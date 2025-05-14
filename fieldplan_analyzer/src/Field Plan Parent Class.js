@@ -169,4 +169,3 @@ class FieldPlan {
     NEEDCOACHING: 56,
     FPEXPERIENCE: 57
   };
-      

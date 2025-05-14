@@ -142,9 +142,14 @@ function sendFieldPlanEmail(fieldPlan) {
     return;
   }
 
-  // Configuration object
+  // Configuration object with recipient emails array - add your emails here
   const config = {
-    recipientEmail: "gabri@alforward.org",
+    recipientEmails: [
+      "gabri@alforward.org",
+      "sherri@alforward.org",
+      "deanna@alforward.org",
+      "datateam@alforward.org"
+    ],
     maxRetries: 3,
     retryDelay: 1000 // milliseconds
   };
@@ -155,9 +160,17 @@ function sendFieldPlanEmail(fieldPlan) {
     return re.test(String(email).toLowerCase());
   };
 
-  if (!validateEmail(config.recipientEmail)) {
-    Logger.log(`Invalid recipient email address: ${config.recipientEmail}`);
+  // Validate all email addresses
+  const validEmails = config.recipientEmails.filter(email => validateEmail(email));
+  
+  if (validEmails.length === 0) {
+    Logger.log("No valid recipient email addresses found");
     return;
+  }
+  
+  // Log any invalid emails that were removed
+  if (validEmails.length < config.recipientEmails.length) {
+    Logger.log(`${config.recipientEmails.length - validEmails.length} invalid email(s) were removed`);
   }
 
   try {
@@ -216,7 +229,7 @@ function sendFieldPlanEmail(fieldPlan) {
     while (attempt <= config.maxRetries && !success) {
       try {
         MailApp.sendEmail({
-          to: config.recipientEmail,
+          to: validEmails.join(','),
           subject: `New Field Plan: ${fieldPlan.memberOrgName || 'Unknown Organization'}`,
           htmlBody: emailBody,
           name: "Field Plan Notification System",
@@ -232,7 +245,7 @@ function sendFieldPlanEmail(fieldPlan) {
         } else {
           // Send simplified error notification on final failure
           MailApp.sendEmail({
-            to: config.recipientEmail,
+            to: validEmails.join(','),
             subject: 'Error in Field Plan Email Processing',
             body: `Error processing field plan for ${fieldPlan.memberOrgName}: ${error.message}\n\nPlease check the Apps Script logs for more details.`,
             name: "Field Plan Error Notification"
@@ -247,7 +260,7 @@ function sendFieldPlanEmail(fieldPlan) {
     
     try {
       MailApp.sendEmail({
-        to: config.recipientEmail,
+        to: validEmails.join(','),
         subject: 'Critical Error in Field Plan Processing',
         body: `A critical error occurred while processing the field plan:\n\n${error.message}\n\nPlease check the Apps Script logs for more details.`,
         name: "Field Plan Error Notification"
@@ -258,45 +271,76 @@ function sendFieldPlanEmail(fieldPlan) {
   }
 }
 
+// This function is kept for backward compatibility but no longer used with the new trigger system
 function onEdit(e) {
-  if (!e) {
-    Logger.log("No event object - this function must be triggered by an edit");
-    return;
-  }
-
-  const range = e.range;
-  const sheet = range.getSheet();
-  
-  if (range.getRow() === sheet.getLastRow()) {
-    try {
-      const fieldPlan = FieldPlan.fromLastRow();
-      Logger.log(`New entry from: ${fieldPlan.memberOrgName}`);
-      
-      // Send email with field plan details
-      sendFieldPlanEmail(fieldPlan);
-      
-    } catch (error) {
-      Logger.log(`Error processing new row: ${error.message}`);
-    }
-  }
+  Logger.log("onEdit function called but not used with new time-based trigger system");
 }
 
 function createSpreadsheetTrigger() {
   // Check if trigger already exists
   const triggers = ScriptApp.getProjectTriggers();
   const triggerExists = triggers.some(trigger => 
-    trigger.getHandlerFunction() === 'onEdit' && 
-    trigger.getEventType() === ScriptApp.EventType.ON_EDIT
+    trigger.getHandlerFunction() === 'checkForNewRows' && 
+    trigger.getEventType() === ScriptApp.EventType.CLOCK
   );
   
   if (!triggerExists) {
-    const ss = SpreadsheetApp.getActive();
-    ScriptApp.newTrigger('onEdit')
-      .forSpreadsheet(ss)
-      .onEdit()
+    // Create trigger to run twice a day (every 12 hours)
+    ScriptApp.newTrigger('checkForNewRows')
+      .timeBased()
+      .everyHours(12)
       .create();
-    Logger.log('New edit trigger created');
+    Logger.log('New time-based trigger created to run every 12 hours');
+    
+    // Initialize the last processed row property
+    PropertiesService.getScriptProperties().setProperty('LAST_PROCESSED_ROW', getLastRow().toString());
   } else {
-    Logger.log('Edit trigger already exists');
+    Logger.log('Time-based trigger already exists');
   }
 }
+
+// Helper function to get the last row number
+function getLastRow() {
+  const sheet = SpreadsheetApp.getActiveSheet();
+  return sheet.getLastRow();
+}
+
+// Function to check for new rows and process them
+function checkForNewRows() {
+  try {
+    const sheet = SpreadsheetApp.getActiveSheet();
+    const currentLastRow = sheet.getLastRow();
+    
+    // Get the last processed row from properties
+    const lastProcessedRow = parseInt(PropertiesService.getScriptProperties().getProperty('LAST_PROCESSED_ROW') || '1');
+    
+    Logger.log(`Current last row: ${currentLastRow}, Last processed row: ${lastProcessedRow}`);
+    
+    // If there are new rows
+    if (currentLastRow > lastProcessedRow) {
+      // Process each new row
+      for (let rowNumber = lastProcessedRow + 1; rowNumber <= currentLastRow; rowNumber++) {
+        try {
+          const fieldPlan = FieldPlan.fromSpecificRow(rowNumber);
+          Logger.log(`Processing row ${rowNumber}: ${fieldPlan.memberOrgName}`);
+          
+          // Send email with field plan details
+          sendFieldPlanEmail(fieldPlan);
+          
+        } catch (error) {
+          Logger.log(`Error processing row ${rowNumber}: ${error.message}`);
+        }
+      }
+      
+      // Update the last processed row
+      PropertiesService.getScriptProperties().setProperty('LAST_PROCESSED_ROW', currentLastRow.toString());
+      Logger.log(`Updated last processed row to ${currentLastRow}`);
+    } else {
+      Logger.log('No new rows to process');
+    }
+  } catch (error) {
+    Logger.log(`Error in checkForNewRows: ${error.message}`);
+  }
+}
+
+

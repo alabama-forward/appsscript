@@ -130,6 +130,6 @@ const PROGRAM_COLUMNS = {
      * @returns {number} Weekly attempts divided by number of volunteers
      */
     reasonableRange() {
-      return (this.weeklyAttempts() / this._weeklyVolunteers)
+      return (this._hourlyAttempts)
     }
   };
