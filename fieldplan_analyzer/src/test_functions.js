@@ -79,6 +79,39 @@ function testMostRecentFieldPlan(testEmail) {
 function onOpen() {
   const ui = SpreadsheetApp.getUi();
   ui.createMenu('Field Plan Tests')
-    .addItem('Test Most Recent Entry', 'testMostRecentFieldPlan')
+    .addItem('Test Most Recent Entry', 'promptForTestEmail')
     .addToUi();
+}
+
+/**
+ * Prompts the user for an email address and then runs the test
+ */
+function promptForTestEmail() {
+  const ui = SpreadsheetApp.getUi();
+  const response = ui.prompt(
+    'Test Field Plan Email',
+    'Enter the email address to send the test to:',
+    ui.ButtonSet.OK_CANCEL
+  );
+
+  // Check if the user clicked "OK"
+  if (response.getSelectedButton() == ui.Button.OK) {
+    const email = response.getResponseText().trim();
+
+    // Validate the email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (email && emailRegex.test(email)) {
+      // Run the test with the provided email
+      const result = testMostRecentFieldPlan(email);
+
+      // Show a confirmation message
+      if (result.success) {
+        ui.alert('Success', `Test email sent to: ${email}`, ui.ButtonSet.OK);
+      } else {
+        ui.alert('Error', `Failed to send test email: ${result.error}`, ui.ButtonSet.OK);
+      }
+    } else {
+      ui.alert('Invalid Email', 'Please enter a valid email address.', ui.ButtonSet.OK);
+    }
+  }
 }
