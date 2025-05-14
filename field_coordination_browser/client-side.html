@@ -1,0 +1,469 @@
+<script>
+    // Define variables at the global level
+    let isSearching = false;
+    let currentResults = [];
+    let organizationOptions = '';
+    let countySearchInput, precinctNameSearchInput, precinctNumberSearchInput;
+    let searchButton, resetButton, statusBox, statusText, resultsCount, resultsContainer;
+    
+    /**
+     * Function to initialize the interface
+     */
+    function initializeInterface() {
+      // Reference the UI elements
+      countySearchInput = document.getElementById('county-search');
+      precinctNameSearchInput = document.getElementById('precinct-name-search');
+      precinctNumberSearchInput = document.getElementById('precinct-number-search');
+      searchButton = document.getElementById('search-button');
+      resetButton = document.getElementById('reset-button');
+      statusBox = document.getElementById('status-box');
+      statusText = document.getElementById('status-text');
+      resultsCount = document.getElementById('results-count');
+      resultsContainer = document.getElementById('results-container');
+    
+      console.log("Search button element:", searchButton);
+      
+      // Load the current search criteria from the spreadsheet
+      google.script.run
+        .withSuccessHandler(loadSearchCriteria)
+        .withFailureHandler(handleError)
+        .getSearchCriteria();
+    
+      // Set up event listeners with proper error handling
+      if (searchButton) {
+        console.log("Adding click event listener to search button");
+        searchButton.addEventListener('click', function() {
+          console.log("Search button clicked!");
+          performSearch();
+        });
+      } else {
+        console.error("Search button element not found!");
+      }
+    
+      if (resetButton) {
+        resetButton.addEventListener('click', resetSearch);
+      } else {
+        console.error("Reset button element not found!");
+      }
+    
+      // Start loading organization options
+      loadOrganizationOptions();
+    }
+    
+    // Initialize the interface when the page loads
+    window.onload = initializeInterface;
+      
+    /**
+     * Function to load current search criteria
+     * @param {Object} criteria - Search criteria from the server
+     */
+    function loadSearchCriteria(criteria) {
+      console.log("loadSearchCriteria called with:", criteria);
+      
+      if (criteria) {
+        countySearchInput.value = criteria.county || '';
+        precinctNameSearchInput.value = criteria.precinctName || '';
+        precinctNumberSearchInput.value = criteria.precinctNumber || '';
+      }
+      
+      console.log("Search fields populated");
+    }
+      
+    /**
+     * Function to perform search
+     */
+    function performSearch() {
+      console.log("Search button clicked!");
+      if (isSearching) return;
+      
+      isSearching = true;
+      showStatus('Searching...', 'info');
+      
+      const criteria = {
+        county: countySearchInput.value.trim(),
+        precinctName: precinctNameSearchInput.value.trim(),
+        precinctNumber: precinctNumberSearchInput.value.trim()
+      };
+      
+      console.log("Sending search criteria:", criteria);
+      
+      // Call your existing search function in the Apps Script
+      google.script.run
+        .withSuccessHandler(function(results) {
+          console.log("Search results received:", results);
+          displaySearchResults(results);
+        })
+        .withFailureHandler(function(error) {
+          console.error("Search failed:", error);
+          handleError(error);
+        })
+        .performSearch(criteria);
+    }
+      
+    /**
+     * Function to display search results
+     * @param {Array} results - Search results from the server
+     */
+    function displaySearchResults(results) {
+      console.log("displaySearchResults called with:", results);
+      
+      try {
+        isSearching = false;
+        hideStatus();
+        
+        currentResults = results;
+        
+        if (!results || results.length === 0) {
+          resultsCount.textContent = '0 results found';
+          resultsContainer.innerHTML = '<div class="no-results">No matching results found. Try adjusting your search criteria.</div>';
+          return;
+        }
+        
+        resultsCount.textContent = `${results.length} results found`;
+        
+        // Create table with the results
+        let tableHTML = `
+          <table id="search-results-table">
+            <thead>
+              <tr>
+                <th>County</th>
+                <th>Precinct Name</th>
+                <th>Precinct Number</th>
+                <th>Municipality</th>
+                <th>First Claim</th>
+                <th>Second Claim</th>
+              </tr>
+            </thead>
+            <tbody>
+        `;
+        
+        // Generate table rows from results
+        results.forEach((row, index) => {
+          console.log("Processing result row:", row);
+          
+          // Determine row class based on claim count
+          let rowClass = '';
+          if (row.claimCount === 1) rowClass = 'claimed-once';
+          else if (row.claimCount === 2) rowClass = 'claimed-twice';
+          
+          tableHTML += `
+            <tr data-row-index="${index}" ${rowClass ? 'class="' + rowClass + '"' : ''}>
+              <td>${escapeHtml(row.county)}</td>
+              <td>${escapeHtml(row.precinctName)}</td>
+              <td>${escapeHtml(row.precinctNumber)}</td>
+              <td>${escapeHtml(row.municipality)}</td>
+              <td>
+                ${formatClaimCell('first', row.firstClaim, index, row.firstClaimTimestamp)}
+              </td>
+              <td>
+                ${formatClaimCell('second', row.secondClaim, index, row.secondClaimTimestamp)}
+              </td>
+            </tr>
+          `;
+        });
+        
+        // Finish the table
+        tableHTML += `
+            </tbody>
+          </table>
+        `;
+        
+        console.log("Setting innerHTML for resultsContainer");
+        resultsContainer.innerHTML = tableHTML;
+        console.log("Table HTML has been set");
+        
+        // Add event listeners to dropdowns
+        console.log("Adding event listeners to dropdowns");
+        document.querySelectorAll('.claim-dropdown').forEach(dropdown => {
+          dropdown.addEventListener('change', handleClaimSelection);
+        });
+        
+        console.log("Search results display complete");
+      } catch (error) {
+        console.error("Error in displaySearchResults:", error);
+        showStatus('Error displaying results: ' + error.message, 'error');
+      }
+    }
+    
+    /**
+     * Helper function to format a claim cell based on its status
+     * @param {string} claimType - Either 'first' or 'second'
+     * @param {string} claimValue - The organization that claimed this slot, if any
+     * @param {number} rowIndex - The row index
+     * @param {string} claimTimestamp - The timestamp when the claim was made
+     * @return {string} HTML for the cell
+     */
+    function formatClaimCell(claimType, claimValue, rowIndex, claimTimestamp) {
+      if (claimValue) {
+        // If claimed, display as disabled with the organization name and timestamp
+        let timestampHtml = claimTimestamp ? 
+          `<span class="claim-timestamp">${escapeHtml(claimTimestamp)}</span>` : '';
+        
+        return `<div class="claimed-by">
+          <span class="org-name">${escapeHtml(claimValue)}</span>
+          ${timestampHtml}
+        </div>`;
+      } else {
+        // If not claimed, show dropdown
+        return `<select class="claim-dropdown ${claimType}-claim" data-row-index="${rowIndex}">
+          ${getOrganizationOptions()}
+        </select>`;
+      }
+    }
+      
+    /**
+     * Function to handle claim selection
+     * @param {Event} event - Change event from the dropdown
+     */
+    function handleClaimSelection(event) {
+      const dropdown = event.target;
+      const rowIndexStr = dropdown.getAttribute('data-row-index');
+      const rowIndex = parseInt(rowIndexStr);
+      
+      if (isNaN(rowIndex) || rowIndex < 0) {
+        showStatus('Invalid row index', 'error');
+        dropdown.value = '';
+        return;
+      }
+      
+      const claimType = dropdown.classList.contains('first-claim') ? 'first' : 'second';
+      const selectedOrg = dropdown.value;
+      
+      if (!selectedOrg) return;
+      
+      showStatus('Processing claim...', 'info');
+      
+      // Get the actual row number from the results data
+      let actualRowIndex;
+      if (currentResults && currentResults[rowIndex]) {
+        actualRowIndex = currentResults[rowIndex].rowIndex;
+      } else {
+        // If we can't find the row in our results, get it from the HTML table
+        const tableRow = dropdown.closest('tr');
+        if (tableRow) {
+          // Find the row index in the actual sheet by looking at data attributes
+          const displayIndex = tableRow.getAttribute('data-display-row-index');
+          if (displayIndex) {
+            actualRowIndex = parseInt(displayIndex);
+          } else {
+            // Fall back to direct row number calculation
+            actualRowIndex = rowIndex + 6; // Assuming results start at row 6
+          }
+        } else {
+          actualRowIndex = rowIndex + 6; // Default fallback
+        }
+      }
+      
+      // Call the server-side claim function
+      google.script.run
+        .withSuccessHandler(function(response) {
+          handleClaimResponse(response, rowIndex, claimType, selectedOrg);
+        })
+        .withFailureHandler(function(error) {
+          console.error('Error processing claim:', error);
+          showStatus('Error processing claim: ' + error, 'error');
+          dropdown.value = '';
+        })
+        .claimItemForOrg(actualRowIndex, selectedOrg, claimType);
+    }
+      
+    /**
+     * Function to handle claim response
+     * @param {Object} response - Response from the server
+     * @param {number} rowIndex - Index of the row in the current results
+     * @param {string} claimType - Whether this is the "first" or "second" claim
+     * @param {string} selectedOrg - Name of the organization making the claim
+     */
+    function handleClaimResponse(response, rowIndex, claimType, selectedOrg) {
+      if (response.success) {
+        showStatus(`Successfully claimed by ${selectedOrg}`, 'success');
+        
+        // If BigQuery integration failed, show a warning
+        if (response.bigQueryError) {
+          showStatus('Note: Voter targeting data processing could not be completed. Your precinct claim was still successful.', 'warning');
+        } else {
+          // Show a message that targeting data was processed (only if successful)
+          console.log("Voter targeting data was processed successfully");
+        }
+        
+        // Update the UI to reflect the claim
+        const row = document.querySelector(`tr[data-row-index="${rowIndex}"]`);
+        
+        // Find the cell containing the dropdown
+        const cell = row.querySelector(`.${claimType}-claim`).parentElement;
+        
+        // Replace dropdown with claimed-by div including timestamp
+        const timestampHtml = response.timestamp ? 
+          `<span class="claim-timestamp">${escapeHtml(response.timestamp)}</span>` : '';
+        
+        cell.innerHTML = `<div class="claimed-by">
+          <span class="org-name">${escapeHtml(selectedOrg)}</span>
+          ${timestampHtml}
+        </div>`;
+        
+        // Update row styling based on claim count
+        if (response.claimCount === 1) {
+          row.classList.add('claimed-once');
+          row.classList.remove('claimed-twice');
+        } else if (response.claimCount >= 2) {
+          row.classList.add('claimed-twice');
+          row.classList.remove('claimed-once');
+        }
+        
+        // If this was the second claim, show a notification
+        if (claimType === 'second' || response.claimCount >= 2) {
+          showStatus('This Precinct has now been claimed by two organizations and will be removed from future search results.', 'success');
+        }
+        
+        // If refreshing is needed, reload results
+        if (response.refreshNeeded) {
+          setTimeout(performSearch, 2000);
+        }
+      } else {
+        showStatus(response.message || 'Claim could not be processed', 'error');
+        
+        // Reset the dropdown
+        const dropdown = document.querySelector(`select[data-row-index="${rowIndex}"].${claimType}-claim`);
+        if (dropdown) {
+          dropdown.value = '';
+        }
+      }
+    }
+      
+    /**
+     * Function to reset search
+     */
+    function resetSearch() {
+      showStatus('Resetting search...', 'info');
+      
+      google.script.run
+        .withSuccessHandler(function() {
+          // Clear all input fields
+          countySearchInput.value = '';
+          precinctNameSearchInput.value = '';
+          precinctNumberSearchInput.value = '';
+          
+          // Clear results
+          resultsCount.textContent = '0 results found';
+          resultsContainer.innerHTML = '<div class="no-results">Search criteria have been reset.</div>';
+          
+          hideStatus();
+          showStatus('Search has been reset', 'success');
+          setTimeout(hideStatus, 3000);
+        })
+        .withFailureHandler(handleError)
+        .resetSearchAndDropdowns();
+    }
+      
+    /**
+     * Helper function to get organization options
+     * @return {string} HTML for organization options
+     */
+    function getOrganizationOptions() {
+      // If we already have the options cached, return them
+      if (organizationOptions) {
+        return organizationOptions;
+      }
+      
+      // Otherwise return a loading placeholder and fetch the options
+      loadOrganizationOptions();
+      return '<option value="">Loading organizations...</option>';
+    }
+      
+    /**
+     * Function to load organization options from the server
+     */
+    function loadOrganizationOptions() {
+      google.script.run
+        .withSuccessHandler(function(organizations) {
+          if (!organizations || organizations.length === 0) {
+            organizationOptions = '<option value="">No organizations found</option>';
+            return;
+          }
+          
+          // Build options HTML from the organizations array
+          let optionsHTML = '<option value="">Select Organization</option>';
+          organizations.forEach(org => {
+            if (org) {
+              optionsHTML += `<option value="${escapeHtml(org)}">${escapeHtml(org)}</option>`;
+            }
+          });
+          
+          // Store in our global variable
+          organizationOptions = optionsHTML;
+          
+          // Update any existing dropdowns with the new options
+          updateDropdownsWithOptions();
+        })
+        .withFailureHandler(function(error) {
+          console.error('Error loading organizations:', error);
+          organizationOptions = '<option value="">Error loading organizations. Email datateam@alforward.org to troubleshoot.</option>';
+          updateDropdownsWithOptions();
+        })
+        .getOrganizations();
+    }
+      
+    /**
+     * Function to update existing dropdowns with the loaded options
+     */
+    function updateDropdownsWithOptions() {
+      if (!organizationOptions) return;
+      
+      // Find all dropdowns that need to be updated
+      document.querySelectorAll('.claim-dropdown').forEach(dropdown => {
+        // Save current selection
+        const currentValue = dropdown.value;
+        
+        // Update options
+        dropdown.innerHTML = organizationOptions;
+        
+        // Restore selection if it existed
+        if (currentValue) {
+          dropdown.value = currentValue;
+        }
+      });
+    }
+      
+    /**
+     * Helper function to show status message
+     * @param {string} message - Message to display
+     * @param {string} type - Type of message (info, success, warning, error)
+     */
+    function showStatus(message, type) {
+      statusText.textContent = message;
+      statusBox.className = `status-message status-${type}`;
+      statusBox.classList.remove('hidden');
+    }
+      
+    /**
+     * Helper function to hide status message
+     */
+    function hideStatus() {
+      statusBox.classList.add('hidden');
+    }
+      
+    /**
+     * Helper function to handle errors
+     * @param {Error|string} error - Error object or message
+     */
+    function handleError(error) {
+      console.error('Error:', error);
+      isSearching = false;
+      showStatus('An error occurred: ' + error, 'error');
+    }
+      
+    /**
+     * Helper function to escape HTML to prevent XSS
+     * @param {*} text - Text to escape
+     * @return {string} Escaped HTML
+     */
+    function escapeHtml(text) {
+      if (text === null || text === undefined) return '';
+      return String(text)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+</script>

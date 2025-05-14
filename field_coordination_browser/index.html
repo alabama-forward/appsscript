@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <base target="_top">
+    <?!= include('styles'); ?>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Precinct Search Tool</h1>
+      
+      <div class="search-section">
+        <h2>Search Criteria</h2>
+        <div class="search-fields">
+          <div class="field-group">
+            <label for="county-search">County</label>
+            <input type="text" id="county-search" placeholder="Enter county name">
+          </div>
+          <div class="field-group">
+            <label for="precinct-name-search">Precinct Name</label>
+            <input type="text" id="precinct-name-search" placeholder="Enter precinct name">
+          </div>
+          <div class="field-group">
+            <label for="precinct-number-search">Precinct Number</label>
+            <input type="text" id="precinct-number-search" placeholder="Enter precinct number">
+          </div>
+        </div>
+        
+        <div class="button-bar">
+          <button id="reset-button" class="secondary-button">Reset Search</button>
+          <button id="search-button" class="primary-button">Search</button>
+        </div>
+      </div>
+      
+      <div id="status-box" class="status-message status-info hidden">
+        <div class="spinner"></div>
+        <span id="status-text">Processing...</span>
+      </div>
+      
+      <div class="results-section">
+        <div class="results-header">
+          <h2>Search Results</h2>
+          <div class="results-count" id="results-count">0 results found</div>
+        </div>
+        
+        <div id="results-container">
+          <!-- Table will be loaded here from your existing spreadsheet data -->
+          <div id="loading-message">Enter search criteria and click "Search" to see results.</div>
+        </div>
+      </div>
+    </div>
+    
+    <?!= include('client-side'); ?>
+  </body>
+</html>

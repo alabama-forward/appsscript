@@ -1,0 +1,292 @@
+<style>
+    /* Modern styling for the search interface */
+    body {
+      font-family: 'Google Sans', 'Roboto', Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background-color: #f8f9fa;
+      color: #202124;
+    }
+    
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+      background-color: white;
+      border-radius: 8px;
+      box-shadow: 0 1px 2px 0 rgba(60,64,67,.3), 0 1px 3px 1px rgba(60,64,67,.15);
+      padding: 24px;
+    }
+    
+    h1 {
+      color: #1a73e8;
+      font-size: 24px;
+      font-weight: 400;
+      margin-top: 0;
+      margin-bottom: 24px;
+      border-bottom: 1px solid #e8eaed;
+      padding-bottom: 12px;
+    }
+    
+    .search-section {
+      margin-bottom: 32px;
+    }
+    
+    .search-section h2 {
+      font-size: 18px;
+      font-weight: 500;
+      color: #3c4043;
+      margin-bottom: 16px;
+    }
+    
+    .search-fields {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      grid-gap: 16px;
+    }
+    
+    .field-group {
+      margin-bottom: 16px;
+    }
+    
+    .field-group label {
+      display: block;
+      font-size: 14px;
+      font-weight: 500;
+      color: #5f6368;
+      margin-bottom: 6px;
+    }
+    
+    .field-group input, .field-group select {
+      width: 100%;
+      padding: 8px 12px;
+      font-size: 14px;
+      border: 1px solid #dadce0;
+      border-radius: 4px;
+      color: #202124;
+      background-color: white;
+      box-sizing: border-box;
+    }
+    
+    .field-group input:focus, .field-group select:focus {
+      outline: none;
+      border-color: #1a73e8;
+      box-shadow: 0 0 0 2px rgba(26,115,232,0.2);
+    }
+    
+    .button-bar {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 24px;
+    }
+    
+    .primary-button, .secondary-button {
+      padding: 10px 24px;
+      font-size: 14px;
+      font-weight: 500;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: none;
+    }
+    
+    .primary-button {
+      background-color: #1a73e8;
+      color: white;
+    }
+    
+    .primary-button:hover {
+      background-color: #1765cc;
+      box-shadow: 0 1px 2px 0 rgba(60,64,67,.3);
+    }
+    
+    .secondary-button {
+      background-color: #f1f3f4;
+      color: #3c4043;
+    }
+    
+    .secondary-button:hover {
+      background-color: #e8eaed;
+      box-shadow: 0 1px 2px 0 rgba(60,64,67,.3);
+    }
+    
+    .results-section {
+      margin-top: 32px;
+    }
+    
+    .results-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+    
+    .results-count {
+      font-size: 14px;
+      color: #5f6368;
+    }
+    
+    #search-results-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+    }
+    
+    #search-results-table th {
+      text-align: left;
+      padding: 12px 16px;
+      background-color: #f1f3f4;
+      color: #3c4043;
+      font-weight: 500;
+      border-bottom: 1px solid #dadce0;
+      white-space: nowrap;
+    }
+    
+    #search-results-table td {
+      padding: 12px 16px;
+      border-bottom: 1px solid #e8eaed;
+      color: #202124;
+    }
+    
+    #search-results-table tr:hover {
+      background-color: #f8f9fa;
+    }
+    
+    /* Styles for the dropdown */
+    .claim-dropdown {
+      padding: 6px 10px;
+      border: 1px solid #dadce0;
+      border-radius: 4px;
+      background-color: white;
+      color: #3c4043;
+      font-size: 14px;
+      width: 100%;
+    }
+    
+    .claim-dropdown:focus {
+      outline: none;
+      border-color: #1a73e8;
+      box-shadow: 0 0 0 2px rgba(26,115,232,0.2);
+    }
+    
+    /* Styles for claimed cells */
+    .claimed-by {
+      padding: 6px 10px;
+      background-color: #f1f3f4;
+      border: 1px solid #dadce0;
+      border-radius: 4px;
+      color: #3c4043;
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+      box-sizing: border-box;
+      position: relative;
+    }
+    
+    /* Organization name styling */
+    .org-name {
+      font-weight: 500;
+      margin-bottom: 4px;
+    }
+    
+    /* Timestamp styling */
+    .claim-timestamp {
+      font-size: 12px;
+      color: #5f6368;
+      font-style: italic;
+    }
+    
+    /* Add a check mark to claimed cells */
+    .claimed-by::after {
+      content: "✓";
+      position: absolute;
+      right: 8px;
+      top: 6px;
+      color: #34a853; /* Google green */
+      font-weight: bold;
+    }
+    
+    /* Styles for claimed items */
+    .claimed-once {
+      background-color: #e8f0fe;
+    }
+    
+    .claimed-twice {
+      background-color: #e6f4ea;
+    }
+    
+    /* Loading spinner */
+    .spinner {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 2px solid rgba(26,115,232,0.3);
+      border-radius: 50%;
+      border-top-color: #1a73e8;
+      animation: spin 1s ease-in-out infinite;
+      margin-right: 8px;
+      vertical-align: middle;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    
+    /* Status messages */
+    .status-message {
+      padding: 12px 16px;
+      border-radius: 4px;
+      margin: 16px 0;
+      display: flex;
+      align-items: center;
+    }
+    
+    .status-info {
+      background-color: #e8f0fe;
+      color: #1967d2;
+    }
+    
+    .status-success {
+      background-color: #e6f4ea;
+      color: #137333;
+    }
+    
+    .status-warning {
+      background-color: #fef7e0;
+      color: #b06000;
+      border-left: 4px solid #f9ab00;
+    }
+    
+    .status-error {
+      background-color: #fce8e6;
+      color: #c5221f;
+    }
+    
+    /* BigQuery integration indication */
+    .bigquery-indicator {
+      display: inline-block;
+      font-size: 11px;
+      background-color: #e8f0fe;
+      color: #1967d2;
+      padding: 2px 6px;
+      border-radius: 10px;
+      margin-left: 8px;
+      border: 1px solid #d2e3fc;
+    }
+    
+    .bigquery-error {
+      background-color: #fef7e0;
+      color: #b06000;
+      border-color: #fedcba;
+    }
+    
+    .hidden {
+      display: none;
+    }
+    
+    .no-results {
+      padding: 20px;
+      text-align: center;
+      color: #5f6368;
+      font-style: italic;
+    }
+  </style>

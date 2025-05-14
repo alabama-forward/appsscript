@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <base target="_top">
+    <style>
+      /* Modern styling for the search interface */
+      body {
+        font-family: 'Google Sans', 'Roboto', Arial, sans-serif;
+        margin: 0;
+        padding: 20px;
+        background-color: #f8f9fa;
+        color: #202124;
+      }
+      
+      .container {
+        max-width: 1000px;
+        margin: 0 auto;
+        background-color: white;
+        border-radius: 8px;
+        box-shadow: 0 1px 2px 0 rgba(60,64,67,.3), 0 1px 3px 1px rgba(60,64,67,.15);
+        padding: 24px;
+      }
+      
+      h1 {
+        color: #1a73e8;
+        font-size: 24px;
+        font-weight: 400;
+        margin-top: 0;
+        margin-bottom: 24px;
+        border-bottom: 1px solid #e8eaed;
+        padding-bottom: 12px;
+      }
+      
+      .search-section {
+        margin-bottom: 32px;
+      }
+      
+      .search-section h2 {
+        font-size: 18px;
+        font-weight: 500;
+        color: #3c4043;
+        margin-bottom: 16px;
+      }
+      
+      .search-fields {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        grid-gap: 16px;
+      }
+      
+      .field-group {
+        margin-bottom: 16px;
+      }
+      
+      .field-group label {
+        display: block;
+        font-size: 14px;
+        font-weight: 500;
+        color: #5f6368;
+        margin-bottom: 6px;
+      }
+      
+      .field-group input, .field-group select {
+        width: 100%;
+        padding: 8px 12px;
+        font-size: 14px;
+        border: 1px solid #dadce0;
+        border-radius: 4px;
+        color: #202124;
+        background-color: white;
+        box-sizing: border-box;
+      }
+      
+      .field-group input:focus, .field-group select:focus {
+        outline: none;
+        border-color: #1a73e8;
+        box-shadow: 0 0 0 2px rgba(26,115,232,0.2);
+      }
+      
+      .button-bar {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 24px;
+      }
+      
+      .primary-button, .secondary-button {
+        padding: 10px 24px;
+        font-size: 14px;
+        font-weight: 500;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: all 0.2s;
+        border: none;
+      }
+      
+      .primary-button {
+        background-color: #1a73e8;
+        color: white;
+      }
+      
+      .primary-button:hover {
+        background-color: #1765cc;
+        box-shadow: 0 1px 2px 0 rgba(60,64,67,.3);
+      }
+      
+      .secondary-button {
+        background-color: #f1f3f4;
+        color: #3c4043;
+      }
+      
+      .secondary-button:hover {
+        background-color: #e8eaed;
+        box-shadow: 0 1px 2px 0 rgba(60,64,67,.3);
+      }
+      
+      .results-section {
+        margin-top: 32px;
+      }
+      
+      .results-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 16px;
+      }
+      
+      .results-count {
+        font-size: 14px;
+        color: #5f6368;
+      }
+      
+      #search-results-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 14px;
+      }
+      
+      #search-results-table th {
+        text-align: left;
+        padding: 12px 16px;
+        background-color: #f1f3f4;
+        color: #3c4043;
+        font-weight: 500;
+        border-bottom: 1px solid #dadce0;
+        white-space: nowrap;
+      }
+      
+      #search-results-table td {
+        padding: 12px 16px;
+        border-bottom: 1px solid #e8eaed;
+        color: #202124;
+      }
+      
+      #search-results-table tr:hover {
+        background-color: #f8f9fa;
+      }
+      
+      /* Styles for the dropdown */
+      .claim-dropdown {
+        padding: 6px 10px;
+        border: 1px solid #dadce0;
+        border-radius: 4px;
+        background-color: white;
+        color: #3c4043;
+        font-size: 14px;
+        width: 100%;
+      }
+      
+      .claim-dropdown:focus {
+        outline: none;
+        border-color: #1a73e8;
+        box-shadow: 0 0 0 2px rgba(26,115,232,0.2);
+      }
+      
+      /* Styles for claimed items */
+      .claimed-once {
+        background-color: #e8f0fe;
+      }
+      
+      .claimed-twice {
+        background-color: #e6f4ea;
+      }
+      
+      /* Loading spinner */
+      .spinner {
+        display: inline-block;
+        width: 20px;
+        height: 20px;
+        border: 2px solid rgba(26,115,232,0.3);
+        border-radius: 50%;
+        border-top-color: #1a73e8;
+        animation: spin 1s ease-in-out infinite;
+        margin-right: 8px;
+        vertical-align: middle;
+      }
+      
+      @keyframes spin {
+        to { transform: rotate(360deg); }
+      }
+      
+      /* Status messages */
+      .status-message {
+        padding: 12px 16px;
+        border-radius: 4px;
+        margin: 16px 0;
+        display: flex;
+        align-items: center;
+      }
+      
+      .status-info {
+        background-color: #e8f0fe;
+        color: #1967d2;
+      }
+      
+      .status-success {
+        background-color: #e6f4ea;
+        color: #137333;
+      }
+      
+      .status-warning {
+        background-color: #fef7e0;
+        color: #b06000;
+      }
+      
+      .status-error {
+        background-color: #fce8e6;
+        color: #c5221f;
+      }
+      
+      .hidden {
+        display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Precinct Search Tool</h1>
+      
+      <div class="search-section">
+        <h2>Search Criteria</h2>
+        <div class="search-fields">
+          <div class="field-group">
+            <label for="county-search">County</label>
+            <input type="text" id="county-search" placeholder="Enter county name">
+          </div>
+          <div class="field-group">
+            <label for="precinct-name-search">Precinct Name</label>
+            <input type="text" id="precinct-name-search" placeholder="Enter precinct name">
+          </div>
+          <div class="field-group">
+            <label for="precinct-number-search">Precinct Number</label>
+            <input type="text" id="precinct-number-search" placeholder="Enter precinct number">
+          </div>
+        </div>
+        
+        <div class="button-bar">
+          <button id="reset-button" class="secondary-button">Reset Search</button>
+          <button id="search-button" class="primary-button">Search</button>
+        </div>
+      </div>
+      
+      <div id="status-box" class="status-message status-info hidden">
+        <div class="spinner"></div>
+        <span id="status-text">Processing...</span>
+      </div>
+      
+      <div class="results-section">
+        <div class="results-header">
+          <h2>Search Results</h2>
+          <div class="results-count" id="results-count">0 results found</div>
+        </div>
+        
+        <div id="results-container">
+          <!-- Table will be loaded here from your existing spreadsheet data -->
+          <div id="loading-message">Enter search criteria and click "Search" to see results.</div>
+        </div>
+      </div>
+    </div>
+    
+    <script>
+      // Initialize variables to track UI state
+      let isSearching = false;
+      let currentResults = [];
+      
+      // Reference the UI elements
+      const countySearchInput = document.getElementById('county-search');
+      const precinctNameSearchInput = document.getElementById('precinct-name-search');
+      const precinctNumberSearchInput = document.getElementById('precinct-number-search');
+      const searchButton = document.getElementById('search-button');
+      const resetButton = document.getElementById('reset-button');
+      const statusBox = document.getElementById('status-box');
+      const statusText = document.getElementById('status-text');
+      const resultsCount = document.getElementById('results-count');
+      const resultsContainer = document.getElementById('results-container');
+      
+      // Function to initialize the interface
+      function initializeInterface() {
+        // Load the current search criteria from the spreadsheet
+        google.script.run
+          .withSuccessHandler(loadSearchCriteria)
+          .withFailureHandler(handleError)
+          .getSearchCriteria();
+        
+        // Set up event listeners
+        searchButton.addEventListener('click', performSearch);
+        resetButton.addEventListener('click', resetSearch);
+        
+        // Start loading organization options
+        loadOrganizationOptions();
+      }
+      
+      // Function to load current search criteria
+      function loadSearchCriteria(criteria) {
+        if (criteria) {
+          countySearchInput.value = criteria.county || '';
+          precinctNameSearchInput.value = criteria.precinctName || '';
+          precinctNumberSearchInput.value = criteria.precinctNumber || '';
+        }
+      }
+      
+      // Function to perform search
+      function performSearch() {
+        if (isSearching) return;
+        
+        isSearching = true;
+        showStatus('Searching...', 'info');
+        
+        const criteria = {
+          county: countySearchInput.value.trim(),
+          precinctName: precinctNameSearchInput.value.trim(),
+          precinctNumber: precinctNumberSearchInput.value.trim()
+        };
+        
+        // Call your existing search function in the Apps Script
+        google.script.run
+          .withSuccessHandler(displaySearchResults)
+          .withFailureHandler(handleError)
+          .performSearch(criteria);
+      }
+      
+      // Function to display search results
+      function displaySearchResults(results) {
+        isSearching = false;
+        hideStatus();
+        
+        currentResults = results;
+        
+        if (!results || results.length === 0) {
+          resultsCount.textContent = '0 results found';
+          resultsContainer.innerHTML = '<div class="no-results">No matching results found. Try adjusting your search criteria.</div>';
+          return;
+        }
+        
+        resultsCount.textContent = `${results.length} results found`;
+        
+        // Create table with the results
+        let tableHTML = `
+          <table id="search-results-table">
+            <thead>
+              <tr>
+                <th>County</th>
+                <th>Precinct Name</th>
+                <th>Precinct Number</th>
+                <th>Municipality</th>
+                <th>First Claim</th>
+                <th>Second Claim</th>
+              </tr>
+            </thead>
+            <tbody>
+        `;
+        
+        // Generate table rows from results
+        results.forEach((row, index) => {
+          const rowClass = row.claimCount === 1 ? 'claimed-once' : 
+                          row.claimCount === 2 ? 'claimed-twice' : '';
+          
+          // Store both the array index and the actual row index in the spreadsheet
+          tableHTML += `
+            <tr class="${rowClass}" data-row-index="${index}" data-display-row-index="${row.rowIndex}">
+              <td>${escapeHtml(row.county)}</td>
+              <td>${escapeHtml(row.precinctName)}</td>
+              <td>${escapeHtml(row.precinctNumber)}</td>
+              <td>${escapeHtml(row.municipality)}</td>
+              <td>
+                ${row.firstClaim ? escapeHtml(row.firstClaim) :
+                  `<select class="claim-dropdown first-claim" data-row-index="${index}" data-display-row-index="${row.rowIndex}" ${row.claimCount >= 2 ? 'disabled' : ''}>
+                    <option value="">Select Organization</option>
+                    ${getOrganizationOptions()}
+                  </select>`
+                }
+              </td>
+              <td>
+                ${row.secondClaim ? escapeHtml(row.secondClaim) :
+                  `<select class="claim-dropdown second-claim" data-row-index="${index}" data-display-row-index="${row.rowIndex}" ${row.claimCount >= 2 ? 'disabled' : ''}>
+                    <option value="">Select Organization</option>
+                    ${getOrganizationOptions()}
+                  </select>`
+                }
+              </td>
+            </tr>
+          `;
+        });
+        
+        tableHTML += `
+            </tbody>
+          </table>
+        `;
+        
+        resultsContainer.innerHTML = tableHTML;
+        
+        // Add event listeners to the dropdowns
+        document.querySelectorAll('.claim-dropdown').forEach(dropdown => {
+          dropdown.addEventListener('change', handleClaimSelection);
+        });
+        
+        // Update dropdowns with actual organization options if they've been loaded
+        if (organizationOptions) {
+          updateDropdownsWithOptions();
+        }
+      }
+      
+      // Function to handle claim selection
+      function handleClaimSelection(event) {
+        const dropdown = event.target;
+        const rowIndexStr = dropdown.getAttribute('data-row-index');
+        const rowIndex = parseInt(rowIndexStr);
+        
+        if (isNaN(rowIndex) || rowIndex < 0) {
+          showStatus('Invalid row index', 'error');
+          dropdown.value = '';
+          return;
+        }
+        
+        const claimType = dropdown.classList.contains('first-claim') ? 'first' : 'second';
+        const selectedOrg = dropdown.value;
+        
+        if (!selectedOrg) return;
+        
+        showStatus('Processing claim...', 'info');
+        
+        // Get the actual row number from the results data
+        let actualRowIndex;
+        if (currentResults && currentResults[rowIndex]) {
+          actualRowIndex = currentResults[rowIndex].rowIndex;
+        } else {
+          // If we can't find the row in our results, get it from the HTML table
+          const tableRow = dropdown.closest('tr');
+          if (tableRow) {
+            // Find the row index in the actual sheet by looking at data attributes
+            const displayIndex = tableRow.getAttribute('data-display-row-index');
+            if (displayIndex) {
+              actualRowIndex = parseInt(displayIndex);
+            } else {
+              // Fall back to direct row number calculation
+              actualRowIndex = rowIndex + 6; // Assuming results start at row 6
+            }
+          } else {
+            actualRowIndex = rowIndex + 6; // Default fallback
+          }
+        }
+        
+        // Call the server-side claim function
+        google.script.run
+          .withSuccessHandler(function(response) {
+            handleClaimResponse(response, rowIndex, claimType, selectedOrg);
+          })
+          .withFailureHandler(function(error) {
+            console.error('Error processing claim:', error);
+            showStatus('Error processing claim: ' + error, 'error');
+            dropdown.value = '';
+          })
+          .claimItemForOrg(actualRowIndex, selectedOrg, claimType);
+      }
+      
+      // Function to handle claim response
+      function handleClaimResponse(response, rowIndex, claimType, selectedOrg) {
+        if (response.success) {
+          showStatus(`Successfully claimed by ${selectedOrg}`, 'success');
+          
+          // Update the UI to reflect the claim
+          const row = document.querySelector(`tr[data-row-index="${rowIndex}"]`);
+          const cell = row.querySelector(`.${claimType}-claim`).parentElement;
+          
+          cell.innerHTML = escapeHtml(selectedOrg);
+          row.classList.add(response.claimCount === 1 ? 'claimed-once' : 'claimed-twice');
+          
+          // If this was the second claim, show a notification
+          if (claimType === 'second' || response.claimCount >= 2) {
+            showStatus('This Precinct has now been claimed by two organizations and will be removed from future search results.', 'success');
+          }
+          
+          // If refreshing is needed, reload results
+          if (response.refreshNeeded) {
+            setTimeout(performSearch, 2000);
+          }
+        } else {
+          showStatus(response.message || 'Claim could not be processed', 'error');
+          
+          // Reset the dropdown
+          const dropdown = document.querySelector(`select[data-row-index="${rowIndex}"].${claimType}-claim`);
+          if (dropdown) {
+            dropdown.value = '';
+          }
+        }
+      }
+      
+      // Function to reset search
+      function resetSearch() {
+        showStatus('Resetting search...', 'info');
+        
+        google.script.run
+          .withSuccessHandler(function() {
+            // Clear all input fields
+            countySearchInput.value = '';
+            precinctNameSearchInput.value = '';
+            precinctNumberSearchInput.value = '';
+            
+            // Clear results
+            resultsCount.textContent = '0 results found';
+            resultsContainer.innerHTML = '<div class="no-results">Search criteria have been reset.</div>';
+            
+            hideStatus();
+            showStatus('Search has been reset', 'success');
+            setTimeout(hideStatus, 3000);
+          })
+          .withFailureHandler(handleError)
+          .resetSearchAndDropdowns();
+      }
+      
+      // Global variable to store organization options
+      let organizationOptions = '';
+      
+      // Helper function to get organization options
+      function getOrganizationOptions() {
+        // If we already have the options cached, return them
+        if (organizationOptions) {
+          return organizationOptions;
+        }
+        
+        // Otherwise return a loading placeholder and fetch the options
+        loadOrganizationOptions();
+        return '<option value="">Loading organizations...</option>';
+      }
+      
+      // Function to load organization options from the server
+      function loadOrganizationOptions() {
+        google.script.run
+          .withSuccessHandler(function(organizations) {
+            if (!organizations || organizations.length === 0) {
+              organizationOptions = '<option value="">No organizations found</option>';
+              return;
+            }
+            
+            // Build options HTML from the organizations array
+            let optionsHTML = '<option value="">Select Organization</option>';
+            organizations.forEach(org => {
+              if (org) {
+                optionsHTML += `<option value="${escapeHtml(org)}">${escapeHtml(org)}</option>`;
+              }
+            });
+            
+            // Store in our global variable
+            organizationOptions = optionsHTML;
+            
+            // Update any existing dropdowns with the new options
+            updateDropdownsWithOptions();
+          })
+          .withFailureHandler(function(error) {
+            console.error('Error loading organizations:', error);
+            organizationOptions = '<option value="">Error loading organizations. Email datateam@alforward.org to troubleshoot.</option>';
+            updateDropdownsWithOptions();
+          })
+          .getOrganizations();
+      }
+      
+      // Function to update existing dropdowns with the loaded options
+      function updateDropdownsWithOptions() {
+        if (!organizationOptions) return;
+        
+        // Find all dropdowns that need to be updated
+        document.querySelectorAll('.claim-dropdown').forEach(dropdown => {
+          // Save current selection
+          const currentValue = dropdown.value;
+          
+          // Update options
+          dropdown.innerHTML = organizationOptions;
+          
+          // Restore selection if it existed
+          if (currentValue) {
+            dropdown.value = currentValue;
+          }
+        });
+      }
+      
+      // Helper function to show status message
+      function showStatus(message, type) {
+        statusText.textContent = message;
+        statusBox.className = `status-message status-${type}`;
+        statusBox.classList.remove('hidden');
+      }
+      
+      // Helper function to hide status message
+      function hideStatus() {
+        statusBox.classList.add('hidden');
+      }
+      
+      // Helper function to handle errors
+      function handleError(error) {
+        console.error('Error:', error);
+        isSearching = false;
+        showStatus('An error occurred: ' + error, 'error');
+      }
+      
+      // Helper function to escape HTML to prevent XSS
+      function escapeHtml(text) {
+        if (text === null || text === undefined) return '';
+        return String(text)
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#039;');
+      }
+      
+      // Initialize the interface when the document loads
+      document.addEventListener('DOMContentLoaded', initializeInterface);
+    </script>
+  </body>
+</html>
