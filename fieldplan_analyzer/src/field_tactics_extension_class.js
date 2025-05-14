@@ -9,7 +9,7 @@ class PhoneTactic extends FieldProgram{
     phoneAttemptReasonable() {
         const range = this.reasonableRange();
         if (range <= this._phoneReasonable) {
-            return `${this._memberOrgName} has a reasonable hourly attempt where each volunteer is only expected to attempt to contact ${range} per hour`;
+            return `${this._memberOrgName} has a reasonable hourly attempt where each volunteer is only expected to attempt to contact ${range} people per hour`;
         } else if (range > this._phoneReasonable && range <= this._phoneReasonable + 10) {  // Added 'range' before <=
             return `${this._memberOrgName} is at risk of expecting too many attempts for each volunteer. They expect ${range} attempts per hour per volunteer.`;
         } else {
@@ -21,7 +21,7 @@ class PhoneTactic extends FieldProgram{
       const phoneLowerRange = this.programAttempts() * this._phoneRange[0];
       const phoneUpperRange = this.programAttempts()* this._phoneRange[1];
   
-      return `${this._memberOrgName} intends to successfully reach between ${phoneLowerRange} and ${phoneUpperRange} during the course of their ${this._programLength} week program`
+      return `${this._memberOrgName} intends to successfully reach between ${phoneLowerRange} and ${phoneUpperRange} people during the course of their ${this._programLength} week program`
     }
   };
   
@@ -36,7 +36,7 @@ class DoorTactic extends FieldProgram{
   doorAttemptReasonable() {
     const range = this.reasonableRange();
     if (range <= this._doorReasonable) {
-        return `${this._memberOrgName} has a reasonable hourly attempt where each volunteer is only expected to attempt to contact ${range} per hour`;
+        return `${this._memberOrgName} has a reasonable hourly attempt where each volunteer is only expected to attempt to contact ${range} people per hour`;
     } else if (range > this._doorReasonable && range <= this._doorReasonable + 10) {  // Added 'range' before <=
         return `${this._memberOrgName} is at risk of expecting too many attempts for each volunteer. They expect ${range} attempts per hour per volunteer.`;
     } else {
@@ -48,7 +48,7 @@ class DoorTactic extends FieldProgram{
     const doorLowerRange = this.programAttempts() * this._doorRange[0];
     const doorUpperRange = this.programAttempts()* this._doorRange[1];
 
-    return `${this._memberOrgName} intends to successfully reach between ${doorLowerRange} and ${doorUpperRange} during the course of their ${this._programLength} week program`
+    return `${this._memberOrgName} intends to successfully reach between ${doorLowerRange} and ${doorUpperRange} people during the course of their ${this._programLength} week program`
   }
 };
 
@@ -63,7 +63,7 @@ class OpenTactic extends FieldProgram{
   openAttemptReasonable() {
     const range = this.reasonableRange();
     if (range <= this._openReasonable) {
-        return `${this._memberOrgName} has a reasonable hourly attempt where each volunteer is only expected to attempt to contact ${range} per hour`;
+        return `${this._memberOrgName} has a reasonable hourly attempt where each volunteer is only expected to attempt to contact ${range} people per hour`;
     } else if (range > this._openReasonable && range <= this._openReasonable + 10) {  // Added 'range' before <=
         return `${this._memberOrgName} is at risk of expecting too many attempts for each volunteer. They expect ${range} attempts per hour per volunteer.`;
     } else {
@@ -75,7 +75,7 @@ class OpenTactic extends FieldProgram{
     const openLowerRange = this.programAttempts() * this._openRange[0];
     const openUpperRange = this.programAttempts()* this._openRange[1];
 
-    return `${this._memberOrgName} intends to successfully reach between ${openLowerRange} and ${openUpperRange} during the course of their ${this._programLength} week program`
+    return `${this._memberOrgName} intends to successfully reach between ${openLowerRange} and ${openUpperRange} people during the course of their ${this._programLength} week program`
   }
 };
 
@@ -89,7 +89,7 @@ class RelationalTactic extends FieldProgram{
   relationalAttemptReasonable() {
     const range = this.reasonableRange();
     if (range <= this._relationalReasonable) {
-        return `${this._memberOrgName} has a reasonable hourly attempt where each volunteer is only expected to attempt to contact ${range} per hour`;
+        return `${this._memberOrgName} has a reasonable hourly attempt where each volunteer is only expected to attempt to contact ${range} people per hour`;
     } else if (range > this._relationalReasonable && range <= this._relationalReasonable + 10) {  // Added 'range' before <=
         return `${this._memberOrgName} is at risk of expecting too many attempts for each volunteer. They expect ${range} attempts per hour per volunteer.`;
     } else {
@@ -101,7 +101,7 @@ class RelationalTactic extends FieldProgram{
     const relationalLowerRange = this.programAttempts() * this._relationalRange[0];
     const relationalUpperRange = this.programAttempts()* this._relationalRange[1];
 
-    return `${this._memberOrgName} intends to successfully reach between ${relationalLowerRange} and ${relationalUpperRange} during the course of their ${this._programLength} week program`
+    return `${this._memberOrgName} intends to successfully reach between ${relationalLowerRange} and ${relationalUpperRange} people during the course of their ${this._programLength} week program`
   }
 };
 
@@ -116,7 +116,7 @@ class RegistrationTactic extends FieldProgram{
   registrationAttemptReasonable() {
     const range = this.reasonableRange();
     if (range <= this._registrationReasonable) {
-        return `${this._memberOrgName} has a reasonable hourly attempt where each volunteer is only expected to attempt to contact ${range} per hour`;
+        return `${this._memberOrgName} has a reasonable hourly attempt where each volunteer is only expected to attempt to contact ${range} people per hour`;
     } else if (range > this._registrationReasonable && range <= this._registrationReasonable + 10) {  // Added 'range' before <=
         return `${this._memberOrgName} is at risk of expecting too many attempts for each volunteer. They expect ${range} attempts per hour per volunteer.`;
     } else {
@@ -143,7 +143,7 @@ class TextTactic extends FieldProgram{
   textAttemptReasonable() {
     const range = this.reasonableRange();
     if (range <= this._textReasonable) {
-        return `${this._memberOrgName} has a reasonable hourly attempt where each volunteer is only expected to attempt to contact ${range} per hour`;
+        return `${this._memberOrgName} has a reasonable hourly attempt where each volunteer is only expected to attempt to contact ${range} people per hour`;
     } else if (range > this._textReasonable && range <= this._textReasonable + 10) {
         return `${this._memberOrgName} is at risk of expecting too many attempts for each volunteer. They expect ${range} attempts per hour per volunteer.`;
     } else {
@@ -155,7 +155,7 @@ class TextTactic extends FieldProgram{
     const textLowerRange = this.programAttempts() * this._textRange[0];
     const textUpperRange = this.programAttempts()* this._textRange[1];
 
-    return `${this._memberOrgName} intends to successfully reach between ${textLowerRange} and ${textUpperRange} during the course of their ${this._programLength} week program`
+    return `${this._memberOrgName} intends to successfully reach between ${textLowerRange} and ${textUpperRange} people during the course of their ${this._programLength} week program`
   }
 };
 
@@ -169,7 +169,7 @@ class MailTactic extends FieldProgram{
   mailAttemptReasonable() {
     const range = this.reasonableRange();
     if (range <= this._mailReasonable) {
-        return `${this._memberOrgName} has a reasonable hourly attempt where each volunteer is only expected to attempt to contact ${range} per hour`;
+        return `${this._memberOrgName} has a reasonable hourly attempt where each volunteer is only expected to attempt to contact ${range} people per hour`;
     } else if (range > this._mailReasonable && range <= this._mailReasonable + 10) {
         return `${this._memberOrgName} is at risk of expecting too many attempts for each volunteer. They expect ${range} attempts per hour per volunteer.`;
     } else {
@@ -181,6 +181,6 @@ class MailTactic extends FieldProgram{
     const mailLowerRange = this.programAttempts() * this._mailRange[0];
     const mailUpperRange = this.programAttempts()* this._mailRange[1];
 
-    return `${this._memberOrgName} intends to successfully reach between ${mailLowerRange} and ${mailUpperRange} during the course of their ${this._programLength} week program`
+    return `${this._memberOrgName} intends to successfully reach between ${mailLowerRange} and ${mailUpperRange} people during the course of their ${this._programLength} week program`
   }
 };
