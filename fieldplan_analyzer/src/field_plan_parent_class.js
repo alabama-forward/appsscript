@@ -58,6 +58,7 @@ class FieldPlan {
       this._firstName = rowData[FieldPlan.COLUMNS.FIRSTNAME];
       this._lastName = rowData[FieldPlan.COLUMNS.LASTNAME];
       this._contactEmail = rowData[FieldPlan.COLUMNS.CONTACTEMAIL];
+      this._contactPhone = rowData[FieldPlan.COLUMNS.CONTACTPHONE];
       this._dataStorage = normalizeField(rowData[FieldPlan.COLUMNS.DATASTORAGE]);
       this._vanCommittee = rowData[FieldPlan.COLUMNS.VANCOMMITTEE];
       this._programTools = normalizeField(rowData[FieldPlan.COLUMNS.PROGRAMTOOLS]);
@@ -78,6 +79,7 @@ class FieldPlan {
     get firstName() { return this._firstName || null; }
     get lastName() { return this._lastName || null; }
     get contactEmail() { return this._contactEmail || null; }
+    get contactPhone() { return this._contactPhone || null; }
     get dataStorage() { return this._dataStorage || null; }
     get vanCommittee() { return this._vanCommittee || null; }
     get programTools() { return this._programTools || null; }
