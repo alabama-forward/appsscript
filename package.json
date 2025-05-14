@@ -1,14 +1,15 @@
 {
   "name": "appsscript",
   "version": "1.0.0",
+  "description": "AppsScript on google",
   "dependencies": {
     "clasp": "11.3.0"
   },
-  "description": "AppsScript on google",
   "homepage": "https://github.com/alabama-forward/appsscript#readme",
   "bugs": {
     "url": "https://github.com/alabama-forward/appsscript/issues"
   },
+  "googleAppsScript": {},
   "repository": {
     "type": "git",
     "url": "git+https://github.com/alabama-forward/appsscript.git"
