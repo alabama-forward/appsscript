@@ -187,7 +187,7 @@ function sendFieldPlanEmail(fieldPlan) {
       <p><strong>Organization:</strong> ${fieldPlan.memberOrgName || 'Not specified'}</p>
       <p><strong>Contact:</strong> ${(fieldPlan.firstName || '') + ' ' + (fieldPlan.lastName || '')}</p>
       <p><strong>Email:</strong> ${fieldPlan.contactEmail || 'Not provided'}</p>
-      <p><strong>Phone:</strong>${fieldPlan.contactPhone || 'Not provided'}</p>
+      <p><strong>Phone:</strong> ${fieldPlan.contactPhone || 'Not provided'}</p>
       
       <h3>Program Details</h3>
       <p><strong>Data Storage:</strong> ${Array.isArray(fieldPlan.dataStorage) ? fieldPlan.dataStorage.join(', ') : 'None specified'}</p>
