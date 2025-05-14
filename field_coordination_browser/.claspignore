@@ -1,3 +1,3 @@
-src/BigQueryIntegration.js
-src/environment-variables.md
-src/SimplifiedBigQueryIntegration.js
+BigQueryIntegration.js
+environment-variables.md
+SimplifiedBigQueryIntegration.js
