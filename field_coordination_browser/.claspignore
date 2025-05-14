@@ -2,3 +2,4 @@ BigQueryIntegration.js
 environment-variables.md
 SimplifiedBigQueryIntegration.js
 .claspignore
+developing/
