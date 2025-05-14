@@ -94,8 +94,40 @@ function getTacticMetrics(tactic) {
         <li>Total Program Attempts: ${tactic.programAttempts()}</li>
       </ul>`;
 
-    // Use constructorName since constructor.name might not be reliable in Apps Script
-    const constructorName = tactic.constructor.toString().match(/function (\w+)/)[1];
+    // More robust way to get the constructor name that handles various JavaScript implementations
+    let constructorName;
+    try {
+      // Try direct constructor.name first (works in modern browsers)
+      if (tactic.constructor && tactic.constructor.name) {
+        constructorName = tactic.constructor.name;
+      }
+      // Fall back to regex matching for older JavaScript engines
+      else if (tactic.constructor && tactic.constructor.toString) {
+        const match = tactic.constructor.toString().match(/function\s+(\w+)/) ||
+                      tactic.constructor.toString().match(/class\s+(\w+)/) ||
+                      tactic.constructor.toString().match(/\[object\s+(\w+)/);
+        if (match && match[1]) {
+          constructorName = match[1];
+        } else {
+          // Last resort - derive from object property
+          for (const tacticType of ['Phone', 'Door', 'Open', 'Relational', 'Registration', 'Text', 'Mail']) {
+            if (tactic['_' + tacticType.toLowerCase() + 'Range']) {
+              constructorName = tacticType + 'Tactic';
+              break;
+            }
+          }
+        }
+      }
+
+      // If we still can't determine the name, log and use a fallback
+      if (!constructorName) {
+        Logger.log('Could not determine tactic constructor name:', tactic);
+        constructorName = 'UnknownTactic';
+      }
+    } catch (nameError) {
+      Logger.log('Error determining tactic type: ' + nameError.message);
+      constructorName = 'UnknownTactic';
+    }
     
     // Add tactic-specific metrics
     switch(constructorName) {
