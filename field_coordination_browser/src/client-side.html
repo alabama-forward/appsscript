@@ -6,6 +6,9 @@
     let countySearchInput, precinctNameSearchInput, precinctNumberSearchInput;
     let searchButton, resetButton, statusBox, statusText, resultsCount, resultsContainer;
     
+    // Create a permanent store for all claimed precincts during this session
+    let claimedPrecincts = [];
+    
     /**
      * Function to initialize the interface
      */
@@ -67,6 +70,59 @@
       }
       
       console.log("Search fields populated");
+    }
+
+    /**
+     * Create a unique key for a precinct to use in our lookup
+     * @param {Object} precinct - Precinct data 
+     * @return {string} Unique key
+     */
+    function createPrecinctKey(precinct) {
+      return `${precinct.county}_${precinct.precinctName}_${precinct.precinctNumber}`;
+    }
+    
+    /**
+     * Store a claimed precinct in our permanent session storage
+     * @param {Object} precinct - Precinct data
+     * @param {string} claimType - 'first' or 'second'
+     * @param {string} org - Organization that claimed it
+     * @param {string} timestamp - When it was claimed
+     */
+    function storeClaimedPrecinct(precinct, claimType, org, timestamp) {
+      const precinctKey = createPrecinctKey(precinct);
+      
+      // Look for an existing record
+      const existingIndex = claimedPrecincts.findIndex(p => createPrecinctKey(p) === precinctKey);
+      
+      if (existingIndex >= 0) {
+        // Update existing record
+        if (claimType === 'first') {
+          claimedPrecincts[existingIndex].firstClaim = org;
+          claimedPrecincts[existingIndex].firstClaimTimestamp = timestamp;
+        } else {
+          claimedPrecincts[existingIndex].secondClaim = org;
+          claimedPrecincts[existingIndex].secondClaimTimestamp = timestamp;
+        }
+        claimedPrecincts[existingIndex].claimCount = 
+          (claimedPrecincts[existingIndex].firstClaim ? 1 : 0) + 
+          (claimedPrecincts[existingIndex].secondClaim ? 1 : 0);
+      } else {
+        // Create a new record
+        const newPrecinct = {
+          county: precinct.county,
+          precinctName: precinct.precinctName,
+          precinctNumber: precinct.precinctNumber,
+          municipality: precinct.municipality,
+          firstClaim: claimType === 'first' ? org : '',
+          secondClaim: claimType === 'second' ? org : '',
+          firstClaimTimestamp: claimType === 'first' ? timestamp : '',
+          secondClaimTimestamp: claimType === 'second' ? timestamp : '',
+          claimCount: 1
+        };
+        claimedPrecincts.push(newPrecinct);
+      }
+      
+      console.log("Updated claimed precincts:", claimedPrecincts);
     }
       
     /**
@@ -195,7 +251,7 @@
      */
     function formatClaimCell(claimType, claimValue, rowIndex, claimTimestamp) {
       if (claimValue) {
-        // If claimed, display as disabled with the organization name and timestamp
+        // If claimed, display as a non-interactive element with the organization name and timestamp
         let timestampHtml = claimTimestamp ? 
           `<span class="claim-timestamp">${escapeHtml(claimTimestamp)}</span>` : '';
         
@@ -254,6 +310,9 @@
         }
       }
       
+      // Disable the dropdown while processing to prevent double-claims
+      dropdown.disabled = true;
+      
       // Call the server-side claim function
       google.script.run
         .withSuccessHandler(function(response) {
@@ -262,6 +321,7 @@
         .withFailureHandler(function(error) {
           console.error('Error processing claim:', error);
           showStatus('Error processing claim: ' + error, 'error');
+          dropdown.disabled = false;
           dropdown.value = '';
         })
         .claimItemForOrg(actualRowIndex, selectedOrg, claimType);
@@ -278,14 +338,6 @@
       if (response.success) {
         showStatus(`Successfully claimed by ${selectedOrg}`, 'success');
         
-        // If BigQuery integration failed, show a warning
-        if (response.bigQueryError) {
-          showStatus('Note: Voter targeting data processing could not be completed. Your precinct claim was still successful.', 'warning');
-        } else {
-          // Show a message that targeting data was processed (only if successful)
-          console.log("Voter targeting data was processed successfully");
-        }
-        
         // Update the UI to reflect the claim
         const row = document.querySelector(`tr[data-row-index="${rowIndex}"]`);
         
@@ -301,6 +353,29 @@
           ${timestampHtml}
         </div>`;
         
+        // Get the precinct data from current results
+        if (currentResults && currentResults[rowIndex]) {
+          const precinct = currentResults[rowIndex];
+          
+          // Update our local data to reflect the claim
+          if (claimType === 'first') {
+            precinct.firstClaim = selectedOrg;
+            precinct.firstClaimTimestamp = response.timestamp || '';
+          } else {
+            precinct.secondClaim = selectedOrg;
+            precinct.secondClaimTimestamp = response.timestamp || '';
+          }
+          precinct.claimCount = response.claimCount;
+          
+          // Also store in our permanent claims collection
+          storeClaimedPrecinct(
+            precinct, 
+            claimType, 
+            selectedOrg, 
+            response.timestamp || ''
+          );
+        }
+        
         // Update row styling based on claim count
         if (response.claimCount === 1) {
           row.classList.add('claimed-once');
@@ -315,6 +390,33 @@
           showStatus('This Precinct has now been claimed by two organizations and will be removed from future search results.', 'success');
         }
         
+        // If any other claim was made in the same row, update that as well
+        if (response.firstClaim && claimType === 'second') {
+          const firstClaimCell = row.querySelector('.first-claim');
+          if (firstClaimCell) {
+            const parentCell = firstClaimCell.parentElement;
+            const otherOrgTimestampHtml = response.firstClaimTimestamp ? 
+              `<span class="claim-timestamp">${escapeHtml(response.firstClaimTimestamp)}</span>` : '';
+            
+            parentCell.innerHTML = `<div class="claimed-by">
+              <span class="org-name">${escapeHtml(response.firstClaim)}</span>
+              ${otherOrgTimestampHtml}
+            </div>`;
+          }
+        } else if (response.secondClaim && claimType === 'first') {
+          const secondClaimCell = row.querySelector('.second-claim');
+          if (secondClaimCell) {
+            const parentCell = secondClaimCell.parentElement;
+            const otherOrgTimestampHtml = response.secondClaimTimestamp ? 
+              `<span class="claim-timestamp">${escapeHtml(response.secondClaimTimestamp)}</span>` : '';
+            
+            parentCell.innerHTML = `<div class="claimed-by">
+              <span class="org-name">${escapeHtml(response.secondClaim)}</span>
+              ${otherOrgTimestampHtml}
+            </div>`;
+          }
+        }
+        
         // If refreshing is needed, reload results
         if (response.refreshNeeded) {
           setTimeout(performSearch, 2000);
@@ -322,9 +424,10 @@
       } else {
         showStatus(response.message || 'Claim could not be processed', 'error');
         
-        // Reset the dropdown
+        // Re-enable the dropdown
         const dropdown = document.querySelector(`select[data-row-index="${rowIndex}"].${claimType}-claim`);
         if (dropdown) {
+          dropdown.disabled = false;
           dropdown.value = '';
         }
       }
@@ -337,7 +440,7 @@
       showStatus('Resetting search...', 'info');
       
       google.script.run
-        .withSuccessHandler(function() {
+        .withSuccessHandler(function(response) {
           // Clear all input fields
           countySearchInput.value = '';
           precinctNameSearchInput.value = '';
@@ -347,12 +450,25 @@
           resultsCount.textContent = '0 results found';
           resultsContainer.innerHTML = '<div class="no-results">Search criteria have been reset.</div>';
           
+          // Also clear our cached results (but keep our claimed data)
+          currentResults = [];
+          
           hideStatus();
           showStatus('Search has been reset', 'success');
           setTimeout(hideStatus, 3000);
         })
         .withFailureHandler(handleError)
         .resetSearchAndDropdowns();
+    }
+
+    /**
+     * Function to refresh the current search
+     * This can be used to get the latest data from the server
+     */
+    function refreshCurrentSearch() {
+      if (!isSearching) {
+        performSearch();
+      }
     }
       
     /**
@@ -466,4 +582,8 @@
         .replace(/"/g, '&quot;')
         .replace(/'/g, '&#039;');
     }
+
+    // Set up a periodic refresh to keep the data current (optional)
+    // Uncomment this if you want the interface to auto-refresh every 3 minutes
+    // setInterval(refreshCurrentSearch, 180000); // 3 minutes in milliseconds
 </script>
