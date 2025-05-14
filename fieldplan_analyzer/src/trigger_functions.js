@@ -222,7 +222,11 @@ function sendFieldPlanEmail(fieldPlan) {
       <p><strong>Phone:</strong> ${fieldPlan.contactPhone || 'Not provided'}</p>
       
       <h3>Program Details</h3>
-      <p><strong>Data Storage:</strong> ${Array.isArray(fieldPlan.dataStorage) ? fieldPlan.dataStorage.join(', ') : 'None specified'}</p>
+      <p><strong>Data Storage:</strong> ${
+        fieldPlan.dataStorage ?
+        (Array.isArray(fieldPlan.dataStorage) ? fieldPlan.dataStorage.toString().replace(/\n/g, ', ') : fieldPlan.dataStorage.join(', ')
+        ) :
+        'None specified'}</p>
       <p><strong>VAN Committee:</strong> ${fieldPlan.vanCommittee || 'None specified'}</p>
       <p><strong>Program Tools:</strong> ${Array.isArray(fieldPlan.programTools) ? fieldPlan.programTools.join(', ') : 'None specified'}</p>
       <p><strong>Field Counties:</strong> ${Array.isArray(fieldPlan.fieldCounties) ? fieldPlan.fieldCounties.join(', ') : 'None specified'}</p>
