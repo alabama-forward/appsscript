@@ -228,13 +228,37 @@ function sendFieldPlanEmail(fieldPlan) {
         ) :
         'None specified'}</p>
       <p><strong>VAN Committee:</strong> ${fieldPlan.vanCommittee || 'None specified'}</p>
-      <p><strong>Program Tools:</strong> ${Array.isArray(fieldPlan.programTools) ? fieldPlan.programTools.join(', ') : 'None specified'}</p>
-      <p><strong>Field Counties:</strong> ${Array.isArray(fieldPlan.fieldCounties) ? fieldPlan.fieldCounties.join(', ') : 'None specified'}</p>
+
+      <p><strong>Program Tools:</strong> ${
+        fieldPlan.programTools ?
+        (Array.isArray(fieldPlan.programTools) ? fieldPlan.programTools.toString().replace(/\n/g, ', ') : fieldPlan.programTools.join(', ')
+        ) :
+        'None specified'}</p>
+
+      <p><strong>Field Counties:</strong> ${
+        fieldPlan.fieldCounties ?
+        (Array.isArray(fieldPlan.fieldCounties) ? fieldPlan.fieldCounties.toString().replace(/\n/g, ', ') : fieldPlan.fieldCounties.join(', ')
+        ) :
+        'None specified'}</p>
       
       <h3>Demographics</h3>
-      <p><strong>Race:</strong> ${Array.isArray(fieldPlan.demoRace) ? fieldPlan.demoRace.join(', ') : 'None specified'}</p>
-      <p><strong>Age:</strong> ${Array.isArray(fieldPlan.demoAge) ? fieldPlan.demoAge.join(', ') : 'None specified'}</p>
-      <p><strong>Gender:</strong> ${Array.isArray(fieldPlan.demoGender) ? fieldPlan.demoGender.join(', ') : 'None specified'}</p>
+      <p><strong>Race:</strong> ${
+        fieldPlan.demoRace ?
+        (Array.isArray(fieldPlan.demoRace) ? fieldPlan.demoRace.toString().replace(/\n/g, ', ') : fieldPlan.demoRace.join(', ')
+        ) :
+        'None specified'}</p>
+      
+      <p><strong>Age:</strong> ${
+        fieldPlan.demoAge ?
+        (Array.isArray(fieldPlan.demoAge) ? fieldPlan.demoAge.toString().replace(/\n/g, ', ') : fieldPlan.demoAge.join(', ')
+        ):
+        'None specified'}</p>
+
+      <p><strong>Gender:</strong> ${
+        fieldPlan.demoGender ?
+        (Array.isArray(fieldPlan.demoGender) ? fieldPlan.demoGender.toString().replace(/\n/g, ', ') : fieldPlan.demoGender.join(', ')
+        ) :
+        'None specified'}</p>
       <p><strong>Affinity Groups:</strong> ${Array.isArray(fieldPlan.demoAffinity) ? fieldPlan.demoAffinity.join(', ') : 'None specified'}</p>
 
       <h3>Coaching Assessment</h3>
