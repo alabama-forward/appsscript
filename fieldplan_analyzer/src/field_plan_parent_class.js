@@ -159,10 +159,19 @@ class FieldPlan {
     CONTACTEMAIL: 4,
     CONTACTPHONE: 5,
     DATASTORAGE: 6,
-    VANCOMMITTEE: 9,
+    DATASTIPEND: 7, // Add getter
+    DATAPLAN: 8, //Add getter
+    VANCOMMITTEE: 9, //Add getter?? Minimum add to email
+    DATASHARE: 10, //Add getter
+    SHAREORG: 11, //Add getter
     PROGRAMTOOLS: 12,
+    PROGRAMDATES: 13, //Add getter
+    PROGRAMTYPES: 14, //Add getter
     FIELDTACTICS: 15,
+    FIELDSTAFF: 16, //Add getter
     FIELDCOUNTIES: 17,
+    PRECINCTS: 19, //Add getter
+    DIFFPRECINCTS: 20, //Add getter
     DEMORACE: 21,
     DEMOAGE: 22,
     DEMOGENDER: 23,
