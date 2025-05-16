@@ -229,7 +229,30 @@ class FieldBudget {
       }
     };
   
-    confirmSubmission() {
+    confirmFieldPlan() {
+      // This code should look for field plan and change to "yes" if it exists
+      let message = '';
+      
+      if (this._submitFieldPlan == 'No') {
+        //Trigger a true
+        //Include a message
+        message = `${this._memberOrgName} has submit their field plan. ${this._coachingNeed}.
+        Reach out to them to confirm what coaching they will need.`;
+      } else if (this._coachingNeed == 'Yes') {
+        //Trigger a true
+        //Include a message
+        message = `${this._memberOrgName} had a confidence score of ${this._coachingNeed}.
+        Reach out to them to ask if they would like some coaching on their field plan.`;
+      } else {
+        message = `${this._memberOrgName} had a confidence score of ${this._coachingNeed}.
+        They did not request coaching on their field plan.`;
+      }
+      Logger.log(message);
+      return message;
+    };
+
+    fieldPlanMessage() {
+      // This function should produce a message depending on field plan existance.
       let message = '';
       
       if (this._submitFieldPlan == 'No') {
