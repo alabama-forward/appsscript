@@ -72,8 +72,8 @@ class FieldBudget {
       this._coachingNeed = rowData[FieldPlan.COLUMNS.NEEDCOACHING];
       this._experienceUsingForm = rowData[FieldPlan.COLUMNS.FPEXPERIENCE];
     }
+    
     //Getters
-  
     get memberOrgName() { return this._memberOrgName || null; }
     get firstName() { return this._firstName || null; }
     get lastName() { return this._lastName || null; }
