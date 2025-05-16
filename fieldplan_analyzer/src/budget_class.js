@@ -44,35 +44,85 @@ class FieldBudget {
         if (!value) return [];
         // If already array, return as is
         if (Array.isArray(value)) return value;
+        // Not sure I need this in this class
         // If string with commas, split into array
-        if (typeof value === 'string' && value.includes(',')) {
-          return value.split(',').map(item => item.trim());
-        }
+        // if (typeof value === 'string' && value.includes(',')) {
+        //   return value.split(',').map(item => item.trim());
+        // }
         // Single value - return as single-item array
-        return [value];
+        // return [value];
       };
-      
 
-      this._memberOrgName = rowData[FieldPlan.COLUMNS.MEMBERNAME];
-      this._firstName = rowData[FieldPlan.COLUMNS.FIRSTNAME];
-      this._lastName = rowData[FieldPlan.COLUMNS.LASTNAME];
-      this._contactEmail = rowData[FieldPlan.COLUMNS.CONTACTEMAIL];
-      this._contactPhone = rowData[FieldPlan.COLUMNS.CONTACTPHONE];
-      this._dataStorage = normalizeField(rowData[FieldPlan.COLUMNS.DATASTORAGE]);
-      this._vanCommittee = rowData[FieldPlan.COLUMNS.VANCOMMITTEE];
-      this._programTools = normalizeField(rowData[FieldPlan.COLUMNS.PROGRAMTOOLS]);
-      this._fieldTactics = rowData[FieldPlan.COLUMNS.FIELDTACTICS];
-      this._fieldCounties = normalizeField(rowData[FieldPlan.COLUMNS.FIELDCOUNTIES]);
-      this._demoRace = normalizeField(rowData[FieldPlan.COLUMNS.DEMORACE]);
-      this._demoAge = normalizeField(rowData[FieldPlan.COLUMNS.DEMOAGE]);
-      this._demoGender = normalizeField(rowData[FieldPlan.COLUMNS.DEMOGENDER]);
-      this._demoAffinity = normalizeField(rowData[FieldPlan.COLUMNS.DEMOAFFINITY]);
-      this._fieldPlanConfidence = rowData[FieldPlan.COLUMNS.PLANCONFIDENCE];
-      this._implementationAffect = rowData[FieldPlan.COLUMNS.IMPLEMENTATION];
-      this._coachingNeed = rowData[FieldPlan.COLUMNS.NEEDCOACHING];
-      this._experienceUsingForm = rowData[FieldPlan.COLUMNS.FPEXPERIENCE];
+
+      //Contact
+      this._firstName = rowData[FieldBudget.COLUMNS.FIRSTNAME];
+      this._lastName = rowData[FieldBudget.COLUMNS.LASTNAME];
+      this._contactEmail = rowData[FieldBudget.COLUMNS.CONTACTEMAIL];
+      this._contactPhone = rowData[FieldBudget.COLUMNS.CONTACTPHONE];
+      this._memberOrgName = rowData[FieldBudget.COLUMNS.MEMBERNAME];
+      //Admin
+      this._adminRequested = rowData[FieldBudget.COLUMNS.ADMINREQUESTED];
+      this._adminTotal = rowData[FieldBudget.COLUMNS.ADMINTOTAL];
+      this._adminGap = rowData[FieldBudget.COLUMNS.ADMINGAP];
+      //Data
+      this._dataRequested = rowData[FieldBudget.COLUMNS.DATAREQUESTED];
+      this._dataTotal = rowData[FieldBudget.COLUMNS.DATATOTAL];
+      this._dataGap = rowData[FieldBudget.COLUMNS.DATAGAP];
+      //Travel
+      this._travelRequested = rowData[FieldBudget.COLUMNS.TRAVELREQUESTED];
+      this._travelTotal = rowData[FieldBudget.COLUMNS.TRAVELTOTAL];
+      this._travelGap = rowData[FieldBudget.COLUMNS.TRAVELGAP];
+      //Comms
+      this._commsRequested = rowData[FieldBudget.COLUMNS.COMMSREQUESTED];
+      this._commsTotal = rowData[FieldBudget.COLUMNS.COMMSTOTAL];
+      this._commsGap = rowData[FieldBudget.COLUMNS.COMMSGAP];
+      //Design
+      this._designRequested = rowData[FieldBudget.COLUMNS.DESIGNREQUESTED];
+      this._designTotal - rowData[FieldBudget.COLUMNS.DESIGNTOTAL];
+      this._designGap = rowData[FieldBudget.COLUMNS.DESIGNGAP];
+      //Video
+      this._videoRequested = rowData[FieldBudget.COLUMNS.VIDEOREQUESTED];
+      this._videoTotal = rowData[FieldBudget.COLUMNS.VIDEOTOTAL];
+      this._videoGap = rowData[FieldBudget.COLUMNS.VIDEOGAP];
+
+
+
+    VIDEOREQUESTED: 22,
+    VIDEOTOTAL: 23,
+    VIDEOGAP: 24,
+    PRINTREQUESTED: 25,
+    PRINTTOTAL: 26,
+    PRINTGAP: 27,
+    POSTAGEREQUESTED: 28,
+    POSTAGETOTAL: 29,
+    POSTAGEGAP: 30,
+    TRAININGREQUESTED: 31,
+    TRAININGTOTAL: 32,
+    TRAININGGAP: 33,
+    SUPPLIESREQUESTED: 34,
+    SUPPLIESTOTAL: 35,
+    SUPPLIESGAP: 36,
+    CANVASSREQUESTED: 37,
+    CANVASSTOTAL: 38,
+    CANVASSGAP: 39,
+    PHONEREQUESTED: 40,
+    PHONETOTAL: 41,
+    PHONEGAP: 42,
+    TEXTREQUESTED: 43,
+    TEXTTOTAL: 44,
+    TEXTGAP: 45,
+    EVENTREQUESTED: 46,
+    EVENTTOTAL: 47,
+    EVENTGAP: 48,
+    DIGITALREQUESTED: 49,
+    DIGITALTOTAL: 50,
+    DIGITALGAP: 51,
+    REQUESTEDTOTAL: 50,
+    PROJECTTOTAL: 51,
+    GAPTOTAL: 52,
+    SUBMITFIELDPLAN: 53,
     }
-    
+
     //Getters
     get memberOrgName() { return this._memberOrgName || null; }
     get firstName() { return this._firstName || null; }

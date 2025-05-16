@@ -54,27 +54,32 @@ class FieldPlan {
         return [value];
       };
       
+      //Contact
       this._memberOrgName = rowData[FieldPlan.COLUMNS.MEMBERNAME];
       this._firstName = rowData[FieldPlan.COLUMNS.FIRSTNAME];
       this._lastName = rowData[FieldPlan.COLUMNS.LASTNAME];
       this._contactEmail = rowData[FieldPlan.COLUMNS.CONTACTEMAIL];
       this._contactPhone = rowData[FieldPlan.COLUMNS.CONTACTPHONE];
+      //Data & Tools
       this._dataStorage = normalizeField(rowData[FieldPlan.COLUMNS.DATASTORAGE]);
       this._vanCommittee = rowData[FieldPlan.COLUMNS.VANCOMMITTEE];
       this._programTools = normalizeField(rowData[FieldPlan.COLUMNS.PROGRAMTOOLS]);
+      //Tactics & Locations
       this._fieldTactics = rowData[FieldPlan.COLUMNS.FIELDTACTICS];
       this._fieldCounties = normalizeField(rowData[FieldPlan.COLUMNS.FIELDCOUNTIES]);
+      //Demographics
       this._demoRace = normalizeField(rowData[FieldPlan.COLUMNS.DEMORACE]);
       this._demoAge = normalizeField(rowData[FieldPlan.COLUMNS.DEMOAGE]);
       this._demoGender = normalizeField(rowData[FieldPlan.COLUMNS.DEMOGENDER]);
       this._demoAffinity = normalizeField(rowData[FieldPlan.COLUMNS.DEMOAFFINITY]);
+      //Confidence & Experience
       this._fieldPlanConfidence = rowData[FieldPlan.COLUMNS.PLANCONFIDENCE];
       this._implementationAffect = rowData[FieldPlan.COLUMNS.IMPLEMENTATION];
       this._coachingNeed = rowData[FieldPlan.COLUMNS.NEEDCOACHING];
       this._experienceUsingForm = rowData[FieldPlan.COLUMNS.FPEXPERIENCE];
     }
+
     //Getters
-  
     get memberOrgName() { return this._memberOrgName || null; }
     get firstName() { return this._firstName || null; }
     get lastName() { return this._lastName || null; }
