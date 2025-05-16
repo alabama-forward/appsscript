@@ -44,7 +44,7 @@ class FieldBudget {
         if (!value) return [];
         // If already array, return as is
         if (Array.isArray(value)) return value;
-        // Not sure I need this in this class
+        // Not sure I need this in this class. Keeping just incase
         // If string with commas, split into array
         // if (typeof value === 'string' && value.includes(',')) {
         //   return value.split(',').map(item => item.trim());
@@ -84,44 +84,48 @@ class FieldBudget {
       this._videoRequested = rowData[FieldBudget.COLUMNS.VIDEOREQUESTED];
       this._videoTotal = rowData[FieldBudget.COLUMNS.VIDEOTOTAL];
       this._videoGap = rowData[FieldBudget.COLUMNS.VIDEOGAP];
-
-
-
-    VIDEOREQUESTED: 22,
-    VIDEOTOTAL: 23,
-    VIDEOGAP: 24,
-    PRINTREQUESTED: 25,
-    PRINTTOTAL: 26,
-    PRINTGAP: 27,
-    POSTAGEREQUESTED: 28,
-    POSTAGETOTAL: 29,
-    POSTAGEGAP: 30,
-    TRAININGREQUESTED: 31,
-    TRAININGTOTAL: 32,
-    TRAININGGAP: 33,
-    SUPPLIESREQUESTED: 34,
-    SUPPLIESTOTAL: 35,
-    SUPPLIESGAP: 36,
-    CANVASSREQUESTED: 37,
-    CANVASSTOTAL: 38,
-    CANVASSGAP: 39,
-    PHONEREQUESTED: 40,
-    PHONETOTAL: 41,
-    PHONEGAP: 42,
-    TEXTREQUESTED: 43,
-    TEXTTOTAL: 44,
-    TEXTGAP: 45,
-    EVENTREQUESTED: 46,
-    EVENTTOTAL: 47,
-    EVENTGAP: 48,
-    DIGITALREQUESTED: 49,
-    DIGITALTOTAL: 50,
-    DIGITALGAP: 51,
-    REQUESTEDTOTAL: 50,
-    PROJECTTOTAL: 51,
-    GAPTOTAL: 52,
-    SUBMITFIELDPLAN: 53,
-    }
+      //Print
+      this._printRequested = rowData[FieldBudget.COLUMNS.PRINTREQUESTED];
+      this._printTotal = rowData[FieldBudget.COLUMNS.PRINTTOTAL];
+      this._printGap = rowData[FieldBudget.COLUMNS.PRINTGAP];
+      //Postage
+      this._postageRequested = rowData[FieldBudget.COLUMNS.POSTAGEREQUESTED];
+      this._postageTotal = rowData[FieldBudget.COLUMNS.POSTAGETOTAL];
+      this._postageGap = rowData[FieldBudget.COLUMNS.POSTAGEGAP];
+      //Training
+      this._trainingRequested = rowData[FieldBudget.COLUMNS.TRAININGREQUESTED];
+      this._trainingTotal = rowData[FieldBudget.COLUMNS.TRAININGTOTAL];
+      this._trainingGap = rowData[FieldBudget.COLUMNS.TRAININGGAP];
+      //Supplies
+      this._suppliesRequested = rowData[FieldBudget.COLUMNS.SUPPLIESREQUESTED];
+      this._suppliesTotal = rowData[FieldBudget.COLUMNS.SUPPLIESTOTAL];
+      this._suppliesGap = rowData[FieldBudget.COLUMNS.SUPPLIESGAP];
+      //Canvass
+      this._canvassRequested = rowData[FieldBudget.COLUMNS.CANVASSREQUESTED];
+      this._canvassTotal = rowData[FieldBudget.COLUMNS.CANVASSTOTAL];
+      this._canvassGap = rowData[FieldBudget.COLUMNS.CANVASSGAP];
+      //Phone
+      this._phoneRequested = rowData[FieldBudget.COLUMNS.PHONEREQUESTED];
+      this._phoneTotal = rowData[FieldBudget.COLUMNS.PHONETOTAL];
+      this._phoneGap = rowData[FieldBudget.COLUMNS.PHONEGAP];
+      //Text
+      this._textRequested = rowData[FieldBudget.COLUMNS.TEXTREQUESTED];
+      this._textTotal = rowData[FieldBudget.COLUMNS.TEXTTOTAL];
+      this._textGap = rowData[FieldBudget.COLUMNS.TEXTGAP];
+      //Event
+      this._eventRequested = rowData[FieldBudget.COLUMNS.EVENTREQUESTED];
+      this._eventTotal = rowData[FieldBudget.COLUMNS.EVENTTOTAL];
+      this._eventGap = rowData[FieldBudget.COLUMNS.EVENTGAP];
+      //Digital
+      this._digitalRequested = rowData[FieldBudget.COLUMNS.DIGITALREQUESTED];
+      this._digitalTotal = rowData[FieldBudget.COLUMNS.DIGITALTOTAL];
+      this._digitalGap = rowData[FieldBudget.COLUMNS.DIGITALGAP];
+      //Summary
+      this._requestedTotal = rowData[FieldBudget.COLUMNS.REQUESTEDTOTAL]
+      this._projectTotal = rowData[FieldBudget.COLUMNS.PROJECTTOTAL]
+      this._gapTotal = rowData[FieldBudget.COLUMNS.GAPTOTAL]
+      this._submitFieldPlan = rowData[FieldBudget.COLUMNS.SUBMITFIELDPLAN]
+}
 
     //Getters
     get memberOrgName() { return this._memberOrgName || null; }
