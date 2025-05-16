@@ -78,7 +78,7 @@ class FieldBudget {
       this._commsGap = rowData[FieldBudget.COLUMNS.COMMSGAP];
       //Design
       this._designRequested = rowData[FieldBudget.COLUMNS.DESIGNREQUESTED];
-      this._designTotal - rowData[FieldBudget.COLUMNS.DESIGNTOTAL];
+      this._designTotal = rowData[FieldBudget.COLUMNS.DESIGNTOTAL];
       this._designGap = rowData[FieldBudget.COLUMNS.DESIGNGAP];
       //Video
       this._videoRequested = rowData[FieldBudget.COLUMNS.VIDEOREQUESTED];
@@ -128,24 +128,78 @@ class FieldBudget {
 }
 
     //Getters
-    get memberOrgName() { return this._memberOrgName || null; }
+    //Contact
     get firstName() { return this._firstName || null; }
     get lastName() { return this._lastName || null; }
     get contactEmail() { return this._contactEmail || null; }
     get contactPhone() { return this._contactPhone || null; }
-    get dataStorage() { return this._dataStorage || null; }
-    get vanCommittee() { return this._vanCommittee || null; }
-    get programTools() { return this._programTools || null; }
-    get fieldTactics() { return this._fieldTactics || null; }
-    get fieldCounties() { return this._fieldCounties || null; }
-    get demoRace() { return this._demoRace || null; }
-    get demoAge() { return this._demoAge || null; }
-    get demoGender() { return this._demoGender || null; }
-    get demoAffinity() { return this._demoAffinity || null; }
-    get fieldPlanConfidence() { return this._fieldPlanConfidence || null; }
-    get implementationAffect() { return this._implementationAffect || null; }
-    get coachingNeed() { return this._coachingNeed || null; }
-    get experienceUsingForm() { return this._experienceUsingForm || null;}
+    get memberOrgName() { return this._memberOrgName || null; }
+    //Admin
+    get adminRequested() { return this._adminRequested || null; }
+    get adminTotal() { return this._adminTotal || null; }
+    get adminGap() { return this._adminGap || null; }
+    //Data
+    get dataRequested() { return this._dataRequested || null; }
+    get dataTotal() { return this._dataTotal || null; }
+    get dataGap() { return this._dataGap || null; }
+    //Travel
+    get travelRequested() { return this._travelRequested || null; }
+    get travelTotal() { return this._travelTotal || null; }
+    get travelGap() { return this._travelGap || null; }
+    //Comms
+    get commsRequested() { return this._commsRequested || null; }
+    get commsTotal() { return this._commsTotal || null; }
+    get commsGap() { return this._commsGap || null; }
+    //Design
+    get designRequested() { return this._designRequested || null; }
+    get designTotal() { return this._designTotal || null; }
+    get designGap() { return this._designGap || null; }
+    //Video
+    get videoRequested() { return this._videoRequested || null; }
+    get videoTotal() { return this._videoTotal || null; }
+    get videoGap() { return this._videoGap || null; }
+    //Print
+    get printRequested() { return this._printRequested || null; }
+    get printTotal() { return this._printTotal || null; }
+    get printGap() { return this._printGap || null; }
+    //Postage
+    get postageRequested() { return this._postageRequested || null; }
+    get postageTotal() { return this._postageTotal || null; }
+    get postageGap() { return this._postageGap || null; }
+    //Training
+    get trainingRequested() { return this._trainingRequested || null; }
+    get trainingTotal() { return this._trainingTotal || null; }
+    get trainingGap() { return this._trainingGap || null; }
+    //Supplies
+    get suppliesRequested() { return this._suppliesRequested || null; }
+    get suppliesTotal() { return this._suppliesTotal || null; }
+    get suppliesGap() { return this._suppliesGap || null; }
+    //Canvass
+    get canvassRequested() { return this._canvassRequested || null; }
+    get canvassTotal() { return this._canvassTotal || null; }
+    get canvassGap() { return this._canvassGap || null; }
+    //Phone
+    get phoneRequested() { return this._phoneRequested || null; }
+    get phoneTotal() { return this._phoneTotal || null; }
+    get phoneGap() { return this._phoneGap || null; }
+    //Text
+    get textRequested() { return this._textequested || null; }
+    get textTotal() { return this._textTotal || null; }
+    get textGap() { return this._textGap || null; }
+    //Event
+    get eventRequested() { return this._eventRequested || null; }
+    get eventTotal() { return this._eventTotal || null; }
+    get eventGap() { return this._eventGap || null; }
+    //Digital
+    get digitalRequested() { return this._digitalRequested || null; }
+    get digitalTotal() { return this._digitalTotal || null; }
+    get digitalGap() { return this._digitalGap || null; }
+    //Summary
+    get requestedTotal() { return this._requestedTotal || null; }
+    get projectTotal() { return this._projectTotal || null; }
+    get gapTotal() { return this._gapTotal || null; }
+    get submitFieldPlan() { return this._submitFieldPlan || null; }
+
   
     // Helper functions for checking if arrays have items
   
