@@ -199,7 +199,6 @@ class FieldBudget {
     get projectTotal() { return this._projectTotal || null; }
     get gapTotal() { return this._gapTotal || null; }
     get submitFieldPlan() { return this._submitFieldPlan || null; }
-
   
     // Helper functions for checking if arrays have items
   
@@ -230,23 +229,17 @@ class FieldBudget {
       }
     };
   
-    // Add methods to get first/primary value if needed
-    getPrimaryDataStorage() {
-      return this._dataStorage[0] || null;
-    };
-  
-    // Add methods to check if field has multiple values
-    hasMultipleDataStorage() {
-      return this._dataStorage.length > 1;
-    };
-  
-    needsCoaching() {
+    confirmSubmission() {
       let message = '';
       
-      if (this._coachingNeed <= 5) {
-        message = `${this._memberOrgName} had a confidence score of ${this._coachingNeed}.
+      if (this._submitFieldPlan == 'No') {
+        //Trigger a true
+        //Include a message
+        message = `${this._memberOrgName} has submit their field plan. ${this._coachingNeed}.
         Reach out to them to confirm what coaching they will need.`;
-      } else if (this._coachingNeed >= 6 && this._coachingNeed <= 8) {
+      } else if (this._coachingNeed == 'Yes') {
+        //Trigger a true
+        //Include a message
         message = `${this._memberOrgName} had a confidence score of ${this._coachingNeed}.
         Reach out to them to ask if they would like some coaching on their field plan.`;
       } else {
