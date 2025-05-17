@@ -125,6 +125,8 @@ class FieldBudget {
       this._projectTotal = rowData[FieldBudget.COLUMNS.PROJECTTOTAL]
       this._gapTotal = rowData[FieldBudget.COLUMNS.GAPTOTAL]
       this._submitFieldPlan = rowData[FieldBudget.COLUMNS.SUBMITFIELDPLAN]
+      //Meta
+      this._analyzed = rowData[FieldBudget.COLUMNS.ANALYZED]
 }
 
     //Getters
@@ -199,6 +201,8 @@ class FieldBudget {
     get projectTotal() { return this._projectTotal || null; }
     get gapTotal() { return this._gapTotal || null; }
     get submitFieldPlan() { return this._submitFieldPlan || null; }
+    //Meta
+    get analyzed() { return this._analyzed || null; }
   
     // Helper functions for checking if arrays have items
   
@@ -210,7 +214,7 @@ class FieldBudget {
     hasDemoGender(gender) { return this._demoGender.includes(gender); }
     hasDemoAffinity(affinity) { return this._demoAffinity.includes(affinity); }
   
-    // Other Helper functions 
+    // Other Helper functions
     countItems(fieldName) {
       const field = this[`_${fieldName}`];
       return Array.isArray(field) ? field.length : 0;
@@ -330,5 +334,6 @@ class FieldBudget {
     PROJECTTOTAL: 51,
     GAPTOTAL: 52,
     SUBMITFIELDPLAN: 53,
+    ANALYZED: 54
 
   };
