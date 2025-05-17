@@ -57,3 +57,11 @@ function checkForNewRows() {
     Logger.log(`Error in checkForNewRows: ${error.message}`);
   }
 }
+
+changeFieldPlanStatus() {
+  if (rowData[FieldBudget.COLUMNS.SUBMITFIELDPLAN] === rowData[Fie]) {
+    //Compare rowData[FieldBudget.COLUMNS.MEMBERNAME] 
+  }
+}
+
+  
