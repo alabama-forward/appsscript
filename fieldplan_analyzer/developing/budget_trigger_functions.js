@@ -58,8 +58,12 @@ function checkForNewRows() {
   }
 }
 
-changeFieldPlanStatus() {
+  function findMatchingOrganizations {
+  //For the specific row in budget spreadsheet
+    //Compare member name to every member name submission in field plan spreadsheet.
+    //Return matches only
   if (rowData[FieldBudget.COLUMNS.SUBMITFIELDPLAN] === rowData[Fie]) {
+
     //Compare rowData[FieldBudget.COLUMNS.MEMBERNAME] 
   }
 }

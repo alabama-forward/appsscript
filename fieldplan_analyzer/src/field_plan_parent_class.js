@@ -77,6 +77,8 @@ class FieldPlan {
       this._implementationAffect = rowData[FieldPlan.COLUMNS.IMPLEMENTATION];
       this._coachingNeed = rowData[FieldPlan.COLUMNS.NEEDCOACHING];
       this._experienceUsingForm = rowData[FieldPlan.COLUMNS.FPEXPERIENCE];
+      //Meta
+      this._submissionDateTime = rowData[FieldPlan.COLUMNS.SUBMISSIONDATETIME];
     }
 
     //Getters
@@ -98,6 +100,7 @@ class FieldPlan {
     get implementationAffect() { return this._implementationAffect || null; }
     get coachingNeed() { return this._coachingNeed || null; }
     get experienceUsingForm() { return this._experienceUsingForm || null;}
+    get submissionDateTime() { return this._submissionDateTime || null; }
   
     // Helper functions for checking if arrays have items
   
@@ -158,6 +161,7 @@ class FieldPlan {
   
   FieldPlan.COLUMNS = {
     // All caps bcause they are constants
+    SUBMISSIONDATETIME: 0,
     MEMBERNAME: 1,
     FIRSTNAME: 2,
     LASTNAME: 3,
