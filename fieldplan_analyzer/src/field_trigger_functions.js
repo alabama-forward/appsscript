@@ -207,7 +207,7 @@ function sendFieldPlanEmail(fieldPlan) {
 
   try {
     // Get the row data for creating tactic instances
-    const sheet = SpreadsheetApp.getActiveSheet();
+    const sheet = SpreadsheetApp.getActive().getSheetByName('2025_field_plan');
     const lastRow = sheet.getLastRow();
     const rowData = sheet.getRange(lastRow, 1, 1, sheet.getLastColumn()).getValues()[0];
 
@@ -357,14 +357,14 @@ function createSpreadsheetTrigger() {
 
 // Helper function to get the last row number
 function getLastRow() {
-  const sheet = SpreadsheetApp.getActiveSheet();
+  const sheet = SpreadsheetApp.getActive().getSheetByName('2025_field_plan');
   return sheet.getLastRow();
 }
 
 // Function to check for new rows and process them
 function checkForNewRows() {
   try {
-    const sheet = SpreadsheetApp.getActiveSheet();
+    const sheet = SpreadsheetApp.getActive().getSheetByName('2025_field_plan');
     const currentLastRow = sheet.getLastRow();
     
     // Get the last processed row from properties
