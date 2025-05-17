@@ -2,6 +2,7 @@
 class PhoneTactic extends FieldProgram{
     constructor(rowData) {
       super(rowData, 'PHONE')
+      this._name = 'Phone'
       this._phoneRange = [.05, .10];
       this._phoneReasonable = 30;
     }
@@ -29,6 +30,7 @@ class PhoneTactic extends FieldProgram{
 class DoorTactic extends FieldProgram{
   constructor(rowData) {
     super(rowData, 'DOOR')
+    this._name = 'Door'
     this._doorRange = [.05, .10];
     this._doorReasonable = 30;
     }
@@ -57,6 +59,7 @@ class DoorTactic extends FieldProgram{
 class OpenTactic extends FieldProgram{
   constructor(rowData) {
     super(rowData, 'OPEN')
+    this._name = 'Open Canvassing'
     this._openRange = [.10, .20];
     this._openReasonable = 60;
   }
@@ -83,6 +86,7 @@ class OpenTactic extends FieldProgram{
 class RelationalTactic extends FieldProgram{
   constructor(rowData) {
     super(rowData, 'RELATIONAL')
+    this._name = 'Relational Organizing'
     this._relationalRange = [.50, .70];
     this._relationalReasonable = 30;
   }
@@ -109,6 +113,7 @@ class RelationalTactic extends FieldProgram{
 class RegistrationTactic extends FieldProgram{
   constructor(rowData) {
     super(rowData, 'REGISTRATION')
+    this._name = 'Voter Registration'
     this._registrationRange = [.10, .30];
     this._registrationReasonable = 5;
   }
@@ -136,6 +141,7 @@ class RegistrationTactic extends FieldProgram{
 class TextTactic extends FieldProgram{
   constructor(rowData) {
     super(rowData, 'TEXT')
+    this._name = 'Text Banking'
     this._textRange = [.01, .05];
     this._textReasonable = 2000;
   }
@@ -162,6 +168,7 @@ class TextTactic extends FieldProgram{
 class MailTactic extends FieldProgram{
   constructor(rowData) {
     super(rowData, 'MAIL')
+    this._name = 'Mail'
     this._mailRange = [.70, .90];
     this._mailReasonable = 1000;
   }
