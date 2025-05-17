@@ -58,7 +58,7 @@ function checkForNewRows() {
   }
 }
 
-  function findMatchingOrganizations {
+  function findMatchingOrganizations() {
   //For the specific row in budget spreadsheet
     //Compare member name to every member name submission in field plan spreadsheet.
     //Return matches only
@@ -68,4 +68,73 @@ function checkForNewRows() {
   }
 }
 
+
+// function findMatchingOrganizations() {
+//   // Get data from both spreadsheets
+//   const budgetSheet = SpreadsheetApp.getActive().getSheetByName('2025_field_budget');
+//   const planSheet = SpreadsheetApp.getActive().getSheetByName('2025_field_plan');
+
+//   const budgetData = budgetSheet.getDataRange().getValues();
+//   const planData = planSheet.getDataRange().getValues();
+
+//   // Get column indices for member org names
+//   const budgetOrgCol = FieldBudget.COLUMNS.MEMBERNAME;
+//   const planOrgCol = FieldPlan.COLUMNS.MEMBERNAME; // Adjust this to match your actual column
+
+//   // Results storage
+//   const matches = [];
+//   const budgetOrgsWithoutPlan = [];
+
+//   // For each budget row (skip header)
+//   for (let i = 1; i < budgetData.length; i++) {
+//     const budgetRow = budgetData[i];
+//     const budgetOrgName = budgetRow[budgetOrgCol];
+
+//     // Skip empty rows
+//     if (!budgetOrgName) continue;
+
+//     let found = false;
+
+//     // Compare with each plan org name
+//     for (let j = 1; j < planData.length; j++) {
+//       const planRow = planData[j];
+//       const planOrgName = planRow[planOrgCol];
+
+//       if (planOrgName && budgetOrgName === planOrgName) {
+//         // Found a match
+//         matches.push({
+//           orgName: budgetOrgName,
+//           budgetRow: i + 1, // 1-based row number for readability
+//           planRow: j + 1    // 1-based row number for readability
+//         });
+//         found = true;
+//         break;
+//       }
+//     }
+
+//     // If no match found for this budget org
+//     if (!found) {
+//       budgetOrgsWithoutPlan.push({
+//         orgName: budgetOrgName,
+//         budgetRow: i + 1
+//       });
+//     }
+//   }
+
+//   // Log results
+//   console.log(`Found ${matches.length} matching organizations`);
+//   matches.forEach(match => {
+//     console.log(`Match: ${match.orgName} (Budget row: ${match.budgetRow}, Plan row: ${match.planRow})`);
+//   });
+
+//   console.log(`Found ${budgetOrgsWithoutPlan.length} budget orgs without matching plans`);
+//   budgetOrgsWithoutPlan.forEach(org => {
+//     console.log(`Missing plan: ${org.orgName} (Budget row: ${org.budgetRow})`);
+//   });
+
+//   return {
+//     matches: matches,
+//     budgetOrgsWithoutPlan: budgetOrgsWithoutPlan
+//   };
+// }
   
