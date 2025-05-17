@@ -94,7 +94,7 @@ function getTacticMetrics(tactic) {
   
   try {
     let metrics = `
-      <h4>${tactic} Metrics</h4>
+      <h4>${tactic._name} Metrics</h4>
       <ul>
         <li>Program Length: ${tactic.programLength} weeks</li>
         <li>Weekly Volunteers: ${tactic.weeklyVolunteers}</li>
