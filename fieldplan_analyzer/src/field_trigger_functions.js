@@ -332,11 +332,6 @@ function sendFieldPlanEmail(fieldPlan) {
   }
 }
 
-// This function is kept for backward compatibility but no longer used with the new trigger system
-function onEdit(e) {
-  Logger.log("onEdit function called but not used with new time-based trigger system");
-}
-
 function createSpreadsheetTrigger() {
   // Check if trigger already exists
   const triggers = ScriptApp.getProjectTriggers();
