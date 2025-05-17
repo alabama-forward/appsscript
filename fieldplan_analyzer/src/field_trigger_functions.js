@@ -1,3 +1,13 @@
+//Sheet error handling function
+function getSheet(sheetName) {
+  const sheet = SpreadsheetApp.getActive().getSheetByName(sheetName);
+  if (!sheet) {
+    throw new Error(`Sheet '${sheetName}' not found. 
+      Please check sheet reference`);
+  }
+  return sheet;
+}
+
 function getTacticInstances(rowData) {
     const tactics = [];
     
