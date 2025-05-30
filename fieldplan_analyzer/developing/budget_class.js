@@ -250,6 +250,11 @@ class FieldBudget {
       }
     };
 
+    requestSummary() {
+      return `${this.memberOrgName} requested $${this.requestedTotal} and described a funding gap of
+      $${this.gapTotal}. Their project costs $${this.projectTotal} to run.`
+    }
+    
 
 
 
