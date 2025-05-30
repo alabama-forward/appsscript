@@ -204,10 +204,11 @@ class FieldBudget {
     //Meta
     get analyzed() { return this._analyzed || null; }
   
-    // Helper functions for checking if arrays have items
+    // Helper functions
 
     sumNotOutreach() {
-      let notOutreachTotal = (this.adminRequested 
+      let notOutreachTotal = (this.adminRequested
+        + this.dataRequested
         + this.travelRequested 
         + this.commsRequested
         + this.designRequested
@@ -221,8 +222,8 @@ class FieldBudget {
       let notOutreachProportion = (notOutreachTotal / this.requestedTotal)*100
 
       return `${this.memberOrgName} is requesting $${notOutreachTotal} in resources for indirect costs.
-      That represents %${notOutreachProportion} of their total request.`
-    }
+      That represents %${notOutreachProportion} of their total funding request.`
+    };
 
     sumOutreach() {
       let outreachTotal = (this.canvassRequested
@@ -235,8 +236,22 @@ class FieldBudget {
       let outreachProportion = (outreachTotal / this.requestedTotal)*100
 
       return `${this.memberOrgName} is requesting $${outreachTotal} in resources for outreach costs.
-      That represents %${outreachProportion} of their total request.`
-    }
+      That represents %${outreachProportion} of their total funding request.`
+    };
+
+    needDataStipend() {
+      let hourlyRate = 20
+      if (this.dataRequested){
+        return `${this.memberOrgName} is requesting ${this.dataRequested} in data funding.
+        This represents ${this.dataRequested / hourlyRate} hours of labor that can be offset
+        by a data stipend.`
+      } else {
+        return `${this.memberOrgName} did not request data funding.`
+      }
+    };
+
+
+
 
     //Helper Functions
     countAnalyzed() {
