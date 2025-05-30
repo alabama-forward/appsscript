@@ -205,14 +205,38 @@ class FieldBudget {
     get analyzed() { return this._analyzed || null; }
   
     // Helper functions for checking if arrays have items
-  
-    hasDataStorage(item) { return this._dataStorage.includes(item); }
-    hasProgramTool(tool) { return this._programTools.includes(tool); }
-    hasFieldTactic(tactic) { return this._programTools.includes(tactic); }
-    hasFieldCounties(county) { return this._fieldCounties.includes(county); }
-    hasDemoRace(race) { return this._demoRace.includes(race); }
-    hasDemoGender(gender) { return this._demoGender.includes(gender); }
-    hasDemoAffinity(affinity) { return this._demoAffinity.includes(affinity); }
+
+    sumNotOutreach() {
+      let notOutreachTotal = (this.adminRequested 
+        + this.travelRequested 
+        + this.commsRequested
+        + this.designRequested
+        + this.videoRequested
+        + this.printRequested
+        + this.postageRequested
+        + this.trainingRequested
+        + this.suppliesRequested
+      )
+
+      let notOutreachProportion = (notOutreachTotal / this.requestedTotal)*100
+
+      return `${this.memberOrgName} is requesting $${notOutreachTotal} in resources for indirect costs.
+      That represents %${notOutreachProportion} of their total request.`
+    }
+
+    sumOutreach() {
+      let outreachTotal = (this.canvassRequested
+        + this.phoneRequested
+        + this.textRequested
+        + this.eventRequested
+        + this.digitalRequested
+      )
+
+      let outreachProportion = (outreachTotal / this.requestedTotal)*100
+
+      return `${this.memberOrgName} is requesting $${outreachTotal} in resources for outreach costs.
+      That represents %${outreachProportion} of their total request.`
+    }
 
     //Helper Functions
     countAnalyzed() {
