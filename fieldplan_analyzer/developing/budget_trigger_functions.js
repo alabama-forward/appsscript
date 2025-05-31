@@ -201,4 +201,20 @@ function analyzeDoorCostPerAttempt(matchedOrg) {
     };
   }
 }
+
+
+/**
+ * Generic function to analyze cost per attempt for any tactic type
+ * @param {Object} matchedOrg - Match organiation from findMatchingOrganizations()
+ * @param {string} tacticType - Type of tactic: 'DOOR', 'PHONE', 'TEXT', 'MAIL', 'OPEN'
+ * @param {number} targetCost - Target cost per attempt for this tactic type
+ * @returns {object} Cost analysis results
+ */
+function analyzeTacticCostPerAttempt(matchedOrg, tacticType, targetCost) {
+  try {
+    const budget = FieldBudget.fromSpecificRow(matchedOrg.budgetRow);
+    const planSheet = SpreadsheetApp.getActive().getSheetByName('2025_field_plan');
+    const planData = planSheet.getDataRange.getValues();
+  }
+}
   
