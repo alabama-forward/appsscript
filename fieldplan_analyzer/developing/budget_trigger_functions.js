@@ -215,6 +215,46 @@ function analyzeTacticCostPerAttempt(matchedOrg, tacticType, targetCost) {
     const budget = FieldBudget.fromSpecificRow(matchedOrg.budgetRow);
     const planSheet = SpreadsheetApp.getActive().getSheetByName('2025_field_plan');
     const planData = planSheet.getDataRange.getValues();
+
+    const tacticConfig = {
+      'DOOR': { class: DoorTactic, budgetField: 'canvassRequested' },
+      'PHONE': { class: PhoneTactic, budgetField: 'phoneRequested' },
+      'TEXT': { class: TextTactic, budgetField: 'textRequested' },
+      //Same budget column, but different cost per attempt
+      'OPEN': { class: OpenTactic, budgetField: 'canvassRequested'}
+    };
+
+    const config = tacticConfig[tacticType];
+    if (!config) {
+      throw new Error(`Invalid tactic type: ${tacticType}`)
+    }
+
+// I don't understand this claude code. Returning to this section
+    //Create tactic instance
+    const tactic = new config.class(planData[matchedOrg.planRow - 1]);
+
+    //Get funding requested
+    const fundingRequested = budget[config.budgetField] || 0;
+    const programAttempts = tactic.programAttempts();
+//End section I misunderstand
+
+    //Calculate and return results
+    //Uses infinity as comparison because it is same # of bytes as any other int
+    const costPerAttempt = programAttempts > 0 ? fundingRequested/programAttempts : Infinity;
+    const meetsTarget = costPerAttempt <= targetCost;
+
+    return {
+      organization: matchedOrg.orgName,
+      tacticType: tacticType,
+      funding: fundingRequested,
+      programAttempts: programAttempts,
+      costPerAttempt: parseFloat(costPerAttempt.toFixed(2)),
+      targetCost: targetCost,
+      meetsTarget: meetsTarget,
+      analysis: generateAnalysisMessage(matchedOrg.orgName, tacticType, costPerAttempt, targetCost, meetsTarget)
+    };
+
   }
+
 }
   
