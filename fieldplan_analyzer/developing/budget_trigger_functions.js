@@ -268,6 +268,16 @@ function analyzeTacticCostPerAttempt(matchedOrg, tacticType, targetCost) {
       message: error.message
     };
   }
+}
 
+//Wrapper functions
+
+//Door wrapper
+function analyzeDoorCostPerAttempt(matchedOrg) {
+  return analyzeTacticCostPerAttempt(matchedOrg, 'DOOR', TACTIC_TARGETS.DOOR);
+}
+
+function analyzePhoneCostPerAttempt(matchedOrg) {
+  return analyzeTacticCostPerAttempt
 }
   
