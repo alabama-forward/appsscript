@@ -197,12 +197,20 @@ function analyzeTacticCostPerAttempt(matchedOrg, tacticType, targetCost) {
 
 //Wrapper functions
 
-//Door wrapper
+//Door Wrapper
 function analyzeDoorCostPerAttempt(matchedOrg) {
   return analyzeTacticCostPerAttempt(matchedOrg, 'DOOR', TACTIC_TARGETS.DOOR);
 }
-
+//Phone Wrapper
 function analyzePhoneCostPerAttempt(matchedOrg) {
-  return analyzeTacticCostPerAttempt
+  return analyzeTacticCostPerAttempt(matchedOrg, 'PHONE', TACTIC_TARGETS.PHONE);
+}
+//Text Wrapper
+function analyzeTextCostPerAttempt(matchedOrg) {
+  return analyzeTacticCostPerAttempt(matchedOrg, 'TEXT', TACTIC_TARGETS.TEXT);
+}
+//Open Wrapper
+function analyzeOpenCostPerAttempt(matchedOrg) {
+  return analyzeTacticCostPerAttempt(matchedOrg, 'OPEN', TACTIC_TARGETS.OPEN);
 }
   
