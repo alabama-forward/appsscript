@@ -213,4 +213,7 @@ function analyzeTextCostPerAttempt(matchedOrg) {
 function analyzeOpenCostPerAttempt(matchedOrg) {
   return analyzeTacticCostPerAttempt(matchedOrg, 'OPEN', TACTIC_TARGETS.OPEN);
 }
+
+
+
   
