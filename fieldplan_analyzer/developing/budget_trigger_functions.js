@@ -253,7 +253,13 @@ function analyzeTacticCostPerAttempt(matchedOrg, tacticType, targetCost) {
       meetsTarget: meetsTarget,
       analysis: generateAnalysisMessage(matchedOrg.orgName, tacticType, costPerAttempt, targetCost, meetsTarget)
     };
-
+  } catch (error) {
+    return {
+      organization: matchedOrg.orgName,
+      tacticType: tacticType,
+      error: true,
+      message: error.message
+    };
   }
 
 }
