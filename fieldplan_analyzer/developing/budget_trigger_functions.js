@@ -1,3 +1,10 @@
+const TACTIC_TARGETS = {
+  DOOR: 1.00,
+  PHONE: .66,
+  TEXT: .02,
+  OPEN: .40
+}
+
 function createSpreadsheetTrigger() {
   // Check if trigger already exists
   const triggers = ScriptApp.getProjectTriggers();

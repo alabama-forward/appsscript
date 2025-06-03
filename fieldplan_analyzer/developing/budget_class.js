@@ -254,7 +254,7 @@ class FieldBudget {
       return `${this.memberOrgName} requested $${this.requestedTotal} and described a funding gap of
       $${this.gapTotal}. Their project costs $${this.projectTotal} to run.`
     }
-    
+
 
 
 
@@ -302,7 +302,7 @@ class FieldBudget {
       }
     };
   };
-  
+
   FieldBudget.COLUMNS = {
     // All caps bcause they are constants
     FIRSTNAME: 2,
@@ -360,5 +360,4 @@ class FieldBudget {
     GAPTOTAL: 52,
     SUBMITFIELDPLAN: 53,
     ANALYZED: 54
-
   };
