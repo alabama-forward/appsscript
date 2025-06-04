@@ -454,6 +454,168 @@ function include(filename) {
 }
 
 /**
+ * Save a user's selection to the shared selections sheet
+ * @param {Object} selectionData - Object containing precinct info and selection details
+ * @return {Object} Success/failure response
+ */
+function saveUserSelection(selectionData) {
+  try {
+    let ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+    let selectionsSheet = ss.getSheetByName("userSelections");
+    
+    // Create the sheet if it doesn't exist
+    if (!selectionsSheet) {
+      selectionsSheet = ss.insertSheet("userSelections");
+      // Add headers
+      selectionsSheet.getRange(1, 1, 1, 11).setValues([[
+        "County",
+        "Precinct Name", 
+        "Precinct Number",
+        "Municipality",
+        "Selection Type",
+        "Organization",
+        "User Email",
+        "Timestamp",
+        "Session ID",
+        "Row Index",
+        "Status"
+      ]]);
+    }
+    
+    // Get current user email
+    let userEmail = Session.getActiveUser().getEmail();
+    let timestamp = new Date();
+    
+    // Add the selection to the sheet
+    let lastRow = selectionsSheet.getLastRow();
+    selectionsSheet.getRange(lastRow + 1, 1, 1, 11).setValues([[
+      selectionData.county,
+      selectionData.precinctName,
+      selectionData.precinctNumber,
+      selectionData.municipality || "",
+      selectionData.claimType,
+      selectionData.organization,
+      userEmail,
+      timestamp,
+      selectionData.sessionId || "",
+      selectionData.rowIndex || "",
+      "active"
+    ]]);
+    
+    return {
+      success: true,
+      message: "Selection saved successfully"
+    };
+  } catch (error) {
+    Logger.log("Error saving user selection: " + error.toString());
+    return {
+      success: false,
+      message: "Error saving selection: " + error.toString()
+    };
+  }
+}
+
+/**
+ * Get all active user selections from the shared sheet
+ * @return {Array} Array of selection objects
+ */
+function getUserSelections() {
+  try {
+    let ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+    let selectionsSheet = ss.getSheetByName("userSelections");
+    
+    if (!selectionsSheet) {
+      return [];
+    }
+    
+    let lastRow = selectionsSheet.getLastRow();
+    if (lastRow <= 1) {
+      return []; // Only headers or empty
+    }
+    
+    // Get all data except headers
+    let data = selectionsSheet.getRange(2, 1, lastRow - 1, 11).getValues();
+    
+    // Convert to objects and filter for active selections
+    let selections = [];
+    data.forEach(row => {
+      if (row[10] === "active") { // Status column
+        selections.push({
+          county: row[0],
+          precinctName: row[1],
+          precinctNumber: row[2],
+          municipality: row[3],
+          claimType: row[4],
+          organization: row[5],
+          userEmail: row[6],
+          timestamp: row[7],
+          sessionId: row[8],
+          rowIndex: row[9]
+        });
+      }
+    });
+    
+    return selections;
+  } catch (error) {
+    Logger.log("Error getting user selections: " + error.toString());
+    return [];
+  }
+}
+
+/**
+ * Clear a user's selection when they complete a claim
+ * @param {Object} claimData - Data about the completed claim
+ * @return {Object} Success/failure response
+ */
+function clearUserSelection(claimData) {
+  try {
+    let ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+    let selectionsSheet = ss.getSheetByName("userSelections");
+    
+    if (!selectionsSheet) {
+      return {
+        success: true,
+        message: "No selections sheet found"
+      };
+    }
+    
+    let lastRow = selectionsSheet.getLastRow();
+    if (lastRow <= 1) {
+      return {
+        success: true,
+        message: "No selections to clear"
+      };
+    }
+    
+    // Get all data
+    let data = selectionsSheet.getRange(2, 1, lastRow - 1, 11).getValues();
+    
+    // Find matching selections and mark as inactive
+    for (let i = 0; i < data.length; i++) {
+      if (data[i][0] === claimData.county &&
+          data[i][1] === claimData.precinctName &&
+          data[i][2] === claimData.precinctNumber &&
+          data[i][4] === claimData.claimType &&
+          data[i][10] === "active") {
+        // Mark as inactive
+        selectionsSheet.getRange(i + 2, 11).setValue("claimed");
+      }
+    }
+    
+    return {
+      success: true,
+      message: "Selection cleared successfully"
+    };
+  } catch (error) {
+    Logger.log("Error clearing user selection: " + error.toString());
+    return {
+      success: false,
+      message: "Error clearing selection: " + error.toString()
+    };
+  }
+}
+
+/**
  * Function to get the current search criteria for the HTML interface
  * @return {Object} Current search criteria
  */
