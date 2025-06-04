@@ -2,12 +2,16 @@
     // Define variables at the global level
     let isSearching = false;
     let currentResults = [];
+    let activeSelections = [];
     let organizationOptions = '';
     let countySearchInput, precinctNameSearchInput, precinctNumberSearchInput;
     let searchButton, resetButton, statusBox, statusText, resultsCount, resultsContainer;
     
     // Create a permanent store for all claimed precincts during this session
     let claimedPrecincts = [];
+    
+    // Generate a unique session ID for this user session
+    let sessionId = 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
     
     /**
      * Function to initialize the interface
@@ -145,9 +149,13 @@
       
       // Call your existing search function in the Apps Script
       google.script.run
-        .withSuccessHandler(function(results) {
-          console.log("Search results received:", results);
-          displaySearchResults(results);
+        .withSuccessHandler(function(response) {
+          console.log("Search response received:", response);
+          if (response.error) {
+            handleError(response.error);
+          } else {
+            displaySearchResults(response.results, response.activeSelections);
+          }
         })
         .withFailureHandler(function(error) {
           console.error("Search failed:", error);
@@ -159,15 +167,17 @@
     /**
      * Function to display search results
      * @param {Array} results - Search results from the server
+     * @param {Array} selections - Active user selections from the server
      */
-    function displaySearchResults(results) {
-      console.log("displaySearchResults called with:", results);
+    function displaySearchResults(results, selections) {
+      console.log("displaySearchResults called with:", results, selections);
       
       try {
         isSearching = false;
         hideStatus();
         
         currentResults = results;
+        activeSelections = selections || [];
         
         if (!results || results.length === 0) {
           resultsCount.textContent = '0 results found';
@@ -209,10 +219,10 @@
               <td>${escapeHtml(row.precinctNumber)}</td>
               <td>${escapeHtml(row.municipality)}</td>
               <td>
-                ${formatClaimCell('first', row.firstClaim, index, row.firstClaimTimestamp)}
+                ${formatClaimCell('first', row.firstClaim, index, row.firstClaimTimestamp, row)}
               </td>
               <td>
-                ${formatClaimCell('second', row.secondClaim, index, row.secondClaimTimestamp)}
+                ${formatClaimCell('second', row.secondClaim, index, row.secondClaimTimestamp, row)}
               </td>
             </tr>
           `;
@@ -247,9 +257,10 @@
      * @param {string} claimValue - The organization that claimed this slot, if any
      * @param {number} rowIndex - The row index
      * @param {string} claimTimestamp - The timestamp when the claim was made
+     * @param {Object} row - The full row data
      * @return {string} HTML for the cell
      */
-    function formatClaimCell(claimType, claimValue, rowIndex, claimTimestamp) {
+    function formatClaimCell(claimType, claimValue, rowIndex, claimTimestamp, row) {
       if (claimValue) {
         // If claimed, display as a non-interactive element with the organization name and timestamp
         let timestampHtml = claimTimestamp ? 
@@ -260,11 +271,39 @@
           ${timestampHtml}
         </div>`;
       } else {
-        // If not claimed, show dropdown
-        return `<select class="claim-dropdown ${claimType}-claim" data-row-index="${rowIndex}">
-          ${getOrganizationOptions()}
-        </select>`;
+        // Check if another user has an active selection for this precinct/claim type
+        let activeSelection = findActiveSelection(row, claimType);
+        
+        if (activeSelection) {
+          // Show that another user is selecting this
+          return `<div class="selection-in-progress">
+            <span class="selecting-user">${escapeHtml(activeSelection.organization)} (selecting...)</span>
+            <span class="selection-info">by ${escapeHtml(activeSelection.userEmail)}</span>
+          </div>`;
+        } else {
+          // If not claimed and not being selected, show dropdown
+          return `<select class="claim-dropdown ${claimType}-claim" data-row-index="${rowIndex}">
+            ${getOrganizationOptions()}
+          </select>`;
+        }
       }
+    }
+    
+    /**
+     * Find if there's an active selection for a precinct/claim type
+     * @param {Object} row - The precinct row data
+     * @param {string} claimType - 'first' or 'second'
+     * @return {Object|null} The active selection or null
+     */
+    function findActiveSelection(row, claimType) {
+      if (!activeSelections || activeSelections.length === 0) return null;
+      
+      return activeSelections.find(selection => 
+        selection.county === row.county &&
+        selection.precinctName === row.precinctName &&
+        String(selection.precinctNumber) === String(row.precinctNumber) &&
+        selection.claimType === claimType
+      );
     }
       
     /**
@@ -286,6 +325,19 @@
       const selectedOrg = dropdown.value;
       
       if (!selectedOrg) return;
+      
+      // First, save the selection to the sheet so other users can see it
+      let precinctData = currentResults[rowIndex];
+      saveUserSelection({
+        county: precinctData.county,
+        precinctName: precinctData.precinctName,
+        precinctNumber: precinctData.precinctNumber,
+        municipality: precinctData.municipality,
+        claimType: claimType,
+        organization: selectedOrg,
+        sessionId: sessionId,
+        rowIndex: precinctData.rowIndex
+      });
       
       showStatus('Processing claim...', 'info');
       
@@ -583,7 +635,26 @@
         .replace(/'/g, '&#039;');
     }
 
-    // Set up a periodic refresh to keep the data current (optional)
-    // Uncomment this if you want the interface to auto-refresh every 3 minutes
-    // setInterval(refreshCurrentSearch, 180000); // 3 minutes in milliseconds
+    /**
+     * Save user's selection to the shared sheet
+     * @param {Object} selectionData - The selection data
+     */
+    function saveUserSelection(selectionData) {
+      google.script.run
+        .withSuccessHandler(function(response) {
+          console.log("Selection saved:", response);
+        })
+        .withFailureHandler(function(error) {
+          console.error("Failed to save selection:", error);
+        })
+        .saveUserSelection(selectionData);
+    }
+
+    // Set up a periodic refresh to keep the data current
+    // This will help users see selections made by other users
+    setInterval(function() {
+      if (!isSearching && currentResults.length > 0) {
+        refreshCurrentSearch();
+      }
+    }, 30000); // 30 seconds in milliseconds
 </script>

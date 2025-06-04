@@ -289,4 +289,51 @@
       color: #5f6368;
       font-style: italic;
     }
+    
+    /* Styles for selection in progress */
+    .selection-in-progress {
+      padding: 6px 10px;
+      background-color: #fef7e0;
+      border: 1px solid #f9ab00;
+      border-radius: 4px;
+      color: #b06000;
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+      box-sizing: border-box;
+      position: relative;
+      animation: pulse 2s ease-in-out infinite;
+    }
+    
+    @keyframes pulse {
+      0% {
+        box-shadow: 0 0 0 0 rgba(249, 171, 0, 0.4);
+      }
+      50% {
+        box-shadow: 0 0 0 4px rgba(249, 171, 0, 0.2);
+      }
+      100% {
+        box-shadow: 0 0 0 0 rgba(249, 171, 0, 0.4);
+      }
+    }
+    
+    .selecting-user {
+      font-weight: 500;
+      margin-bottom: 2px;
+    }
+    
+    .selection-info {
+      font-size: 11px;
+      color: #5f6368;
+      font-style: italic;
+    }
+    
+    /* Add hourglass icon to selection in progress cells */
+    .selection-in-progress::after {
+      content: "⏳";
+      position: absolute;
+      right: 8px;
+      top: 6px;
+      font-size: 14px;
+    }
   </style>

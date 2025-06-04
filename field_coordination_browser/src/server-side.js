@@ -654,7 +654,7 @@ function getSearchCriteria() {
 /**
  * Function to perform search for the HTML interface
  * @param {Object} criteria - Search criteria
- * @return {Array} Search results
+ * @return {Object} Search results with active selections
  */
 function performSearch(criteria) {
   try {
@@ -729,8 +729,14 @@ function performSearch(criteria) {
       }
     }
     
-    // Ensure we return at least an empty array
-    return results || [];
+    // Get all active user selections
+    let activeSelections = getUserSelections();
+    
+    // Return both results and active selections
+    return {
+      results: results || [],
+      activeSelections: activeSelections || []
+    };
   } catch (error) {
     Logger.log("Error in performSearch: " + error.toString());
     // Return an error object that client can handle
@@ -810,6 +816,14 @@ function claimItemForOrg(displayRowIndex, orgName, claimType) {
           
           // The confirmation email is already sent from within the claimItemForOrganization function
           // No additional email notifications needed here
+          
+          // Clear any user selections for this precinct/claim type
+          clearUserSelection({
+            county: resultRowData[0],
+            precinctName: resultRowData[1],
+            precinctNumber: String(resultRowData[2]),
+            claimType: claimType
+          });
           
           Logger.log("Precinct claim completed successfully");
           
