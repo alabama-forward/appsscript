@@ -722,6 +722,26 @@ function testAnalyzeSpecificOrg(orgName) {
   Logger.log(`Organization: ${orgName}`);
   Logger.log(`Emails will be sent ONLY to datateam@alforward.org`);
   
+  // First, let's debug the values for this specific org
+  try {
+    const budgetSheet = SpreadsheetApp.getActive().getSheetByName('2025_field_budget');
+    const data = budgetSheet.getDataRange().getValues();
+    
+    for (let i = 1; i < data.length; i++) {
+      if (data[i][FieldBudget.COLUMNS.MEMBERNAME] === orgName) {
+        const budget = new FieldBudget(data[i]);
+        Logger.log(`\nFound ${orgName}:`);
+        Logger.log(`- requestedTotal: ${budget.requestedTotal} (type: ${typeof budget.requestedTotal})`);
+        Logger.log(`- gapTotal: ${budget.gapTotal} (type: ${typeof budget.gapTotal})`);
+        Logger.log(`- projectTotal: ${budget.projectTotal} (type: ${typeof budget.projectTotal})`);
+        Logger.log(`- requestSummary: ${budget.requestSummary()}`);
+        break;
+      }
+    }
+  } catch (debugError) {
+    Logger.log(`Debug error: ${debugError.message}`);
+  }
+  
   try {
     analyzeSpecificOrganization(orgName, true);
     Logger.log("✅ Test analysis completed - check datateam@alforward.org for test email");

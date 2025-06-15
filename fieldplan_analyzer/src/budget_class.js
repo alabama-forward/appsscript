@@ -251,13 +251,12 @@ class FieldBudget {
     };
 
     requestSummary() {
-      // Check if both gap and requested amount are null/0 (entirely funded)
       const requestedAmount = this.requestedTotal || 0;
       const rawGap = this.gapTotal || 0;
       const displayGap = Math.abs(rawGap);
       
-      // If both gap and requested amount are 0/null, program is entirely funded
-      if (displayGap === 0 && requestedAmount === 0) {
+      // If gap equals requested amount, program is entirely funded by this request
+      if (displayGap === requestedAmount && requestedAmount > 0) {
         return `This program will be entirely funded by this request. Reach out to ask if they will be seeking additional funds for this program or if they will only run their program with support from Alabama Forward.`;
       }
       
