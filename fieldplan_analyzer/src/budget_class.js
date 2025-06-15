@@ -219,7 +219,7 @@ class FieldBudget {
         + this.suppliesRequested
       )
 
-      let notOutreachProportion = (notOutreachTotal / this.requestedTotal)*100
+      let notOutreachProportion = Math.round((notOutreachTotal / this.requestedTotal)*100)
 
       return `${this.memberOrgName} is requesting $${notOutreachTotal} in resources for indirect costs.
       That represents ${notOutreachProportion}% of their total funding request.`
@@ -233,7 +233,7 @@ class FieldBudget {
         + this.digitalRequested
       )
 
-      let outreachProportion = (outreachTotal / this.requestedTotal)*100
+      let outreachProportion = Math.round((outreachTotal / this.requestedTotal)*100)
 
       return `${this.memberOrgName} is requesting $${outreachTotal} in resources for outreach costs.
       That represents ${outreachProportion}% of their total funding request.`
