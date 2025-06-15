@@ -14,6 +14,9 @@ const EMAIL_CONFIG = {
     "deanna@alforward.org",
     "datateam@alforward.org"
   ],
+  testRecipients: [
+    "datateam@alforward.org"
+  ],
   replyTo: "datateam@alforward.org"
 };
 
