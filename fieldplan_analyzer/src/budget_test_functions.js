@@ -67,9 +67,9 @@ function testAnalyzeOrg() {
     Logger.log(`Testing analysis for: ${firstMatch.orgName}`);
     
     try {
-      // This will trigger the full analysis flow
-      analyzeSpecificOrganization(firstMatch.orgName);
-      Logger.log("Analysis completed - check email for results");
+      // This will trigger the full analysis flow in TEST MODE
+      analyzeSpecificOrganization(firstMatch.orgName, true);
+      Logger.log("TEST analysis completed - check datateam@alforward.org for test email");
     } catch (error) {
       Logger.log(`Error analyzing org: ${error.message}`);
     }

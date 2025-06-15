@@ -72,7 +72,7 @@ function analyzeBudgets() {
 }
 
 // Process a single budget
-function processBudget(budgetData) {
+function processBudget(budgetData, isTestMode = false) {
   const { budget, rowNumber } = budgetData;
   
   // Check if field plan exists
@@ -91,10 +91,12 @@ function processBudget(budgetData) {
   const analysis = analyzeBudgetWithFieldPlan(budget, fieldPlanMatch);
   
   // Send email with analysis
-  sendBudgetAnalysisEmail(budget, fieldPlanMatch.fieldPlan, analysis);
+  sendBudgetAnalysisEmail(budget, fieldPlanMatch.fieldPlan, analysis, isTestMode);
   
-  // Mark as analyzed
-  budget.markAsAnalyzed(rowNumber);
+  // Mark as analyzed (only in production mode to avoid marking test runs)
+  if (!isTestMode) {
+    budget.markAsAnalyzed(rowNumber);
+  }
   
   Logger.log(`Analysis completed for ${budget.memberOrgName}`);
 }
@@ -408,7 +410,7 @@ function sendMissingFieldPlanNotification(orgName, isTestMode = false) {
 }
 
 // Send error notification
-function sendErrorNotification(budget, error) {
+function sendErrorNotification(budget, error, isTestMode = false) {
   const emailBody = `
     <h2>Budget Analysis Error</h2>
     <p><strong>Organization:</strong> ${budget.memberOrgName}</p>
@@ -418,21 +420,25 @@ function sendErrorNotification(budget, error) {
   `;
   
   try {
+    const recipients = getEmailRecipients(isTestMode);
     MailApp.sendEmail({
-      to: EMAIL_CONFIG.recipients.join(','),
-      subject: `Budget Analysis Error: ${budget.memberOrgName}`,
-      htmlBody: emailBody,
+      to: recipients.join(','),
+      subject: `${isTestMode ? '[TEST] ' : ''}Budget Analysis Error: ${budget.memberOrgName}`,
+      htmlBody: isTestMode ? `<div style="background-color: #ffffcc; padding: 10px; border: 2px solid #ffcc00; margin-bottom: 20px;">
+        <strong>🧪 TEST MODE EMAIL</strong> - This is a test email sent only to datateam@alforward.org
+      </div>` + emailBody : emailBody,
       name: "Budget Analysis System",
       replyTo: EMAIL_CONFIG.replyTo
     });
+    Logger.log(`Error notification sent for ${budget.memberOrgName} (${isTestMode ? 'TEST MODE' : 'PRODUCTION'})`);
   } catch (emailError) {
     Logger.log(`Failed to send error notification: ${emailError.message}`);
   }
 }
 
 // Manually analyze a specific organization
-function analyzeSpecificOrganization(orgName) {
-  Logger.log(`Manual analysis requested for ${orgName}`);
+function analyzeSpecificOrganization(orgName, isTestMode = true) {
+  Logger.log(`Manual analysis requested for ${orgName} (${isTestMode ? 'TEST MODE' : 'PRODUCTION'})`);
   
   // Find the budget for this org
   const budgetSheet = SpreadsheetApp.getActive().getSheetByName('2025_field_budget');
@@ -444,12 +450,12 @@ function analyzeSpecificOrganization(orgName) {
       const budgetData = { budget: budget, rowNumber: i + 1 };
       
       try {
-        processBudget(budgetData);
+        processBudget(budgetData, isTestMode);
         Logger.log(`Manual analysis completed for ${orgName}`);
         return;
       } catch (error) {
         Logger.log(`Error in manual analysis: ${error.message}`);
-        sendErrorNotification(budget, error);
+        sendErrorNotification(budget, error, isTestMode);
         return;
       }
     }
