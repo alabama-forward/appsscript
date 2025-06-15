@@ -255,8 +255,13 @@ class FieldBudget {
       const displayGap = Math.abs(this.gapTotal || 0);
       const gapNote = this.gapTotal < 0 ? ' (gap was originally negative, converted to positive for analysis)' : '';
       
-      return `${this.memberOrgName} requested $${this.requestedTotal} and described a funding gap of
-      $${displayGap}${gapNote}. Their project costs $${this.projectTotal} to run.`
+      // Handle null/undefined project total
+      const projectCost = this.projectTotal !== null && this.projectTotal !== undefined ? 
+        `$${this.projectTotal}` : 
+        'an unspecified amount';
+      
+      return `${this.memberOrgName} requested $${this.requestedTotal || 0} and described a funding gap of
+      $${displayGap}${gapNote}. Their project costs ${projectCost} to run.`
     }
 
 
