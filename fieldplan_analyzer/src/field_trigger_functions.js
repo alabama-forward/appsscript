@@ -393,6 +393,9 @@ function checkForNewRows() {
           // Send email with field plan details
           sendFieldPlanEmail(fieldPlan);
           
+          // Trigger budget analysis for this organization
+          onFieldPlanSubmission(fieldPlan);
+          
         } catch (error) {
           Logger.log(`Error processing row ${rowNumber}: ${error.message}`);
         }
