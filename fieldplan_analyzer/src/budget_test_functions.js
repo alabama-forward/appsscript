@@ -225,6 +225,157 @@ function testMarkAnalyzed() {
   }
 }
 
+// Debug function to investigate organization name matching issues
+function debugMatchingIssue() {
+  Logger.log("===== DEBUGGING ORGANIZATION NAME MATCHING ISSUE =====\n");
+  
+  try {
+    // Get data from both spreadsheets
+    const budgetSheet = SpreadsheetApp.getActive().getSheetByName('2025_field_budget');
+    const planSheet = SpreadsheetApp.getActive().getSheetByName('2025_field_plan');
+    
+    const budgetData = budgetSheet.getDataRange().getValues();
+    const planData = planSheet.getDataRange().getValues();
+    
+    // Get column indices
+    const budgetOrgCol = FieldBudget.COLUMNS.MEMBERNAME; // Column 6
+    const planOrgCol = FieldPlan.COLUMNS.MEMBERNAME;     // Column 1
+    
+    Logger.log(`Budget sheet uses column ${budgetOrgCol} for MEMBERNAME`);
+    Logger.log(`Field plan sheet uses column ${planOrgCol} for MEMBERNAME`);
+    Logger.log("\n");
+    
+    // Sample first 5 organizations from each sheet
+    Logger.log("=== BUDGET SHEET ORGANIZATIONS (first 5 after header) ===");
+    for (let i = 1; i <= Math.min(5, budgetData.length - 1); i++) {
+      const orgName = budgetData[i][budgetOrgCol];
+      Logger.log(`Row ${i + 1}: "${orgName}"`);
+      
+      // Debug info for this organization
+      if (orgName) {
+        Logger.log(`  - Length: ${orgName.length} characters`);
+        Logger.log(`  - Type: ${typeof orgName}`);
+        Logger.log(`  - Trimmed length: ${orgName.trim().length}`);
+        Logger.log(`  - Has leading spaces: ${orgName !== orgName.trimStart()}`);
+        Logger.log(`  - Has trailing spaces: ${orgName !== orgName.trimEnd()}`);
+        Logger.log(`  - Character codes: ${Array.from(orgName).map(c => c.charCodeAt(0)).join(', ')}`);
+        
+        // Check for common hidden characters
+        const hasLineBreaks = orgName.includes('\n') || orgName.includes('\r');
+        const hasTabs = orgName.includes('\t');
+        const hasNonBreakingSpace = orgName.includes('\u00A0');
+        
+        if (hasLineBreaks) Logger.log(`  - WARNING: Contains line breaks!`);
+        if (hasTabs) Logger.log(`  - WARNING: Contains tabs!`);
+        if (hasNonBreakingSpace) Logger.log(`  - WARNING: Contains non-breaking spaces!`);
+      } else {
+        Logger.log(`  - WARNING: Empty or null value`);
+      }
+      Logger.log("");
+    }
+    
+    Logger.log("\n=== FIELD PLAN SHEET ORGANIZATIONS (first 5 after header) ===");
+    for (let i = 1; i <= Math.min(5, planData.length - 1); i++) {
+      const orgName = planData[i][planOrgCol];
+      Logger.log(`Row ${i + 1}: "${orgName}"`);
+      
+      // Debug info for this organization
+      if (orgName) {
+        Logger.log(`  - Length: ${orgName.length} characters`);
+        Logger.log(`  - Type: ${typeof orgName}`);
+        Logger.log(`  - Trimmed length: ${orgName.trim().length}`);
+        Logger.log(`  - Has leading spaces: ${orgName !== orgName.trimStart()}`);
+        Logger.log(`  - Has trailing spaces: ${orgName !== orgName.trimEnd()}`);
+        Logger.log(`  - Character codes: ${Array.from(orgName).map(c => c.charCodeAt(0)).join(', ')}`);
+        
+        // Check for common hidden characters
+        const hasLineBreaks = orgName.includes('\n') || orgName.includes('\r');
+        const hasTabs = orgName.includes('\t');
+        const hasNonBreakingSpace = orgName.includes('\u00A0');
+        
+        if (hasLineBreaks) Logger.log(`  - WARNING: Contains line breaks!`);
+        if (hasTabs) Logger.log(`  - WARNING: Contains tabs!`);
+        if (hasNonBreakingSpace) Logger.log(`  - WARNING: Contains non-breaking spaces!`);
+      } else {
+        Logger.log(`  - WARNING: Empty or null value`);
+      }
+      Logger.log("");
+    }
+    
+    // Try to find exact matches between first few organizations
+    Logger.log("\n=== ATTEMPTING TO MATCH FIRST FEW ORGANIZATIONS ===");
+    for (let i = 1; i <= Math.min(3, budgetData.length - 1); i++) {
+      const budgetOrg = budgetData[i][budgetOrgCol];
+      if (!budgetOrg) continue;
+      
+      Logger.log(`\nSearching for budget org "${budgetOrg}" in field plans...`);
+      
+      let foundMatch = false;
+      for (let j = 1; j < planData.length; j++) {
+        const planOrg = planData[j][planOrgCol];
+        if (!planOrg) continue;
+        
+        // Test different matching strategies
+        const exactMatch = budgetOrg === planOrg;
+        const trimMatch = budgetOrg.trim() === planOrg.trim();
+        const lowerMatch = budgetOrg.toLowerCase() === planOrg.toLowerCase();
+        const trimLowerMatch = budgetOrg.trim().toLowerCase() === planOrg.trim().toLowerCase();
+        
+        if (exactMatch || trimMatch || lowerMatch || trimLowerMatch) {
+          Logger.log(`  FOUND MATCH at row ${j + 1}!`);
+          Logger.log(`  - Exact match: ${exactMatch}`);
+          Logger.log(`  - Trim match: ${trimMatch}`);
+          Logger.log(`  - Lowercase match: ${lowerMatch}`);
+          Logger.log(`  - Trim + lowercase match: ${trimLowerMatch}`);
+          foundMatch = true;
+          break;
+        }
+      }
+      
+      if (!foundMatch) {
+        Logger.log(`  NO MATCH FOUND`);
+        
+        // Show closest matches (by checking if one contains the other)
+        Logger.log(`  Checking for partial matches...`);
+        for (let j = 1; j < Math.min(6, planData.length); j++) {
+          const planOrg = planData[j][planOrgCol];
+          if (!planOrg) continue;
+          
+          if (budgetOrg.includes(planOrg) || planOrg.includes(budgetOrg)) {
+            Logger.log(`    - Partial match with "${planOrg}" (row ${j + 1})`);
+          }
+        }
+      }
+    }
+    
+    // Summary of findings
+    Logger.log("\n=== SUMMARY ===");
+    Logger.log(`Total budget rows: ${budgetData.length - 1}`);
+    Logger.log(`Total field plan rows: ${planData.length - 1}`);
+    
+    // Count non-empty organizations
+    let budgetOrgCount = 0;
+    let planOrgCount = 0;
+    
+    for (let i = 1; i < budgetData.length; i++) {
+      if (budgetData[i][budgetOrgCol]) budgetOrgCount++;
+    }
+    
+    for (let i = 1; i < planData.length; i++) {
+      if (planData[i][planOrgCol]) planOrgCount++;
+    }
+    
+    Logger.log(`Non-empty budget organizations: ${budgetOrgCount}`);
+    Logger.log(`Non-empty field plan organizations: ${planOrgCount}`);
+    
+  } catch (error) {
+    Logger.log(`Error in debugMatchingIssue: ${error.message}`);
+    Logger.log(`Stack trace: ${error.stack}`);
+  }
+  
+  Logger.log("\n===== DEBUG COMPLETE =====");
+}
+
 // Run all tests
 function runAllBudgetTests() {
   Logger.log("===== RUNNING ALL BUDGET ANALYZER TESTS =====\n");
