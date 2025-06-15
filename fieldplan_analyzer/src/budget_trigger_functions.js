@@ -278,7 +278,7 @@ function checkIfCanIncreaseFunding(category, requested, gap, tactics) {
 }
 
 // Send budget analysis email
-function sendBudgetAnalysisEmail(budget, fieldPlan, analysis) {
+function sendBudgetAnalysisEmail(budget, fieldPlan, analysis, isTestMode = false) {
   let emailBody = `
     <h2>Budget Analysis for ${budget.memberOrgName}</h2>
     
@@ -320,16 +320,24 @@ function sendBudgetAnalysisEmail(budget, fieldPlan, analysis) {
     <p>Confidence Level: ${fieldPlan.fieldPlanConfidence}/10</p>
     <p>${fieldPlan.needsCoaching()}</p>`;
   
+  // Add test mode indicator to email if in test mode
+  if (isTestMode) {
+    emailBody = `<div style="background-color: #ffffcc; padding: 10px; border: 2px solid #ffcc00; margin-bottom: 20px;">
+      <strong>🧪 TEST MODE EMAIL</strong> - This is a test email sent only to datateam@alforward.org
+    </div>` + emailBody;
+  }
+
   // Send email
   try {
+    const recipients = getEmailRecipients(isTestMode);
     MailApp.sendEmail({
-      to: EMAIL_CONFIG.recipients.join(','),
-      subject: `Budget Analysis: ${budget.memberOrgName}`,
+      to: recipients.join(','),
+      subject: `${isTestMode ? '[TEST] ' : ''}Budget Analysis: ${budget.memberOrgName}`,
       htmlBody: emailBody,
       name: "Budget Analysis System",
       replyTo: EMAIL_CONFIG.replyTo
     });
-    Logger.log(`Budget analysis email sent for ${budget.memberOrgName}`);
+    Logger.log(`Budget analysis email sent for ${budget.memberOrgName} (${isTestMode ? 'TEST MODE' : 'PRODUCTION'})`);
   } catch (error) {
     Logger.log(`Error sending email for ${budget.memberOrgName}: ${error.message}`);
     throw error;
