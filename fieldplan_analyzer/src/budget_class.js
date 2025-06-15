@@ -242,7 +242,7 @@ class FieldBudget {
     needDataStipend() {
       let hourlyRate = 20
       if (this.dataRequested){
-        return `${this.memberOrgName} is requesting ${this.dataRequested} in data funding.
+        return `${this.memberOrgName} is requesting $${this.dataRequested} in data funding.
         This represents ${this.dataRequested / hourlyRate} hours of labor that can be offset
         by a data stipend.`
       } else {
