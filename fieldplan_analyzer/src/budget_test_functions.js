@@ -776,6 +776,41 @@ function testGapHandling() {
   }
 }
 
+// Debug function to check for null values in budget data
+function debugBudgetNullValues() {
+  Logger.log("=== DEBUGGING NULL VALUES IN BUDGET ===");
+  
+  try {
+    const firstBudget = FieldBudget.fromFirstRow();
+    Logger.log(`Organization: ${firstBudget.memberOrgName}`);
+    
+    // Check key summary fields
+    Logger.log("\nSummary Fields:");
+    Logger.log(`- requestedTotal: ${firstBudget.requestedTotal} (type: ${typeof firstBudget.requestedTotal})`);
+    Logger.log(`- projectTotal: ${firstBudget.projectTotal} (type: ${typeof firstBudget.projectTotal})`);
+    Logger.log(`- gapTotal: ${firstBudget.gapTotal} (type: ${typeof firstBudget.gapTotal})`);
+    Logger.log(`- analyzed: ${firstBudget.analyzed} (type: ${typeof firstBudget.analyzed})`);
+    
+    // Get raw data to see what's in the columns
+    const budgetSheet = SpreadsheetApp.getActive().getSheetByName('2025_field_budget');
+    const data = budgetSheet.getDataRange().getValues();
+    const firstRow = data[1]; // First data row (index 1)
+    
+    Logger.log("\nRaw Column Data:");
+    Logger.log(`- Column ${FieldBudget.COLUMNS.REQUESTEDTOTAL} (REQUESTEDTOTAL): "${firstRow[FieldBudget.COLUMNS.REQUESTEDTOTAL]}" (type: ${typeof firstRow[FieldBudget.COLUMNS.REQUESTEDTOTAL]})`);
+    Logger.log(`- Column ${FieldBudget.COLUMNS.PROJECTTOTAL} (PROJECTTOTAL): "${firstRow[FieldBudget.COLUMNS.PROJECTTOTAL]}" (type: ${typeof firstRow[FieldBudget.COLUMNS.PROJECTTOTAL]})`);
+    Logger.log(`- Column ${FieldBudget.COLUMNS.GAPTOTAL} (GAPTOTAL): "${firstRow[FieldBudget.COLUMNS.GAPTOTAL]}" (type: ${typeof firstRow[FieldBudget.COLUMNS.GAPTOTAL]})`);
+    
+    // Test the fixed request summary
+    Logger.log("\nFixed Request Summary:");
+    Logger.log(firstBudget.requestSummary());
+    
+  } catch (error) {
+    Logger.log(`❌ Error debugging null values: ${error.message}`);
+    Logger.log(`Stack trace: ${error.stack}`);
+  }
+}
+
 // Run all tests
 function runAllBudgetTests() {
   Logger.log("===== RUNNING ALL BUDGET ANALYZER TESTS =====\n");
