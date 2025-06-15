@@ -224,12 +224,11 @@ function generateTacticRecommendation(tacticType, costPerAttempt, target, status
 function analyzeGaps(budget, tactics) {
   const gaps = [];
   
-  // Check each budget category for gaps
-  const categories = ['admin', 'data', 'travel', 'comms', 'design', 'video', 
-                     'print', 'postage', 'training', 'supplies', 'canvass', 
-                     'phone', 'text', 'event', 'digital'];
+  // Only include tactic-related categories for recommendations
+  const tacticCategories = ['canvass', 'phone', 'text', 'open'];
   
-  for (const category of categories) {
+  // Check each tactic category for gaps
+  for (const category of tacticCategories) {
     const requested = budget[category + 'Requested'] || 0;
     const rawGap = budget[category + 'Gap'] || 0;
     
@@ -260,9 +259,9 @@ function analyzeGaps(budget, tactics) {
 // Check if funding can be increased within targets
 function checkIfCanIncreaseFunding(category, requested, gap, tactics) {
   // For tactic-related categories, check if increased funding stays within bounds
-  if (['canvass', 'phone', 'text'].includes(category)) {
+  if (['canvass', 'phone', 'text', 'open'].includes(category)) {
     const relevantTactic = tactics.find(t => {
-      if (category === 'canvass' && (t instanceof DoorTactic || t instanceof OpenTactic)) return true;
+      if ((category === 'canvass' || category === 'open') && (t instanceof DoorTactic || t instanceof OpenTactic)) return true;
       if (category === 'phone' && t instanceof PhoneTactic) return true;
       if (category === 'text' && t instanceof TextTactic) return true;
       return false;
@@ -312,13 +311,37 @@ function sendBudgetAnalysisEmail(budget, fieldPlan, analysis, isTestMode = false
       <p><strong>Recommendation:</strong> ${tactic.recommendation}</p>`;
   }
   
-  // Add gap analysis
+  // Add gap analysis as a table
   if (analysis.gaps.length > 0) {
-    emailBody += `<h3>Funding Gap Analysis</h3>`;
+    emailBody += `
+      <h3>Funding Gap Analysis</h3>
+      <table border="1" cellpadding="8" cellspacing="0" style="border-collapse: collapse; width: 100%;">
+        <thead>
+          <tr style="background-color: #f2f2f2;">
+            <th>Tactic</th>
+            <th>Gap Amount</th>
+            <th>Recommendation</th>
+          </tr>
+        </thead>
+        <tbody>`;
+    
     for (const gap of analysis.gaps) {
+      const tacticName = gap.category.charAt(0).toUpperCase() + gap.category.slice(1);
+      const recommendation = gap.canIncrease ? 
+        `Consider increasing by up to $${gap.gap}` :
+        `Would exceed efficiency targets`;
+      
       emailBody += `
-        <p><strong>${gap.category}:</strong> ${gap.recommendation}</p>`;
+          <tr>
+            <td><strong>${tacticName}</strong></td>
+            <td>$${gap.gap}</td>
+            <td>${recommendation}</td>
+          </tr>`;
     }
+    
+    emailBody += `
+        </tbody>
+      </table>`;
   }
   
   // Add field plan connection
