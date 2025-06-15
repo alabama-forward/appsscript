@@ -465,7 +465,7 @@ function analyzeSpecificOrganization(orgName, isTestMode = true) {
 }
 
 // Generate weekly summary report
-function generateWeeklySummary() {
+function generateWeeklySummary(isTestMode = false) {
   const budgetSheet = SpreadsheetApp.getActive().getSheetByName('2025_field_budget');
   const data = budgetSheet.getDataRange().getValues();
   
@@ -513,15 +513,23 @@ function generateWeeklySummary() {
     <p>${FieldBudget.countAnalyzed()}</p>
   `;
   
+  // Add test mode indicator if in test mode
+  if (isTestMode) {
+    emailBody = `<div style="background-color: #ffffcc; padding: 10px; border: 2px solid #ffcc00; margin-bottom: 20px;">
+      <strong>🧪 TEST MODE EMAIL</strong> - This is a test email sent only to datateam@alforward.org
+    </div>` + emailBody;
+  }
+
   try {
+    const recipients = getEmailRecipients(isTestMode);
     MailApp.sendEmail({
-      to: EMAIL_CONFIG.recipients.join(','),
-      subject: `Weekly Budget Analysis Summary - ${new Date().toLocaleDateString()}`,
+      to: recipients.join(','),
+      subject: `${isTestMode ? '[TEST] ' : ''}Weekly Budget Analysis Summary - ${new Date().toLocaleDateString()}`,
       htmlBody: emailBody,
       name: "Budget Analysis System",
       replyTo: EMAIL_CONFIG.replyTo
     });
-    Logger.log('Weekly summary report sent');
+    Logger.log(`Weekly summary report sent (${isTestMode ? 'TEST MODE' : 'PRODUCTION'})`);
   } catch (error) {
     Logger.log(`Error sending weekly summary: ${error.message}`);
   }

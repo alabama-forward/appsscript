@@ -716,9 +716,37 @@ function testEnhancedMatching() {
   }
 }
 
+// Test functions specifically for sending test emails to datateam only
+function testAnalyzeSpecificOrg(orgName) {
+  Logger.log(`=== TESTING SPECIFIC ORGANIZATION (TEST MODE) ===`);
+  Logger.log(`Organization: ${orgName}`);
+  Logger.log(`Emails will be sent ONLY to datateam@alforward.org`);
+  
+  try {
+    analyzeSpecificOrganization(orgName, true);
+    Logger.log("✅ Test analysis completed - check datateam@alforward.org for test email");
+  } catch (error) {
+    Logger.log(`❌ Error in test analysis: ${error.message}`);
+  }
+}
+
+// Test the weekly summary in test mode
+function testWeeklySummaryTestMode() {
+  Logger.log("=== TESTING WEEKLY SUMMARY (TEST MODE) ===");
+  Logger.log("Summary will be sent ONLY to datateam@alforward.org");
+  
+  try {
+    generateWeeklySummary(true);
+    Logger.log("✅ Test summary sent - check datateam@alforward.org");
+  } catch (error) {
+    Logger.log(`❌ Error generating test summary: ${error.message}`);
+  }
+}
+
 // Run all tests
 function runAllBudgetTests() {
   Logger.log("===== RUNNING ALL BUDGET ANALYZER TESTS =====\n");
+  Logger.log("NOTE: Email tests will send to datateam@alforward.org only\n");
   
   testBudgetClass();
   Logger.log("\n");
