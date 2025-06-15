@@ -80,6 +80,11 @@ function onOpen() {
   const ui = SpreadsheetApp.getUi();
   ui.createMenu('Field Plan Tests')
     .addItem('Test Most Recent Entry', 'promptForTestEmail')
+    .addSeparator()
+    .addSubMenu(ui.createMenu('Budget Analyzer Debug')
+      .addItem('Debug Matching Issue', 'debugMatchingIssue')
+      .addItem('Test Enhanced Matching', 'testEnhancedMatching')
+      .addItem('Run All Budget Tests', 'runAllBudgetTests'))
     .addToUi();
 }
 

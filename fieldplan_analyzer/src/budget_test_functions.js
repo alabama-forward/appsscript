@@ -506,6 +506,216 @@ function testEnhancedMatching() {
   }
 }
 
+// Debug function to investigate matching issues
+function debugMatchingIssue() {
+  Logger.log("=== DEBUGGING ORGANIZATION NAME MATCHING ===");
+  
+  try {
+    const budgetSheet = SpreadsheetApp.getActive().getSheetByName('2025_field_budget');
+    const planSheet = SpreadsheetApp.getActive().getSheetByName('2025_field_plan');
+    
+    const budgetData = budgetSheet.getDataRange().getValues();
+    const planData = planSheet.getDataRange().getValues();
+    
+    Logger.log(`Budget sheet rows: ${budgetData.length}`);
+    Logger.log(`Field plan sheet rows: ${planData.length}`);
+    Logger.log(`Budget MEMBERNAME column: ${FieldBudget.COLUMNS.MEMBERNAME}`);
+    Logger.log(`Field plan MEMBERNAME column: ${FieldPlan.COLUMNS.MEMBERNAME}`);
+    
+    // Check first 5 budget organizations
+    Logger.log("\n--- BUDGET ORGANIZATIONS (first 5) ---");
+    for (let i = 1; i < Math.min(6, budgetData.length); i++) {
+      const orgName = budgetData[i][FieldBudget.COLUMNS.MEMBERNAME];
+      Logger.log(`Row ${i + 1}: "${orgName}" (length: ${orgName ? orgName.length : 'null'}, type: ${typeof orgName})`);
+      
+      if (orgName) {
+        // Check for hidden characters
+        const charCodes = Array.from(orgName).map(char => `${char}(${char.charCodeAt(0)})`).join(', ');
+        Logger.log(`  Character codes: ${charCodes}`);
+        
+        // Check for whitespace issues
+        if (orgName !== orgName.trim()) {
+          Logger.log(`  ⚠️ Has leading/trailing whitespace`);
+        }
+        if (orgName.includes('\n')) {
+          Logger.log(`  ⚠️ Contains line breaks`);
+        }
+        if (orgName.includes('\t')) {
+          Logger.log(`  ⚠️ Contains tabs`);
+        }
+        if (orgName.includes('\u00A0')) {
+          Logger.log(`  ⚠️ Contains non-breaking spaces`);
+        }
+      }
+    }
+    
+    // Check first 5 field plan organizations
+    Logger.log("\n--- FIELD PLAN ORGANIZATIONS (first 5) ---");
+    for (let i = 1; i < Math.min(6, planData.length); i++) {
+      const orgName = planData[i][FieldPlan.COLUMNS.MEMBERNAME];
+      Logger.log(`Row ${i + 1}: "${orgName}" (length: ${orgName ? orgName.length : 'null'}, type: ${typeof orgName})`);
+      
+      if (orgName) {
+        // Check for hidden characters
+        const charCodes = Array.from(orgName).map(char => `${char}(${char.charCodeAt(0)})`).join(', ');
+        Logger.log(`  Character codes: ${charCodes}`);
+        
+        // Check for whitespace issues
+        if (orgName !== orgName.trim()) {
+          Logger.log(`  ⚠️ Has leading/trailing whitespace`);
+        }
+        if (orgName.includes('\n')) {
+          Logger.log(`  ⚠️ Contains line breaks`);
+        }
+        if (orgName.includes('\t')) {
+          Logger.log(`  ⚠️ Contains tabs`);
+        }
+        if (orgName.includes('\u00A0')) {
+          Logger.log(`  ⚠️ Contains non-breaking spaces`);
+        }
+      }
+    }
+    
+    // Test different matching strategies
+    Logger.log("\n--- TESTING MATCHING STRATEGIES ---");
+    const firstBudgetOrg = budgetData[1] ? budgetData[1][FieldBudget.COLUMNS.MEMBERNAME] : null;
+    if (firstBudgetOrg) {
+      Logger.log(`Testing matches for: "${firstBudgetOrg}"`);
+      
+      let exactMatch = false;
+      let trimMatch = false;
+      let caseMatch = false;
+      let normalizedMatch = false;
+      
+      for (let i = 1; i < planData.length; i++) {
+        const planOrg = planData[i][FieldPlan.COLUMNS.MEMBERNAME];
+        if (!planOrg) continue;
+        
+        // Test exact match
+        if (planOrg === firstBudgetOrg) {
+          Logger.log(`  ✅ Exact match found at row ${i + 1}: "${planOrg}"`);
+          exactMatch = true;
+        }
+        
+        // Test trimmed match
+        if (planOrg.trim() === firstBudgetOrg.trim()) {
+          Logger.log(`  ✅ Trimmed match found at row ${i + 1}: "${planOrg}"`);
+          trimMatch = true;
+        }
+        
+        // Test case-insensitive match
+        if (planOrg.toLowerCase() === firstBudgetOrg.toLowerCase()) {
+          Logger.log(`  ✅ Case-insensitive match found at row ${i + 1}: "${planOrg}"`);
+          caseMatch = true;
+        }
+        
+        // Test normalized match (trim + replace multiple spaces + remove line breaks)
+        const normalizeString = (str) => str.trim().replace(/\s+/g, ' ').replace(/[\n\r\t]/g, '').replace(/\u00A0/g, ' ');
+        if (normalizeString(planOrg) === normalizeString(firstBudgetOrg)) {
+          Logger.log(`  ✅ Normalized match found at row ${i + 1}: "${planOrg}"`);
+          normalizedMatch = true;
+        }
+      }
+      
+      if (!exactMatch && !trimMatch && !caseMatch && !normalizedMatch) {
+        Logger.log(`  ❌ No matches found for "${firstBudgetOrg}"`);
+        
+        // Look for partial matches
+        Logger.log(`  Checking for partial matches...`);
+        for (let i = 1; i < planData.length; i++) {
+          const planOrg = planData[i][FieldPlan.COLUMNS.MEMBERNAME];
+          if (!planOrg) continue;
+          
+          if (planOrg.toLowerCase().includes(firstBudgetOrg.toLowerCase()) || 
+              firstBudgetOrg.toLowerCase().includes(planOrg.toLowerCase())) {
+            Logger.log(`  🔍 Partial match: "${planOrg}" contains or is contained in "${firstBudgetOrg}"`);
+          }
+        }
+      }
+    }
+    
+  } catch (error) {
+    Logger.log(`Error in debugMatchingIssue: ${error.message}`);
+    Logger.log(`Error stack: ${error.stack}`);
+  }
+}
+
+// Enhanced matching function that handles common data issues
+function testEnhancedMatching() {
+  Logger.log("=== TESTING ENHANCED MATCHING ===");
+  
+  try {
+    const budgetSheet = SpreadsheetApp.getActive().getSheetByName('2025_field_budget');
+    const planSheet = SpreadsheetApp.getActive().getSheetByName('2025_field_plan');
+    
+    const budgetData = budgetSheet.getDataRange().getValues();
+    const planData = planSheet.getDataRange().getValues();
+    
+    // Normalize organization name
+    const normalizeOrgName = (name) => {
+      if (!name) return '';
+      return name.toString()
+        .trim()
+        .replace(/\s+/g, ' ')  // Replace multiple spaces with single space
+        .replace(/[\n\r\t]/g, '')  // Remove line breaks and tabs
+        .replace(/\u00A0/g, ' ');  // Replace non-breaking spaces with regular spaces
+    };
+    
+    // Create lookup map from field plans
+    const fieldPlanLookup = new Map();
+    for (let i = 1; i < planData.length; i++) {
+      const orgName = planData[i][FieldPlan.COLUMNS.MEMBERNAME];
+      if (orgName) {
+        const normalizedName = normalizeOrgName(orgName);
+        if (!fieldPlanLookup.has(normalizedName) || i > fieldPlanLookup.get(normalizedName).row) {
+          fieldPlanLookup.set(normalizedName, { row: i, original: orgName });
+        }
+      }
+    }
+    
+    Logger.log(`Field plan lookup created with ${fieldPlanLookup.size} entries`);
+    
+    // Test matching for budget organizations
+    let matches = 0;
+    let mismatches = 0;
+    
+    for (let i = 1; i < budgetData.length; i++) {
+      const budgetOrgName = budgetData[i][FieldBudget.COLUMNS.MEMBERNAME];
+      if (!budgetOrgName) continue;
+      
+      const normalizedBudgetName = normalizeOrgName(budgetOrgName);
+      
+      if (fieldPlanLookup.has(normalizedBudgetName)) {
+        const match = fieldPlanLookup.get(normalizedBudgetName);
+        Logger.log(`✅ Match: "${budgetOrgName}" -> "${match.original}" (row ${match.row + 1})`);
+        matches++;
+      } else {
+        // Try case-insensitive matching
+        let caseInsensitiveMatch = null;
+        for (const [key, value] of fieldPlanLookup.entries()) {
+          if (key.toLowerCase() === normalizedBudgetName.toLowerCase()) {
+            caseInsensitiveMatch = value;
+            break;
+          }
+        }
+        
+        if (caseInsensitiveMatch) {
+          Logger.log(`✅ Case-insensitive match: "${budgetOrgName}" -> "${caseInsensitiveMatch.original}"`);
+          matches++;
+        } else {
+          Logger.log(`❌ No match: "${budgetOrgName}" (normalized: "${normalizedBudgetName}")`);
+          mismatches++;
+        }
+      }
+    }
+    
+    Logger.log(`\nSummary: ${matches} matches, ${mismatches} mismatches`);
+    
+  } catch (error) {
+    Logger.log(`Error in testEnhancedMatching: ${error.message}`);
+  }
+}
+
 // Run all tests
 function runAllBudgetTests() {
   Logger.log("===== RUNNING ALL BUDGET ANALYZER TESTS =====\n");
