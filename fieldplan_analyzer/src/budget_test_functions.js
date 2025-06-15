@@ -743,6 +743,39 @@ function testWeeklySummaryTestMode() {
   }
 }
 
+// Test gap handling with negative values
+function testGapHandling() {
+  Logger.log("=== TESTING GAP HANDLING ===");
+  
+  try {
+    const firstBudget = FieldBudget.fromFirstRow();
+    Logger.log(`Organization: ${firstBudget.memberOrgName}`);
+    
+    // Test individual gap values
+    const categories = ['admin', 'data', 'travel', 'comms', 'design', 'video', 
+                       'print', 'postage', 'training', 'supplies', 'canvass', 
+                       'phone', 'text', 'event', 'digital'];
+    
+    Logger.log("\nGap Values (negative values will be converted to positive):");
+    for (const category of categories) {
+      const gap = firstBudget[category + 'Gap'];
+      if (gap !== null && gap !== undefined && gap !== 0) {
+        Logger.log(`- ${category}: ${gap} → ${Math.abs(gap)} (absolute value)`);
+      }
+    }
+    
+    // Test total gap
+    Logger.log(`\nTotal Gap: ${firstBudget.gapTotal} → ${Math.abs(firstBudget.gapTotal || 0)} (absolute value)`);
+    
+    // Test request summary
+    Logger.log(`\nRequest Summary:`);
+    Logger.log(firstBudget.requestSummary());
+    
+  } catch (error) {
+    Logger.log(`❌ Error testing gap handling: ${error.message}`);
+  }
+}
+
 // Run all tests
 function runAllBudgetTests() {
   Logger.log("===== RUNNING ALL BUDGET ANALYZER TESTS =====\n");

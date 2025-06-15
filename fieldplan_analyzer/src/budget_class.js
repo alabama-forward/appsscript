@@ -251,8 +251,12 @@ class FieldBudget {
     };
 
     requestSummary() {
+      // Convert negative gap to positive for display
+      const displayGap = Math.abs(this.gapTotal || 0);
+      const gapNote = this.gapTotal < 0 ? ' (gap was originally negative, converted to positive for analysis)' : '';
+      
       return `${this.memberOrgName} requested $${this.requestedTotal} and described a funding gap of
-      $${this.gapTotal}. Their project costs $${this.projectTotal} to run.`
+      $${displayGap}${gapNote}. Their project costs $${this.projectTotal} to run.`
     }
 
 

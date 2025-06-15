@@ -231,7 +231,10 @@ function analyzeGaps(budget, tactics) {
   
   for (const category of categories) {
     const requested = budget[category + 'Requested'] || 0;
-    const gap = budget[category + 'Gap'] || 0;
+    const rawGap = budget[category + 'Gap'] || 0;
+    
+    // Convert negative gaps to positive values
+    const gap = Math.abs(rawGap);
     
     if (gap > 0) {
       // Check if we can recommend increased funding
@@ -240,10 +243,13 @@ function analyzeGaps(budget, tactics) {
         category: category,
         requested: requested,
         gap: gap,
+        originalGap: rawGap,
         canIncrease: canIncrease,
         recommendation: canIncrease ? 
-          `Consider increasing ${category} funding by up to $${gap} while maintaining cost efficiency.` :
-          `Gap identified in ${category} but increasing funding would exceed efficiency targets.`
+          `Consider increasing ${category} funding by up to $${gap} while maintaining cost efficiency.` +
+          (rawGap < 0 ? ' (Note: Original gap was negative, converted to positive for analysis)' : '') :
+          `Gap identified in ${category} but increasing funding would exceed efficiency targets.` +
+          (rawGap < 0 ? ' (Note: Original gap was negative, converted to positive for analysis)' : '')
       });
     }
   }
@@ -489,7 +495,9 @@ function generateWeeklySummary(isTestMode = false) {
       }
       
       totalRequested += data[i][FieldBudget.COLUMNS.REQUESTEDTOTAL] || 0;
-      totalGap += data[i][FieldBudget.COLUMNS.GAPTOTAL] || 0;
+      // Convert negative gaps to positive for totaling
+      const gapValue = data[i][FieldBudget.COLUMNS.GAPTOTAL] || 0;
+      totalGap += Math.abs(gapValue);
     }
   }
   
@@ -509,6 +517,8 @@ function generateWeeklySummary(isTestMode = false) {
       <li>Total Requested: $${totalRequested.toFixed(2)}</li>
       <li>Total Gap Identified: $${totalGap.toFixed(2)}</li>
     </ul>
+    
+    <p><em>Note: All gap calculations use absolute values (negative gaps converted to positive).</em></p>
     
     <p>${FieldBudget.countAnalyzed()}</p>
   `;
