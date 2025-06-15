@@ -185,7 +185,7 @@ class FieldBudget {
     get phoneTotal() { return this._phoneTotal || null; }
     get phoneGap() { return this._phoneGap || null; }
     //Text
-    get textRequested() { return this._textequested || null; }
+    get textRequested() { return this._textRequested || null; }
     get textTotal() { return this._textTotal || null; }
     get textGap() { return this._textGap || null; }
     //Event
@@ -259,7 +259,9 @@ class FieldBudget {
 
 
     //Helper Functions
-    countAnalyzed() {
+    static countAnalyzed() {
+      const budgetSheet = SpreadsheetApp.getActive().getSheetByName('2025_field_budget');
+      const data = budgetSheet.getDataRange().getValues();
       let analyzed = 0;
       let notAnalyzed = 0;
 
@@ -272,16 +274,36 @@ class FieldBudget {
           } else notAnalyzed++
         }
       }
-      return `So far, ${analyzed} budgets have been analyzed and ${notAnalyzed} 
-      remain to be analyzed because they are missing field plans.`
+      return `So far, ${analyzed} budgets have been analyzed and ${notAnalyzed} remain to be analyzed.`
     }
 
 
 
-      //Check row data at specific cell
-        //If row data analyzed is TRUE
-          //Increment analyzed counter
-        // Else increment notAnalyzed counter
+    // Method to mark this budget as analyzed
+    markAsAnalyzed(rowNumber) {
+      const budgetSheet = SpreadsheetApp.getActive().getSheetByName('2025_field_budget');
+      budgetSheet.getRange(rowNumber, FieldBudget.COLUMNS.ANALYZED + 1).setValue(true);
+      this._analyzed = true;
+    }
+
+    // Get all unanalyzed budgets
+    static getUnanalyzedBudgets() {
+      const budgetSheet = SpreadsheetApp.getActive().getSheetByName('2025_field_budget');
+      const data = budgetSheet.getDataRange().getValues();
+      const unanalyzedBudgets = [];
+      
+      for (let i = 1; i < data.length; i++) {
+        const row = data[i];
+        if (row[0] && row[FieldBudget.COLUMNS.ANALYZED] !== true) {
+          unanalyzedBudgets.push({
+            budget: new FieldBudget(row),
+            rowNumber: i + 1 // 1-based row number
+          });
+        }
+      }
+      
+      return unanalyzedBudgets;
+    }
 
     // Other Helper functions
     countItems(fieldName) {
@@ -355,9 +377,9 @@ class FieldBudget {
     DIGITALREQUESTED: 49,
     DIGITALTOTAL: 50,
     DIGITALGAP: 51,
-    REQUESTEDTOTAL: 50,
-    PROJECTTOTAL: 51,
-    GAPTOTAL: 52,
-    SUBMITFIELDPLAN: 53,
-    ANALYZED: 54
+    REQUESTEDTOTAL: 52,
+    PROJECTTOTAL: 53,
+    GAPTOTAL: 54,
+    SUBMITFIELDPLAN: 55,
+    ANALYZED: 56
   };
