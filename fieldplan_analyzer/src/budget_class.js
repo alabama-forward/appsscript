@@ -251,16 +251,25 @@ class FieldBudget {
     };
 
     requestSummary() {
-      // Convert negative gap to positive for display
-      const displayGap = Math.abs(this.gapTotal || 0);
-      const gapNote = this.gapTotal < 0 ? ' (gap was originally negative, converted to positive for analysis)' : '';
+      // Check if both gap and requested amount are null/0 (entirely funded)
+      const requestedAmount = this.requestedTotal || 0;
+      const rawGap = this.gapTotal || 0;
+      const displayGap = Math.abs(rawGap);
+      
+      // If both gap and requested amount are 0/null, program is entirely funded
+      if (displayGap === 0 && requestedAmount === 0) {
+        return `This program will be entirely funded by this request. Reach out to ask if they will be seeking additional funds for this program or if they will only run their program with support from Alabama Forward.`;
+      }
+      
+      // Standard summary for programs with funding requests or gaps
+      const gapNote = rawGap < 0 ? ' (gap was originally negative, converted to positive for analysis)' : '';
       
       // Handle null/undefined project total
       const projectCost = this.projectTotal !== null && this.projectTotal !== undefined ? 
         `$${this.projectTotal}` : 
         'an unspecified amount';
       
-      return `${this.memberOrgName} requested $${this.requestedTotal || 0} and described a funding gap of
+      return `${this.memberOrgName} requested $${requestedAmount} and described a funding gap of
       $${displayGap}${gapNote}. Their project costs ${projectCost} to run.`
     }
 
