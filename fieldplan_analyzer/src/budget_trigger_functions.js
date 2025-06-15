@@ -381,7 +381,7 @@ function checkForMissingFieldPlans() {
 }
 
 // Send notification for missing field plan
-function sendMissingFieldPlanNotification(orgName) {
+function sendMissingFieldPlanNotification(orgName, isTestMode = false) {
   const emailBody = `
     <h2>Missing Field Plan Alert</h2>
     <p><strong>Organization:</strong> ${orgName}</p>
@@ -391,14 +391,17 @@ function sendMissingFieldPlanNotification(orgName) {
   `;
   
   try {
+    const recipients = getEmailRecipients(isTestMode);
     MailApp.sendEmail({
-      to: EMAIL_CONFIG.recipients.join(','),
-      subject: `Missing Field Plan: ${orgName}`,
-      htmlBody: emailBody,
+      to: recipients.join(','),
+      subject: `${isTestMode ? '[TEST] ' : ''}Missing Field Plan: ${orgName}`,
+      htmlBody: isTestMode ? `<div style="background-color: #ffffcc; padding: 10px; border: 2px solid #ffcc00; margin-bottom: 20px;">
+        <strong>🧪 TEST MODE EMAIL</strong> - This is a test email sent only to datateam@alforward.org
+      </div>` + emailBody : emailBody,
       name: "Budget Analysis System",
       replyTo: EMAIL_CONFIG.replyTo
     });
-    Logger.log(`Missing field plan notification sent for ${orgName}`);
+    Logger.log(`Missing field plan notification sent for ${orgName} (${isTestMode ? 'TEST MODE' : 'PRODUCTION'})`);
   } catch (error) {
     Logger.log(`Error sending missing field plan notification: ${error.message}`);
   }
