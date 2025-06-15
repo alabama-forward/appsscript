@@ -20,6 +20,11 @@ const EMAIL_CONFIG = {
   replyTo: "datateam@alforward.org"
 };
 
+// Helper function to get email recipients based on mode
+function getEmailRecipients(isTestMode = false) {
+  return isTestMode ? EMAIL_CONFIG.testRecipients : EMAIL_CONFIG.recipients;
+}
+
 // Create time-based trigger for budget analysis
 function createBudgetAnalysisTrigger() {
   const triggers = ScriptApp.getProjectTriggers();
