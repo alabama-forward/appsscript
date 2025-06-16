@@ -1,23 +1,29 @@
 // Cost per attempt targets with standard deviations
+const scriptProps = PropertiesService.getScriptProperties();
 const TACTIC_TARGETS = {
-  DOOR: { target: 1.00, stdDev: 0.20 },
-  PHONE: { target: 0.66, stdDev: 0.15 },
-  TEXT: { target: 0.02, stdDev: 0.01 },
-  OPEN: { target: 0.40, stdDev: 0.10 }
+  DOOR: { 
+    target: parseFloat(scriptProps.getProperty('COST_TARGET_DOOR') || '1.00'), 
+    stdDev: parseFloat(scriptProps.getProperty('COST_TARGET_DOOR_STDDEV') || '0.20') 
+  },
+  PHONE: { 
+    target: parseFloat(scriptProps.getProperty('COST_TARGET_PHONE') || '0.66'), 
+    stdDev: parseFloat(scriptProps.getProperty('COST_TARGET_PHONE_STDDEV') || '0.15') 
+  },
+  TEXT: { 
+    target: parseFloat(scriptProps.getProperty('COST_TARGET_TEXT') || '0.02'), 
+    stdDev: parseFloat(scriptProps.getProperty('COST_TARGET_TEXT_STDDEV') || '0.01') 
+  },
+  OPEN: { 
+    target: parseFloat(scriptProps.getProperty('COST_TARGET_OPEN') || '0.40'), 
+    stdDev: parseFloat(scriptProps.getProperty('COST_TARGET_OPEN_STDDEV') || '0.10') 
+  }
 }
 
 // Email configuration
 const EMAIL_CONFIG = {
-  recipients: [
-    "gabri@alforward.org",
-    "sherri@alforward.org", 
-    "deanna@alforward.org",
-    "datateam@alforward.org"
-  ],
-  testRecipients: [
-    "datateam@alforward.org"
-  ],
-  replyTo: "datateam@alforward.org"
+  recipients: (scriptProps.getProperty('EMAIL_RECIPIENTS') || 'gabri@alforward.org,sherri@alforward.org,deanna@alforward.org,datateam@alforward.org').split(','),
+  testRecipients: (scriptProps.getProperty('EMAIL_TEST_RECIPIENTS') || 'datateam@alforward.org').split(','),
+  replyTo: scriptProps.getProperty('EMAIL_REPLY_TO') || 'datateam@alforward.org'
 };
 
 // Helper function to get email recipients based on mode
@@ -34,9 +40,10 @@ function createBudgetAnalysisTrigger() {
   );
   
   if (!triggerExists) {
+    const triggerHours = parseInt(scriptProps.getProperty('TRIGGER_BUDGET_ANALYSIS_HOURS') || '12');
     ScriptApp.newTrigger('analyzeBudgets')
       .timeBased()
-      .everyHours(12)
+      .everyHours(triggerHours)
       .create();
     Logger.log('Budget analysis trigger created to run every 12 hours');
   } else {
@@ -103,7 +110,8 @@ function processBudget(budgetData, isTestMode = false) {
 
 // Find matching field plan for organization
 function findMatchingFieldPlan(orgName) {
-  const planSheet = SpreadsheetApp.getActive().getSheetByName('2025_field_plan');
+  const sheetName = scriptProps.getProperty('SHEET_FIELD_PLAN') || '2025_field_plan';
+  const planSheet = SpreadsheetApp.getActive().getSheetByName(sheetName);
   const data = planSheet.getDataRange().getValues();
   
   let latestMatch = null;
@@ -393,14 +401,15 @@ function checkForMissingFieldPlans() {
   const properties = PropertiesService.getScriptProperties();
   const allProperties = properties.getProperties();
   const currentTime = new Date();
-  const seventyTwoHours = 72 * 60 * 60 * 1000; // 72 hours in milliseconds
+  const thresholdHours = parseInt(scriptProps.getProperty('TRIGGER_MISSING_PLAN_THRESHOLD_HOURS') || '72');
+  const thresholdMilliseconds = thresholdHours * 60 * 60 * 1000; // Convert to milliseconds
   
   for (const key in allProperties) {
     if (key.startsWith('MISSING_PLAN_')) {
       const orgName = key.replace('MISSING_PLAN_', '');
       const timestamp = new Date(allProperties[key]);
       
-      if (currentTime - timestamp > seventyTwoHours) {
+      if (currentTime - timestamp > thresholdMilliseconds) {
         // Send notification about missing field plan
         sendMissingFieldPlanNotification(orgName);
         
@@ -470,7 +479,8 @@ function analyzeSpecificOrganization(orgName, isTestMode = true) {
   Logger.log(`Manual analysis requested for ${orgName} (${isTestMode ? 'TEST MODE' : 'PRODUCTION'})`);
   
   // Find the budget for this org
-  const budgetSheet = SpreadsheetApp.getActive().getSheetByName('2025_field_budget');
+  const sheetName = scriptProps.getProperty('SHEET_FIELD_BUDGET') || '2025_field_budget';
+  const budgetSheet = SpreadsheetApp.getActive().getSheetByName(sheetName);
   const data = budgetSheet.getDataRange().getValues();
   
   for (let i = 1; i < data.length; i++) {
@@ -495,7 +505,8 @@ function analyzeSpecificOrganization(orgName, isTestMode = true) {
 
 // Generate weekly summary report
 function generateWeeklySummary(isTestMode = false) {
-  const budgetSheet = SpreadsheetApp.getActive().getSheetByName('2025_field_budget');
+  const sheetName = scriptProps.getProperty('SHEET_FIELD_BUDGET') || '2025_field_budget';
+  const budgetSheet = SpreadsheetApp.getActive().getSheetByName(sheetName);
   const data = budgetSheet.getDataRange().getValues();
   
   let analyzed = 0;
@@ -577,10 +588,13 @@ function createWeeklySummaryTrigger() {
   );
   
   if (!triggerExists) {
+    const weekDay = scriptProps.getProperty('TRIGGER_WEEKLY_SUMMARY_DAY') || 'MONDAY';
+    const hour = parseInt(scriptProps.getProperty('TRIGGER_WEEKLY_SUMMARY_HOUR') || '9');
+    
     ScriptApp.newTrigger('generateWeeklySummary')
       .timeBased()
-      .onWeekDay(ScriptApp.WeekDay.MONDAY)
-      .atHour(9)
+      .onWeekDay(ScriptApp.WeekDay[weekDay])
+      .atHour(hour)
       .create();
     Logger.log('Weekly summary trigger created for Monday 9 AM');
   }

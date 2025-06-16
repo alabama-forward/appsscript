@@ -4,25 +4,28 @@
  * CONFIGURATION SECTION
  * Update these values with your specific BigQuery details
  */
+// Get configuration from script properties
+const scriptProps = PropertiesService.getScriptProperties();
+
 const BIGQUERY_CONFIG = {
   // Project ID for all BigQuery operations
-  projectId: 'prod-sv-al-898733e3',
+  projectId: scriptProps.getProperty('BQ_PROJECT_ID') || 'prod-sv-al-898733e3',
   
   // Dataset for saving query history and results
-  historyDataset: 'alforward',
-  historyTableId: 'precinct_query_history',
-  resultsTableId: 'latest_query_results',
+  historyDataset: scriptProps.getProperty('BQ_HISTORY_DATASET') || 'alforward',
+  historyTableId: scriptProps.getProperty('BQ_HISTORY_TABLE') || 'precinct_query_history',
+  resultsTableId: scriptProps.getProperty('BQ_RESULTS_TABLE') || 'latest_query_results',
   
   // Catalist database datasets
   catalistConfig: {
-    districtDataset: 'catalist_AL.District',
-    personDataset: 'catalist_AL.Person',
-    modelsDataset: 'catalist_AL.Models',
-    historyDataset: 'catalist_AL.Vote_History'
+    districtDataset: scriptProps.getProperty('BQ_CATALIST_DISTRICT_DATASET') || 'catalist_AL.District',
+    personDataset: scriptProps.getProperty('BQ_CATALIST_PERSON_DATASET') || 'catalist_AL.Person',
+    modelsDataset: scriptProps.getProperty('BQ_CATALIST_MODELS_DATASET') || 'catalist_AL.Models',
+    historyDataset: scriptProps.getProperty('BQ_CATALIST_HISTORY_DATASET') || 'catalist_AL.Vote_History'
   },
   
   // Query timeout in milliseconds (5 minutes)
-  queryTimeoutMs: 300000
+  queryTimeoutMs: parseInt(scriptProps.getProperty('BQ_QUERY_TIMEOUT_MS') || '300000')
 };
 
 /**
@@ -878,7 +881,7 @@ function claimItemForOrganizationWithBigQuery(originalRowIndex, orgName, resultR
     };
     
     // Get user email for notifications - use multiple methods to ensure we get a valid email
-    let userEmail = "gabri.cubero.caban@cta-tech.app"; // Default fallback
+    let userEmail = scriptProps.getProperty('EMAIL_FALLBACK') || "gabri@alforward.org"; // Default fallback
     
     // Try different methods to get user email
     try {
@@ -902,7 +905,7 @@ function claimItemForOrganizationWithBigQuery(originalRowIndex, orgName, resultR
     }
     
     // Always CC the data team for redundancy
-    const ccEmail = "datateam@alforward.org";
+    const ccEmail = (scriptProps.getProperty('EMAIL_RECIPIENTS') || 'datateam@alforward.org').split(',')[0];
     
     Logger.log("Using email address for notifications: " + userEmail);
     
@@ -1130,7 +1133,7 @@ function claimItemForOrganizationWithBigQuery(originalRowIndex, orgName, resultR
     
     // Try to send error email
     try {
-      let criticalEmail = "gabri.cubero.caban@cta-tech.app"; // Default email for critical errors
+      let criticalEmail = scriptProps.getProperty('EMAIL_FALLBACK') || "gabri@alforward.org"; // Default email for critical errors
       
       // Try to get a valid user email for the error notification
       try {
@@ -1149,7 +1152,7 @@ function claimItemForOrganizationWithBigQuery(originalRowIndex, orgName, resultR
       
       MailApp.sendEmail({
         to: criticalEmail,
-        cc: "datateam@alforward.org",
+        cc: (scriptProps.getProperty('EMAIL_RECIPIENTS') || 'datateam@alforward.org').split(',')[0],
         subject: "ERROR: BigQuery Precinct Claim Integration",
         htmlBody: `
           <html>

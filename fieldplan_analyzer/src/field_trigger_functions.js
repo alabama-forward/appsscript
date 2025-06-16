@@ -185,13 +185,9 @@ function sendFieldPlanEmail(fieldPlan) {
   }
 
   // Configuration object with recipient emails array - add your emails here
+  const scriptProps = PropertiesService.getScriptProperties();
   const config = {
-    recipientEmails: [
-      "gabri@alforward.org",
-      "sherri@alforward.org",
-      "deanna@alforward.org",
-      "datateam@alforward.org"
-    ],
+    recipientEmails: (scriptProps.getProperty('EMAIL_RECIPIENTS') || 'gabri@alforward.org,sherri@alforward.org,deanna@alforward.org,datateam@alforward.org').split(','),
     maxRetries: 3,
     retryDelay: 1000 // milliseconds
   };
@@ -304,7 +300,7 @@ function sendFieldPlanEmail(fieldPlan) {
           subject: `New Field Plan: ${fieldPlan.memberOrgName || 'Unknown Organization'}`,
           htmlBody: emailBody,
           name: "Field Plan Notification System",
-          replyTo: "datateam@alforward.org"
+          replyTo: scriptProps.getProperty('EMAIL_REPLY_TO') || "datateam@alforward.org"
         });
         success = true;
         Logger.log('Email sent successfully');
@@ -352,9 +348,10 @@ function createSpreadsheetTrigger() {
   
   if (!triggerExists) {
     // Create trigger to run twice a day (every 12 hours)
+    const triggerHours = parseInt(scriptProps.getProperty('TRIGGER_FIELD_PLAN_CHECK_HOURS') || '12');
     ScriptApp.newTrigger('checkForNewRows')
       .timeBased()
-      .everyHours(12)
+      .everyHours(triggerHours)
       .create();
     Logger.log('New time-based trigger created to run every 12 hours');
     
@@ -367,14 +364,16 @@ function createSpreadsheetTrigger() {
 
 // Helper function to get the last row number
 function getLastRow() {
-  const sheet = SpreadsheetApp.getActive().getSheetByName('2025_field_plan');
+  const sheetName = scriptProps.getProperty('SHEET_FIELD_PLAN') || '2025_field_plan';
+  const sheet = SpreadsheetApp.getActive().getSheetByName(sheetName);
   return sheet.getLastRow();
 }
 
 // Function to check for new rows and process them
 function checkForNewRows() {
   try {
-    const sheet = SpreadsheetApp.getActive().getSheetByName('2025_field_plan');
+    const sheetName = scriptProps.getProperty('SHEET_FIELD_PLAN') || '2025_field_plan';
+    const sheet = SpreadsheetApp.getActive().getSheetByName(sheetName);
     const currentLastRow = sheet.getLastRow();
     
     // Get the last processed row from properties

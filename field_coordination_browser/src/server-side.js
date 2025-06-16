@@ -1,7 +1,17 @@
 // Main server-side code for the Precinct Claim application
 
-// Your spreadsheet ID - replace this with your actual spreadsheet ID
-const SPREADSHEET_ID = '1E3yYNnPbrUNpdIU8TCjcKGtMe5T8qSuvh_1p_zkhZI0';
+// Get configuration from script properties
+const scriptProps = PropertiesService.getScriptProperties();
+const SPREADSHEET_ID = scriptProps.getProperty('SPREADSHEET_ID');
+
+// Sheet name constants from script properties
+const SHEET_NAMES = {
+  PRIORITIES: scriptProps.getProperty('SHEET_PRIORITIES') || 'priorities',
+  SEARCH: scriptProps.getProperty('SHEET_SEARCH') || 'search',
+  ORG_CONTACTS: scriptProps.getProperty('SHEET_ORG_CONTACTS') || 'orgContacts',
+  USER_SELECTIONS: scriptProps.getProperty('SHEET_USER_SELECTIONS') || 'userSelections',
+  FIELD_PLAN: scriptProps.getProperty('SHEET_FIELD_PLAN') || '2025_field_plan'
+};
 
 // Main server-side code for the Precinct Claim application - handles user interface and claim processing
 
@@ -28,7 +38,7 @@ function onEdit(e) {
   let column = range.getColumn();
   
   // Check if the edit was in either dropdown column of the search results
-  if (sheetName === "search" && (column === 6 || column === 7)) { // Column F is 6, G is 7
+  if (sheetName === SHEET_NAMES.SEARCH && (column === 6 || column === 7)) { // Column F is 6, G is 7
     
     // Get the organization name selected from the dropdown
     let selectedOrg = range.getValue();
@@ -282,7 +292,7 @@ function sendConfirmationEmail(orgName, resultRowData, actionDetails, claimType)
         "</html>";
     
     // Create recipient list
-    let recipients = ["datateam@alforward.org", "sherri@alforward.org"];
+    let recipients = (scriptProps.getProperty('EMAIL_RECIPIENTS') || 'datateam@alforward.org,sherri@alforward.org').split(',');
     
     // Add current user's email if available
     if (currentUserEmail && currentUserEmail.includes('@') && !recipients.includes(currentUserEmail)) {

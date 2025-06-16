@@ -5,21 +5,24 @@
  * CONFIGURATION SECTION
  * Update these values with your specific BigQuery details
  */
+// Get configuration from script properties
+const scriptProps = PropertiesService.getScriptProperties();
+
 const BIGQUERY_CONFIG = {
   // Project ID for all BigQuery operations
-  projectId: 'prod-sv-al-898733e3',
+  projectId: scriptProps.getProperty('BQ_PROJECT_ID') || 'prod-sv-al-898733e3',
   
   // Dataset for saving query history and results
-  historyDataset: 'alforward',
-  historyTableId: 'precinct_query_history',
-  resultsTableId: 'latest_query_results',
+  historyDataset: scriptProps.getProperty('BQ_HISTORY_DATASET') || 'alforward',
+  historyTableId: scriptProps.getProperty('BQ_HISTORY_TABLE') || 'precinct_query_history',
+  resultsTableId: scriptProps.getProperty('BQ_RESULTS_TABLE') || 'latest_query_results',
   
   // Catalist database datasets
   catalistConfig: {
-    districtDataset: 'catalist_AL.District',
-    personDataset: 'catalist_AL.Person',
-    modelsDataset: 'catalist_AL.Models',
-    historyDataset: 'catalist_AL.Vote_History'
+    districtDataset: scriptProps.getProperty('BQ_CATALIST_DISTRICT_DATASET') || 'catalist_AL.District',
+    personDataset: scriptProps.getProperty('BQ_CATALIST_PERSON_DATASET') || 'catalist_AL.Person',
+    modelsDataset: scriptProps.getProperty('BQ_CATALIST_MODELS_DATASET') || 'catalist_AL.Models',
+    historyDataset: scriptProps.getProperty('BQ_CATALIST_HISTORY_DATASET') || 'catalist_AL.Vote_History'
   }
 };
 
