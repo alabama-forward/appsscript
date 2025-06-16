@@ -48,6 +48,9 @@ Both applications demonstrate advanced Apps Script patterns:
 - [Timer Implementation](/appsscript/developers/fieldplan-analyzer/timers)
 - [Email Response Generation](/appsscript/developers/fieldplan-analyzer/email-responses)
 
+### Configuration & Security
+- [Script Properties Guide](/appsscript/developers/script-properties-guide)
+
 ### Spreadsheet Mapping
 - [Configuration Guide](/appsscript/developers/spreadsheet-mapping/configuration)
 - [Mapping Examples](/appsscript/developers/spreadsheet-mapping/examples)

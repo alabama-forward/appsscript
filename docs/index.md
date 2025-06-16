@@ -22,6 +22,7 @@ Technical documentation for implementing your own Apps Script solutions based on
 - [Getting Started](/appsscript/developers/getting-started)
 - [Field Coordination Browser Guide](/appsscript/developers/field-coordination-browser/)
 - [FieldPlan Analyzer Guide](/appsscript/developers/fieldplan-analyzer/)
+- [Script Properties Guide](/appsscript/developers/script-properties-guide)
 - [Spreadsheet Mapping](/appsscript/developers/spreadsheet-mapping/)
 
 ## Quick Links

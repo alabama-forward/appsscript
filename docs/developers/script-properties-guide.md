@@ -1,8 +1,8 @@
 ---
 layout: default
 title: Script Properties Guide
-parent: Developer Documentation
-nav_order: 4
+parent: For Developers
+nav_order: 5
 ---
 
 # Script Properties Guide
