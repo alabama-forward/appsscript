@@ -12,23 +12,23 @@ Welcome to the documentation for the Field Coordination Browser and FieldPlan An
 ### For End Users
 Learn about Google Apps Script and how these applications work to streamline field coordination and budget analysis processes.
 
-- [What is Google Apps Script?](/appsscript/end-users/what-is-apps-script)
-- [Field Coordination Browser Overview](/appsscript/end-users/field-coordination-browser-overview)
-- [FieldPlan Analyzer Overview](/appsscript/end-users/fieldplan-analyzer-overview)
+- [What is Google Apps Script?](./end-users/what-is-apps-script)
+- [Field Coordination Browser Overview](./end-users/field-coordination-browser-overview)
+- [FieldPlan Analyzer Overview](./end-users/fieldplan-analyzer-overview)
 
 ### For Developers
 Technical documentation for implementing your own Apps Script solutions based on these applications.
 
-- [Getting Started](/appsscript/developers/getting-started)
-- [Field Coordination Browser Guide](/appsscript/developers/field-coordination-browser/)
-- [FieldPlan Analyzer Guide](/appsscript/developers/fieldplan-analyzer/)
-- [Script Properties Guide](/appsscript/developers/script-properties-guide)
-- [Spreadsheet Mapping](/appsscript/developers/spreadsheet-mapping/)
+- [Getting Started](./developers/getting-started)
+- [Field Coordination Browser Guide](./developers/field-coordination-browser/)
+- [FieldPlan Analyzer Guide](./developers/fieldplan-analyzer/)
+- [Script Properties Guide](./developers/script-properties-guide)
+- [Spreadsheet Mapping](./developers/spreadsheet-mapping/)
 
 ## Quick Links
 
-- [Troubleshooting Guide](/appsscript/troubleshooting)
-- [Frequently Asked Questions](/appsscript/faq)
+- [Troubleshooting Guide](./troubleshooting)
+- [Frequently Asked Questions](./faq)
 
 ## About These Applications
 
