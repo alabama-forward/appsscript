@@ -87,3 +87,7 @@ Feel free to add any other information or requirements for the documentation:
 
 **Your Answer:**
 Any developer with javascript knowledge should be able to use this documentation. Any end-user curious about how this works should be able to understand the parts geared toward them.
+
+
+Improvements:
+- Review the field plan analyzer and give more accurate examples of what the budget analyzer and field plan analyzer emails look like.
