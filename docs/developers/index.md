@@ -35,25 +35,23 @@ Both applications demonstrate advanced Apps Script patterns:
 ## Documentation Structure
 
 ### Getting Started
-- [Getting Started Guide](/appsscript/developers/getting-started) - Set up your development environment
+- [Getting Started Guide](./getting-started) - Set up your development environment
 
 ### Field Coordination Browser
-- [Architecture Overview](/appsscript/developers/field-coordination-browser/architecture)
-- [Spreadsheet as Database](/appsscript/developers/field-coordination-browser/spreadsheet-as-database)
-- [Web Deployment](/appsscript/developers/field-coordination-browser/web-deployment)
+- [Architecture Overview](./field-coordination-browser/architecture)
+- [Spreadsheet as Database](./field-coordination-browser/spreadsheet-as-database)
+- [Web Deployment](./field-coordination-browser/web-deployment)
 
 ### FieldPlan Analyzer
-- [Class Structure](/appsscript/developers/fieldplan-analyzer/class-structure)
-- [Functional Programming Patterns](/appsscript/developers/fieldplan-analyzer/functional-programming)
-- [Timer Implementation](/appsscript/developers/fieldplan-analyzer/timers)
-- [Email Response Generation](/appsscript/developers/fieldplan-analyzer/email-responses)
+- [Class Structure](./fieldplan-analyzer/class-structure)
+- [Timer Implementation](./fieldplan-analyzer/timers)
 
 ### Configuration & Security
-- [Script Properties Guide](/appsscript/developers/script-properties-guide)
+- [Script Properties Guide](./script-properties-guide)
 
 ### Spreadsheet Mapping
-- [Configuration Guide](/appsscript/developers/spreadsheet-mapping/configuration)
-- [Mapping Examples](/appsscript/developers/spreadsheet-mapping/examples)
+- [Configuration Guide](./spreadsheet-mapping/configuration)
+- [Mapping Examples](./spreadsheet-mapping/examples)
 
 ## Key Concepts
 

@@ -11,13 +11,13 @@ Welcome! This section is designed to help you understand how Google Apps Script 
 
 If you're new to these applications, we recommend reading these guides in order:
 
-1. **[What is Google Apps Script?](/appsscript/end-users/what-is-apps-script)**  
+1. **[What is Google Apps Script?](./what-is-apps-script)**  
    Learn about the technology that powers our applications and why it's the perfect solution for organizational automation.
 
-2. **[Field Coordination Browser Overview](/appsscript/end-users/field-coordination-browser-overview)**  
+2. **[Field Coordination Browser Overview](./field-coordination-browser-overview)**  
    Discover how this web application transforms spreadsheets into an interactive coordination system.
 
-3. **[FieldPlan Analyzer Overview](/appsscript/end-users/fieldplan-analyzer-overview)**  
+3. **[FieldPlan Analyzer Overview](./fieldplan-analyzer-overview)**  
    Understand how automated analysis and reporting save time while improving decision-making.
 
 ## Key Concepts
@@ -77,10 +77,10 @@ A: Contact your administrator - most actions can be reversed.
 
 ## Need Help?
 
-- Check our [FAQ](/appsscript/faq) for answers to common questions
-- Visit [Troubleshooting](/appsscript/troubleshooting) for solutions to common issues
+- Check our [FAQ](../faq) for answers to common questions
+- Visit [Troubleshooting](../troubleshooting) for solutions to common issues
 - Contact your system administrator for account-specific help
 
 ## Ready to Dive Deeper?
 
-If you're interested in the technical side or want to build your own solutions, visit our [Developer Documentation](/appsscript/developers/).
+If you're interested in the technical side or want to build your own solutions, visit our [Developer Documentation](../developers/).
