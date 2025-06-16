@@ -12,7 +12,7 @@ const BIGQUERY_CONFIG = {
   projectId: scriptProps.getProperty('BQ_PROJECT_ID') || 'prod-sv-al-898733e3',
   
   // Dataset for saving query history and results
-  historyDataset: scriptProps.getProperty('BQ_HISTORY_DATASET') || 'alforward',
+  historyDataset: scriptProps.getProperty('BQ_HISTORY_DATASET'),
   historyTableId: scriptProps.getProperty('BQ_HISTORY_TABLE') || 'precinct_query_history',
   resultsTableId: scriptProps.getProperty('BQ_RESULTS_TABLE') || 'latest_query_results',
   
@@ -881,7 +881,7 @@ function claimItemForOrganizationWithBigQuery(originalRowIndex, orgName, resultR
     };
     
     // Get user email for notifications - use multiple methods to ensure we get a valid email
-    let userEmail = scriptProps.getProperty('EMAIL_FALLBACK') || "gabri@alforward.org"; // Default fallback
+    let userEmail = "gabri.cubero.caban@cta-tech.app"; // Default fallback
     
     // Try different methods to get user email
     try {
@@ -905,7 +905,7 @@ function claimItemForOrganizationWithBigQuery(originalRowIndex, orgName, resultR
     }
     
     // Always CC the data team for redundancy
-    const ccEmail = (scriptProps.getProperty('EMAIL_RECIPIENTS') || 'datateam@alforward.org').split(',')[0];
+    const ccEmail = "datateam@alforward.org";
     
     Logger.log("Using email address for notifications: " + userEmail);
     
@@ -1133,7 +1133,7 @@ function claimItemForOrganizationWithBigQuery(originalRowIndex, orgName, resultR
     
     // Try to send error email
     try {
-      let criticalEmail = scriptProps.getProperty('EMAIL_FALLBACK') || "gabri@alforward.org"; // Default email for critical errors
+      let criticalEmail = "gabri.cubero.caban@cta-tech.app"; // Default email for critical errors
       
       // Try to get a valid user email for the error notification
       try {
@@ -1152,7 +1152,7 @@ function claimItemForOrganizationWithBigQuery(originalRowIndex, orgName, resultR
       
       MailApp.sendEmail({
         to: criticalEmail,
-        cc: (scriptProps.getProperty('EMAIL_RECIPIENTS') || 'datateam@alforward.org').split(',')[0],
+        cc: "datateam@alforward.org",
         subject: "ERROR: BigQuery Precinct Claim Integration",
         htmlBody: `
           <html>
