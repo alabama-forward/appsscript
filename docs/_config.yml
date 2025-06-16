@@ -1,0 +1,61 @@
+# Jekyll configuration for Apps Script Documentation
+
+title: Apps Script Field Coordination Documentation
+description: Documentation for Field Coordination Browser and FieldPlan Analyzer
+baseurl: "/appsscript"
+url: ""
+
+# Theme
+theme: jekyll-theme-minimal
+remote_theme: pages-themes/minimal@v0.2.0
+
+# Plugins
+plugins:
+  - jekyll-seo-tag
+  - jekyll-sitemap
+
+# Collections
+collections:
+  end_users:
+    output: true
+    permalink: /end-users/:name
+  developers:
+    output: true
+    permalink: /developers/:name
+
+# Navigation
+navigation:
+  - title: Home
+    url: /
+  - title: For End Users
+    url: /end-users/
+  - title: For Developers
+    url: /developers/
+  - title: Troubleshooting
+    url: /troubleshooting/
+  - title: FAQ
+    url: /faq/
+
+# Default layouts
+defaults:
+  - scope:
+      path: ""
+      type: "pages"
+    values:
+      layout: "default"
+  - scope:
+      path: "_end_users"
+      type: "end_users"
+    values:
+      layout: "default"
+  - scope:
+      path: "_developers"
+      type: "developers"
+    values:
+      layout: "default"
+
+# Exclude files
+exclude:
+  - README.md
+  - Gemfile
+  - Gemfile.lock
