@@ -197,31 +197,85 @@ Reports typically include:
 
 ## Email Report Examples
 
-### Budget Alert Email
+### Budget Analysis Email
+When a budget is analyzed after finding a matching field plan:
+
 ```
-Subject: Budget Alert - Field Operations
+Subject: Budget Analysis - [Organization Name]
 
-Current Status:
-- Total Budget: $100,000
-- Spent: $78,000 (78%)
-- Remaining: $22,000
-- Days Left: 45
+Summary:
+Organization ABC requested $50,000 and described a funding gap of $10,000.
+Their project costs $75,000 to run.
 
-Recommendation: Current burn rate will exceed budget.
-Consider reducing activities in Region 3.
+Key Findings:
+• Indirect costs: $5,000 (10% of request)
+• Outreach costs: $15,000 (30% of request)  
+• Data funding: $8,000 (160 hours of labor offset)
+
+Tactic Analysis - Door Knocking:
+• Funding Requested: $25,000
+• Program Attempts: 5,000
+• Cost Per Attempt: $5.00
+• Target Range: $4.50 - $6.00
+• Status: Within target range
+• Recommendation: Funding level is appropriate
+
+Gap Analysis:
+If you increase Door Knocking by $5,000:
+- New cost per attempt: $6.00
+- Still within efficiency targets ✓
+```
+
+### Field Plan Notification Email
+When a new field plan is submitted:
+
+```
+Subject: New Field Plan - [Organization Name]
+
+Contact Information:
+• Organization: Community Action Group
+• Contact: Jane Smith
+• Email: jane@example.org
+
+Program Details:
+• Data Storage: VAN
+• Field Counties: County A, County B
+• Program Length: 12 weeks
+• Weekly Volunteers: 25
+• Total Program Hours: 3,000
+
+Coaching Assessment:
+Confidence Level: 7/10
+Recommendation: Light touch coaching recommended
+
+Field Metrics:
+• Door Knocking: 5,000 attempts planned
+• Phone Banking: 10,000 attempts planned
+• Expected contact rate: 25%
 ```
 
 ### Weekly Summary Email
+Every Monday at 9 AM:
+
 ```
-Subject: Weekly Field Summary - Week 23
+Subject: Weekly Budget Analysis Summary
 
-Highlights:
-✓ 15 new areas completed
-✓ 92% on-time completion rate
-⚠ 3 areas need revisiting
-✓ Budget on track (52% used, 50% time elapsed)
+Report Date: Monday, June 10, 2024
 
-See attached details for full breakdown.
+Analysis Status:
+• Budgets Analyzed: 15
+• Budgets Pending: 3
+• Waiting for Field Plans: 2
+
+Financial Summary:
+• Total Requested: $750,000
+• Total Gap Identified: $125,000
+
+Organizations missing field plans (72+ hours):
+• Organization XYZ - submitted 4 days ago
+• Organization ABC - submitted 3 days ago
+
+Note: Follow up with these organizations to complete analysis.
 ```
 
 ## Tips for Recipients
