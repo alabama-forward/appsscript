@@ -2,10 +2,13 @@
 # This file contains sensitive configuration data
 SCRIPT_PROPERTIES_CONFIGURATION.md
 
+
 # Development folders
 # These contain work-in-progress code and BigQuery integration
 field_coordination_browser/developing/
+field_coordination_browser/docs
 fieldplan_analyzer/developing/
+fieldplan_analyzer/dpcs
 
 # Documentation planning files
 documentation_questions.md
