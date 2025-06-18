@@ -155,6 +155,56 @@ function recordUserSelection(precinctId, organization, claimType) {
 }
 ```
 
+### 4. **Email Notifications**
+
+The application sends confirmation emails when claims are made:
+
+```javascript
+function sendConfirmationEmail(precinctDetails, selectedOrg, claimType) {
+  const recipients = PropertiesService.getScriptProperties()
+    .getProperty('EMAIL_RECIPIENTS') || 'datateam@alforward.org,sherri@alforward.org';
+  
+  const userEmail = Session.getActiveUser().getEmail();
+  const allRecipients = recipients + ',' + userEmail;
+  
+  // Get other organization's email if applicable
+  const otherOrgEmail = getEmailForOrganization(otherOrgName);
+  if (otherOrgEmail) {
+    allRecipients += ',' + otherOrgEmail;
+  }
+  
+  const subject = `Precinct Claim Confirmation - ${precinctDetails.county} ${precinctDetails.precinctName}`;
+  
+  // HTML email body with styling
+  const htmlBody = generateEmailHTML(precinctDetails, selectedOrg, claimType);
+  const plainBody = generatePlainTextEmail(precinctDetails, selectedOrg, claimType);
+  
+  MailApp.sendEmail({
+    to: allRecipients,
+    subject: subject,
+    body: plainBody,
+    htmlBody: htmlBody
+  });
+}
+
+function getEmailForOrganization(orgName) {
+  const orgSheet = ss.getSheetByName(orgContactsSheetName);
+  const data = orgSheet.getDataRange().getValues();
+  
+  for (let i = 1; i < data.length; i++) {
+    if (data[i][0] === orgName) {
+      return data[i][1]; // Email in column B
+    }
+  }
+  return null;
+}
+```
+
+Email recipients include:
+- Configured administrators (datateam@alforward.org, sherri@alforward.org)
+- The user making the claim
+- Other organizations that have claimed the same precinct
+
 ## Key Limitations
 
 ### 1. **No Real-Time Updates**
@@ -162,22 +212,17 @@ function recordUserSelection(precinctId, organization, claimType) {
 - No WebSocket or push notifications
 - No automatic polling mechanism
 
-### 2. **No Email Functionality**
-- Despite UI references, no emails are sent
-- No Gmail service integration
-- No notification system
-
-### 3. **Basic Search**
+### 2. **Basic Search**
 - Only searches by precinct number
 - No multi-field search
 - No advanced filtering
 
-### 4. **No Session Management**
+### 3. **No Session Management**
 - Relies solely on Google authentication
 - No activity tracking
 - No user preferences
 
-### 5. **Race Conditions**
+### 4. **Race Conditions**
 - No LockService implementation
 - Possible simultaneous claims
 - No transaction support

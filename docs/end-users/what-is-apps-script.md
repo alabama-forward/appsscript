@@ -111,7 +111,7 @@ While you don't need to be a programmer to use applications built with Apps Scri
 
 Now that you understand what Apps Script is and why it's powerful, explore how our specific applications work:
 
-- [Field Coordination Browser Overview](/appsscript/end-users/field-coordination-browser-overview)
-- [FieldPlan Analyzer Overview](/appsscript/end-users/fieldplan-analyzer-overview)
+- [Field Coordination Browser Overview](/appsscript/docs/end-users/field-coordination-browser-overview)
+- [FieldPlan Analyzer Overview](/appsscript/docs/end-users/fieldplan-analyzer-overview)
 
 These guides will show you how we've applied Apps Script principles to solve real organizational challenges.

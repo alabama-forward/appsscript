@@ -236,6 +236,6 @@ Example: `DOOR_TARGET: 5.0, DOOR_SD: 0.75`
 
 ## Next Steps
 
-- Learn about the [Field Coordination Browser](/appsscript/end-users/field-coordination-browser-overview)
-- Read the [FAQ](/appsscript/faq) for common questions
-- Check [Troubleshooting](/appsscript/troubleshooting) for issues
+- Learn about the [Field Coordination Browser](/appsscript/docs/end-users/field-coordination-browser-overview)
+- Read the [FAQ](/appsscript/docs/faq) for common questions
+- Check [Troubleshooting](/appsscript/docs/troubleshooting) for issues

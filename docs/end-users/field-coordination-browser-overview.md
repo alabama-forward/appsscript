@@ -16,6 +16,7 @@ The Field Coordination Browser is a precinct claim management system that allows
    - Each precinct allows up to 2 organizations to claim it
    - Claims are recorded with timestamps
    - Prevents duplicate claims by the same organization
+   - Automatic email confirmations sent to administrators and claimants
 
 2. **Basic Search**
    - Search by precinct number only
@@ -50,10 +51,23 @@ The application uses Google Sheets as its database with these sheets:
 3. **Claim Precinct**: System records your claim with timestamp
 4. **Manual Refresh**: Click refresh or reload page to see latest claims
 
+### Email Notifications
+
+When you claim a precinct, the system automatically sends confirmation emails to:
+- **Data team administrators** (datateam@alforward.org)
+- **You** (the person making the claim)
+- **Other organization** (if they've already claimed the same precinct)
+
+The email includes:
+- Precinct details (county, name, number, municipality)
+- Organizations that have claimed the precinct
+- Timestamp of claims
+- Instructions to run the 'field_coordination_2025' query in PAD
+- Link to the master spreadsheet
+
 ### Important Limitations
 
 - **No real-time updates** - You must manually refresh to see changes
-- **No email notifications** - Despite UI references, emails are not sent
 - **Basic search only** - Can only search by precinct number
 - **No undo feature** - Claims cannot be reversed once made
 - **Limited to 2 claims per precinct** - Hard-coded limit
@@ -180,12 +194,11 @@ The application uses Google Sheets as its database with these sheets:
 
 The following features are in development but not currently active:
 - BigQuery integration for voter data
-- Email notifications for claims
 - Advanced search capabilities
 - Real-time updates
 
 ## Next Steps
 
-- Learn about the [FieldPlan Analyzer](/appsscript/end-users/fieldplan-analyzer-overview)
-- Visit the [FAQ](/appsscript/faq) for common questions
-- Check [Troubleshooting](/appsscript/troubleshooting) if you encounter issues
+- Learn about the [FieldPlan Analyzer](/appsscript/docs/end-users/fieldplan-analyzer-overview)
+- Visit the [FAQ](/appsscript/docs/faq) for common questions
+- Check [Troubleshooting](/appsscript/docs/troubleshooting) if you encounter issues

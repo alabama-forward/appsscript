@@ -56,7 +56,8 @@ When you claim an item:
 1. It's immediately marked with your organization
 2. Others can no longer claim that slot
 3. The claim is recorded with a timestamp
-4. You must refresh to see other users' claims
+4. Email confirmations are sent to administrators and relevant parties
+5. You must refresh to see other users' claims
 
 ### Can I unclaim an item?
 
@@ -309,7 +310,7 @@ Regular backups recommended:
 
 If your question isn't answered here:
 
-1. Check the [Troubleshooting Guide](/appsscript/troubleshooting)
+1. Check the [Troubleshooting Guide](/appsscript/docs/troubleshooting)
 2. Review relevant documentation sections
 3. Contact your system administrator
 4. For developers: Check Google Apps Script documentation
