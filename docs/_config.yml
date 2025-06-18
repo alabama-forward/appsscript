@@ -14,15 +14,6 @@ plugins:
   - jekyll-seo-tag
   - jekyll-sitemap
 
-# Collections
-collections:
-  end_users:
-    output: true
-    permalink: /end-users/:name
-  developers:
-    output: true
-    permalink: /developers/:name
-
 # Navigation
 navigation:
   - title: Home
@@ -32,25 +23,14 @@ navigation:
   - title: For Developers
     url: /developers/
   - title: Troubleshooting
-    url: /troubleshooting/
+    url: /troubleshooting
   - title: FAQ
-    url: /faq/
+    url: /faq
 
 # Default layouts
 defaults:
   - scope:
       path: ""
-      type: "pages"
-    values:
-      layout: "default"
-  - scope:
-      path: "_end_users"
-      type: "end_users"
-    values:
-      layout: "default"
-  - scope:
-      path: "_developers"
-      type: "developers"
     values:
       layout: "default"
 
@@ -59,3 +39,6 @@ exclude:
   - README.md
   - Gemfile
   - Gemfile.lock
+  - _developers
+  - _end_users
+  - _includes
