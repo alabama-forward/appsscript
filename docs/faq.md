@@ -53,31 +53,27 @@ Possible reasons:
 ### How do claims work?
 
 When you claim an item:
-1. It's immediately marked with your email
-2. Others can no longer claim it
-3. You receive an email confirmation
-4. The claim appears in your active claims list
+1. It's immediately marked with your organization
+2. Others can no longer claim that slot
+3. The claim is recorded with a timestamp
+4. You must refresh to see other users' claims
 
 ### Can I unclaim an item?
 
-Yes, you can release claims:
-- Find the item in your claimed list
-- Click "Release" or "Unclaim"
-- The item becomes available again
-- You'll receive a confirmation
+No, claims cannot be reversed once made. Contact your administrator if you need to release a claim.
 
 ### What happens if two people claim simultaneously?
 
-The system uses locking to prevent double claims:
-- First person to click gets the claim
-- Second person sees "Already claimed" message
-- The page updates to show current status
+The system has basic conflict prevention:
+- It tracks active selections to reduce conflicts
+- However, true simultaneous claims may result in race conditions
+- Always refresh after claiming to verify your claim was recorded
 
 ### How often does data update?
 
-- **Real-time**: Claims and releases
-- **Near real-time**: Most data changes
-- **Manual refresh**: Click refresh or reload page
+- **Not automatic**: You must manually refresh the page
+- **No real-time updates**: Changes by other users require page reload
+- **Manual refresh**: Click refresh button or reload the page
 
 ## FieldPlan Analyzer Questions
 
@@ -113,8 +109,9 @@ Targets are based on:
 
 Current default ranges:
 - Door Knocking: $4.50 - $6.00 per attempt
-- Phone Banking: $2.00 - $3.50 per attempt
-- Text Banking: $0.15 - $0.30 per attempt
+- Phone Banking: $0.30 - $0.50 per attempt
+- Text Messaging: $0.25 - $0.50 per attempt
+- Mail: $2.00 - $4.00 per attempt
 
 ### What does "confidence level" mean?
 

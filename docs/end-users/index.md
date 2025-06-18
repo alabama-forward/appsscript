@@ -37,7 +37,7 @@ As an end user, you can:
 
 - Browse and claim field assignments through a web interface
 - Receive automated email notifications and reports
-- Track progress and completion status in real-time
+- Track progress and completion status
 - Access data from any device, anywhere
 
 ### What You Don't Need to Worry About
@@ -67,7 +67,7 @@ As an end user, you can:
 A: No, just a web browser and Google account.
 
 **Q: How often is data updated?**  
-A: Real-time for the browser, every 12 hours for analysis.
+A: Manual refresh required for the browser, every 12 hours for analysis.
 
 **Q: Can I access from my phone?**  
 A: Yes, both tools work on mobile devices.

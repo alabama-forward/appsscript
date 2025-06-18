@@ -5,7 +5,7 @@ title: Field Coordination Browser - Architecture
 
 # Field Coordination Browser Architecture
 
-The Field Coordination Browser demonstrates how to build a sophisticated web application using Google Apps Script, with a spreadsheet serving as the backend database.
+The Field Coordination Browser is a precinct claim management system built with Google Apps Script, using Google Sheets as the backend database.
 
 ## Architecture Overview
 
@@ -16,487 +16,272 @@ The Field Coordination Browser demonstrates how to build a sophisticated web app
 └─────────────────┘     └──────────────────┘     └─────────────────┘
         │                         │                         │
         │                         │                         │
-    HTML/CSS/JS            Business Logic            Data Storage
-    User Interface         Authentication            State Management
-    Event Handling         Data Processing           Email Mappings
+    HTML Interface         Basic Logic            Data Storage
+    Form Submission        Claim Processing      Precinct Data
+    Manual Refresh         Conflict Check        Claim Records
 ```
 
 ## Core Components
 
-### 1. **Server-Side (Code.gs)**
+### 1. **Server-Side (server-side.js)**
 
-The server-side code handles all business logic and data access:
+The server-side code handles basic claim processing:
 
 ```javascript
 // Main entry point for web app
 function doGet() {
-  const userEmail = Session.getActiveUser().getEmail();
-  const template = HtmlService.createTemplateFromFile('index');
-  template.userEmail = userEmail;
-  
-  return template.evaluate()
-    .setTitle('Field Coordination Browser')
-    .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL)
+  return HtmlService.createTemplateFromFile('index')
+    .evaluate()
+    .setTitle('Alabama Forward Field Coordination 2025')
     .addMetaTag('viewport', 'width=device-width, initial-scale=1');
 }
 
-// Include external files
+// Include CSS and JavaScript files
 function include(filename) {
   return HtmlService.createHtmlOutputFromFile(filename).getContent();
 }
 ```
 
-### 2. **Client-Side Architecture**
+### 2. **Client-Side Components**
 
-The client interface is split into modular components:
+The interface consists of three files:
 
-- **index.html**: Main HTML structure
-- **styles.html**: CSS styling
-- **client-side.html**: JavaScript functionality
+- **index.html**: Main HTML structure with search form and results table
+- **styles.html**: CSS styling for visual appearance
+- **client-side.html**: JavaScript for form handling and UI updates
 
 ### 3. **Data Layer**
 
-Spreadsheet sheets serve different purposes:
+The application uses these Google Sheets:
 
 ```javascript
+// Actual sheets used (from script properties or defaults)
 const SHEETS = {
-  PRIORITIES: 'priorities',      // Main data
-  SEARCH: 'search',             // Search interface
-  ORG_CONTACTS: 'orgContacts',  // Email mappings
-  USER_SELECTIONS: 'userSelections' // Active claims
+  PRIORITIES: 'priorities',           // Master precinct list
+  SEARCH: 'search',                  // Search results
+  ORG_CONTACTS: 'orgContacts',       // Organization list
+  USER_SELECTIONS: 'userSelections'  // Active selections
 };
 ```
 
-## Key Design Patterns
+## Actual Implementation Details
 
-### 1. **Server-Client Communication**
+### 1. **Search Functionality**
 
-Use `google.script.run` for asynchronous communication:
+The search is basic and only searches by precinct number:
 
 ```javascript
-// Client-side call
-google.script.run
-  .withSuccessHandler(handleSuccess)
-  .withFailureHandler(handleError)
-  .getDataFromServer(parameters);
-
-// Server-side handler
-function getDataFromServer(parameters) {
-  try {
-    // Process request
-    const data = fetchData(parameters);
-    return { success: true, data: data };
-  } catch (error) {
-    return { success: false, error: error.toString() };
-  }
+function performSearch(county, precinctName, precinctNumber) {
+  const searchSheet = ss.getSheetByName(searchSheetName);
+  
+  // Clear previous results
+  searchSheet.getRange('A7:J282').clearContent();
+  
+  // Set search criteria
+  if (county) searchSheet.getRange('B3').setValue(county);
+  if (precinctName) searchSheet.getRange('B4').setValue(precinctName);
+  if (precinctNumber) searchSheet.getRange('B5').setValue(precinctNumber);
+  
+  // Force recalculation
+  SpreadsheetApp.flush();
+  
+  // Get filtered results
+  const results = searchSheet.getRange('A7:J282').getValues();
+  return results.filter(row => row[0]); // Non-empty rows
 }
 ```
 
-### 2. **Session Management**
+### 2. **Claim Processing**
 
-Track user sessions and state:
-
-```javascript
-function getUserSession() {
-  const email = Session.getActiveUser().getEmail();
-  const temp = Session.getTemporaryActiveUserKey();
-  
-  return {
-    email: email,
-    sessionId: temp,
-    timestamp: new Date()
-  };
-}
-
-function trackUserAction(action, data) {
-  const session = getUserSession();
-  const logSheet = SpreadsheetApp.getActiveSpreadsheet()
-    .getSheetByName('activityLog');
-  
-  logSheet.appendRow([
-    session.timestamp,
-    session.email,
-    action,
-    JSON.stringify(data)
-  ]);
-}
-```
-
-### 3. **Real-Time Updates**
-
-Implement claim system with instant feedback:
+Claims are processed without any locking mechanism:
 
 ```javascript
-function claimItem(itemId, userEmail) {
-  const lock = LockService.getScriptLock();
+function submitClaim(precinctDetails, selectedOrg, claimType) {
+  const prioritiesSheet = ss.getSheetByName(prioritiesSheetName);
+  const data = prioritiesSheet.getDataRange().getValues();
   
-  try {
-    // Get exclusive lock to prevent race conditions
-    lock.waitLock(10000);
-    
-    const sheet = SpreadsheetApp.getActiveSpreadsheet()
-      .getSheetByName(SHEETS.PRIORITIES);
-    const data = sheet.getDataRange().getValues();
-    
-    // Find and claim item
-    for (let i = 1; i < data.length; i++) {
-      if (data[i][0] === itemId && !data[i][COLUMNS.CLAIMED_BY]) {
-        sheet.getRange(i + 1, COLUMNS.CLAIMED_BY + 1).setValue(userEmail);
-        sheet.getRange(i + 1, COLUMNS.CLAIM_TIME + 1).setValue(new Date());
-        
-        // Send notification
-        sendClaimNotification(data[i], userEmail);
-        
-        return { success: true, message: 'Item claimed successfully' };
-      }
-    }
-    
-    return { success: false, message: 'Item already claimed' };
-    
-  } catch (e) {
-    return { success: false, message: 'Error claiming item: ' + e.toString() };
-  } finally {
-    lock.releaseLock();
-  }
-}
-```
-
-### 4. **Search Implementation**
-
-Efficient search across multiple fields:
-
-```javascript
-function searchData(searchTerm) {
-  const sheet = SpreadsheetApp.getActiveSpreadsheet()
-    .getSheetByName(SHEETS.PRIORITIES);
-  const data = sheet.getDataRange().getValues();
-  const headers = data[0];
-  const results = [];
-  
-  // Define searchable columns
-  const searchableColumns = [
-    COLUMNS.NAME,
-    COLUMNS.DESCRIPTION,
-    COLUMNS.LOCATION,
-    COLUMNS.CATEGORY
-  ];
-  
-  // Search through data
+  // Find the precinct row
   for (let i = 1; i < data.length; i++) {
-    const row = data[i];
-    let match = false;
-    
-    for (const col of searchableColumns) {
-      if (row[col] && row[col].toString().toLowerCase()
-          .includes(searchTerm.toLowerCase())) {
-        match = true;
-        break;
+    if (data[i][2] == precinctNumber) {
+      // Check for existing claims
+      const firstClaim = data[i][13];
+      const secondClaim = data[i][15];
+      
+      // Validate claim
+      if (claimType === 'first' && firstClaim) {
+        return { success: false, message: 'Already claimed' };
       }
-    }
-    
-    if (match) {
-      results.push({
-        id: row[COLUMNS.ID],
-        data: row,
-        rowIndex: i + 1
-      });
-    }
-  }
-  
-  return results;
-}
-```
-
-## Performance Optimization
-
-### 1. **Batch Operations**
-
-Minimize API calls by batching operations:
-
-```javascript
-function updateMultipleRows(updates) {
-  const sheet = SpreadsheetApp.getActiveSpreadsheet()
-    .getSheetByName(SHEETS.PRIORITIES);
-  
-  // Sort updates by row for efficiency
-  updates.sort((a, b) => a.row - b.row);
-  
-  // Group consecutive rows
-  const batches = [];
-  let currentBatch = null;
-  
-  updates.forEach(update => {
-    if (!currentBatch || update.row !== currentBatch.endRow + 1) {
-      currentBatch = {
-        startRow: update.row,
-        endRow: update.row,
-        values: [update.values]
-      };
-      batches.push(currentBatch);
-    } else {
-      currentBatch.endRow = update.row;
-      currentBatch.values.push(update.values);
-    }
-  });
-  
-  // Apply batches
-  batches.forEach(batch => {
-    const range = sheet.getRange(
-      batch.startRow, 
-      1, 
-      batch.values.length, 
-      batch.values[0].length
-    );
-    range.setValues(batch.values);
-  });
-}
-```
-
-### 2. **Caching Strategy**
-
-Implement client-side caching:
-
-```javascript
-// Client-side cache
-const DataCache = {
-  cache: {},
-  ttl: 5 * 60 * 1000, // 5 minutes
-  
-  set: function(key, data) {
-    this.cache[key] = {
-      data: data,
-      timestamp: Date.now()
-    };
-  },
-  
-  get: function(key) {
-    const item = this.cache[key];
-    if (!item) return null;
-    
-    if (Date.now() - item.timestamp > this.ttl) {
-      delete this.cache[key];
-      return null;
-    }
-    
-    return item.data;
-  },
-  
-  clear: function() {
-    this.cache = {};
-  }
-};
-
-// Use cache before server call
-function getData(forceRefresh = false) {
-  const cacheKey = 'mainData';
-  
-  if (!forceRefresh) {
-    const cached = DataCache.get(cacheKey);
-    if (cached) {
-      displayData(cached);
-      return;
+      
+      // Make the claim
+      const claimColumn = claimType === 'first' ? 14 : 16;
+      const timeColumn = claimType === 'first' ? 15 : 17;
+      
+      prioritiesSheet.getRange(i + 1, claimColumn).setValue(selectedOrg);
+      prioritiesSheet.getRange(i + 1, timeColumn).setValue(new Date());
+      
+      return { success: true };
     }
   }
-  
-  google.script.run
-    .withSuccessHandler(data => {
-      DataCache.set(cacheKey, data);
-      displayData(data);
-    })
-    .withFailureHandler(handleError)
-    .getDataFromServer();
 }
 ```
 
-### 3. **Lazy Loading**
+### 3. **Conflict Prevention**
 
-Load data progressively:
+Basic conflict prevention using userSelections sheet:
 
 ```javascript
-function getDataPage(pageNumber, pageSize = 50) {
-  const sheet = SpreadsheetApp.getActiveSpreadsheet()
-    .getSheetByName(SHEETS.PRIORITIES);
+function recordUserSelection(precinctId, organization, claimType) {
+  const selectionsSheet = ss.getSheetByName(userSelectionsSheetName);
   
-  const startRow = 2 + (pageNumber - 1) * pageSize;
-  const numRows = pageSize;
+  // Add selection with timestamp
+  selectionsSheet.appendRow([
+    Session.getActiveUser().getEmail(),
+    precinctId,
+    organization,
+    claimType,
+    new Date()
+  ]);
   
-  const dataRange = sheet.getRange(
-    startRow, 
-    1, 
-    numRows, 
-    sheet.getLastColumn()
-  );
+  // Clean old selections (> 5 minutes)
+  const now = new Date();
+  const data = selectionsSheet.getDataRange().getValues();
   
-  const data = dataRange.getValues();
-  const totalRows = sheet.getLastRow() - 1;
-  const totalPages = Math.ceil(totalRows / pageSize);
-  
-  return {
-    data: data,
-    page: pageNumber,
-    totalPages: totalPages,
-    hasMore: pageNumber < totalPages
-  };
+  for (let i = data.length - 1; i > 0; i--) {
+    const selectionTime = data[i][4];
+    if (now - selectionTime > 300000) { // 5 minutes
+      selectionsSheet.deleteRow(i + 1);
+    }
+  }
 }
 ```
+
+## Key Limitations
+
+### 1. **No Real-Time Updates**
+- Users must manually refresh to see changes
+- No WebSocket or push notifications
+- No automatic polling mechanism
+
+### 2. **No Email Functionality**
+- Despite UI references, no emails are sent
+- No Gmail service integration
+- No notification system
+
+### 3. **Basic Search**
+- Only searches by precinct number
+- No multi-field search
+- No advanced filtering
+
+### 4. **No Session Management**
+- Relies solely on Google authentication
+- No activity tracking
+- No user preferences
+
+### 5. **Race Conditions**
+- No LockService implementation
+- Possible simultaneous claims
+- No transaction support
 
 ## Security Considerations
 
-### 1. **Authentication**
+### Current Security
+- Google account authentication only
+- Spreadsheet sharing permissions
+- No additional validation
 
+### Missing Security Features
+- No input validation
+- No rate limiting
+- No audit logging
+- No error sanitization
+
+## Performance Characteristics
+
+### Current Implementation
+- Loads all data at once (up to 282 rows)
+- No pagination
+- No caching
+- Manual refresh required
+
+### Performance Issues
+- All operations require full sheet reads
+- No batch operations
+- No lazy loading
+- Limited to ~280 rows hardcoded
+
+## Deployment Configuration
+
+### Web App Settings
 ```javascript
-function requireAuth() {
-  const email = Session.getActiveUser().getEmail();
-  
-  if (!email) {
-    throw new Error('Authentication required');
-  }
-  
-  // Check if user is authorized
-  const authSheet = SpreadsheetApp.getActiveSpreadsheet()
-    .getSheetByName('authorizedUsers');
-  const authorizedEmails = authSheet.getRange('A:A').getValues()
-    .flat().filter(e => e);
-  
-  if (!authorizedEmails.includes(email)) {
-    throw new Error('Unauthorized access');
-  }
-  
-  return email;
-}
+// Current deployment approach
+- Execute as: User accessing the web app
+- Access: Anyone (or restricted by domain)
+- No custom headers or security settings
 ```
 
-### 2. **Input Validation**
-
-```javascript
-function validateInput(input, rules) {
-  const errors = [];
-  
-  // Required fields
-  if (rules.required && !input) {
-    errors.push('Field is required');
-  }
-  
-  // Email validation
-  if (rules.email && input) {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(input)) {
-      errors.push('Invalid email format');
-    }
-  }
-  
-  // Length validation
-  if (rules.minLength && input.length < rules.minLength) {
-    errors.push(`Minimum length is ${rules.minLength}`);
-  }
-  
-  if (rules.maxLength && input.length > rules.maxLength) {
-    errors.push(`Maximum length is ${rules.maxLength}`);
-  }
-  
-  return errors;
-}
+### Required Script Properties
+```
+SPREADSHEET_ID - ID of the Google Sheet
+EMAIL_RECIPIENTS - Comma-separated emails (not used)
+SHEET_PRIORITIES - Name of priorities sheet
+SHEET_SEARCH - Name of search sheet
+SHEET_ORG_CONTACTS - Name of organizations sheet
+SHEET_USER_SELECTIONS - Name of selections sheet
 ```
 
-### 3. **Rate Limiting**
+## Development Considerations
 
-```javascript
-const RateLimiter = {
-  attempts: {},
-  maxAttempts: 100,
-  windowMs: 60 * 1000, // 1 minute
-  
-  check: function(userId) {
-    const now = Date.now();
-    const userAttempts = this.attempts[userId] || [];
-    
-    // Remove old attempts
-    const recentAttempts = userAttempts.filter(
-      time => now - time < this.windowMs
-    );
-    
-    if (recentAttempts.length >= this.maxAttempts) {
-      throw new Error('Rate limit exceeded. Please try again later.');
-    }
-    
-    // Record new attempt
-    recentAttempts.push(now);
-    this.attempts[userId] = recentAttempts;
-    
-    return true;
-  }
-};
+### Current State
+1. **BigQuery Integration** - Code exists in /developing but not integrated
+2. **Email Notifications** - Referenced in UI but not implemented
+3. **Advanced Features** - Many planned features not implemented
+
+### Code Organization
+```
+field_coordination_browser/
+├── src/
+│   ├── appsscript.json      # Manifest file
+│   ├── server-side.js       # Server logic
+│   ├── index.html           # Main HTML
+│   ├── client-side.html     # Client JavaScript
+│   └── styles.html          # CSS styles
+└── developing/
+    └── bigquery-integration.js  # Future features
 ```
 
-## Deployment Considerations
+## Testing Approach
 
-### 1. **Web App Settings**
+### Manual Testing
+- Use Script Editor's test functions
+- Deploy as test deployment
+- Check claim functionality
+- Verify search results
 
-Configure deployment for optimal performance:
-
-```javascript
-// Deployment configuration
-const DEPLOYMENT_CONFIG = {
-  executeAs: 'USER_ACCESSING', // or 'USER_DEPLOYING'
-  access: 'DOMAIN',            // or 'ANYONE', 'MYSELF'
-  
-  // Custom headers
-  headers: {
-    'X-Frame-Options': 'SAMEORIGIN',
-    'X-Content-Type-Options': 'nosniff'
-  }
-};
-```
-
-### 2. **Error Handling**
-
-Comprehensive error handling:
-
-```javascript
-function handleRequest(request) {
-  try {
-    // Validate request
-    if (!request || !request.action) {
-      throw new Error('Invalid request');
-    }
-    
-    // Route to appropriate handler
-    switch (request.action) {
-      case 'getData':
-        return handleGetData(request.params);
-      case 'claimItem':
-        return handleClaimItem(request.params);
-      default:
-        throw new Error('Unknown action: ' + request.action);
-    }
-    
-  } catch (error) {
-    console.error('Request error:', error);
-    
-    // Log to spreadsheet
-    logError(error, request);
-    
-    // Return user-friendly error
-    return {
-      success: false,
-      error: sanitizeError(error)
-    };
-  }
-}
-
-function sanitizeError(error) {
-  // Don't expose internal details
-  const message = error.toString();
-  
-  if (message.includes('ScriptError')) {
-    return 'An internal error occurred';
-  }
-  
-  return message;
-}
-```
+### No Automated Tests
+- No unit tests
+- No integration tests
+- Manual verification only
 
 ## Next Steps
+
+For developers looking to enhance this application:
+
+1. **Add Real Functionality**
+   - Implement email notifications
+   - Add real-time updates
+   - Improve search capabilities
+
+2. **Improve Architecture**
+   - Add proper locking
+   - Implement caching
+   - Add error handling
+
+3. **Enhance Security**
+   - Add input validation
+   - Implement rate limiting
+   - Add audit logging
+
+## Related Documentation
 
 - Learn about [Spreadsheet as Database](/appsscript/developers/field-coordination-browser/spreadsheet-as-database) patterns
 - Explore [Web Deployment](/appsscript/developers/field-coordination-browser/web-deployment) strategies

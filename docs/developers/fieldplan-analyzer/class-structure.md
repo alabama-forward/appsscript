@@ -5,148 +5,374 @@ title: Class Structure - FieldPlan Analyzer
 
 # Class-Based Architecture in FieldPlan Analyzer
 
-The FieldPlan Analyzer uses object-oriented programming principles to create maintainable, scalable code. This guide explains the class structure and design patterns used.
+The FieldPlan Analyzer uses object-oriented programming with a simple class hierarchy to process field planning and budget data. This guide explains the actual class structure implemented in the code.
 
 ## Architecture Overview
 
 ```
 ┌─────────────────────┐
-│   Parent Classes    │
+│    Base Classes     │
 ├─────────────────────┤
-│ FieldPlanParent     │ ← Base class for field plans
+│ FieldPlan           │ ← Base class for field plan data
 │ FieldBudget         │ ← Budget data model
 └──────────┬──────────┘
            │
 ┌──────────▼──────────┐
 │  Extension Classes  │
 ├─────────────────────┤
-│ FieldProgram        │ ← Extends FieldPlanParent
-│ FieldTactics        │ ← Extends FieldPlanParent
-└─────────────────────┘
+│ FieldProgram        │ ← Extends FieldPlan with calculations
+└──────────┬──────────┘
            │
 ┌──────────▼──────────┐
-│  Trigger Functions  │
+│   Tactic Classes    │
 ├─────────────────────┤
-│ checkForNewRows()   │
-│ analyzeBudgets()    │
-│ generateSummary()   │
+│ PhoneTactic         │ ← Extends FieldProgram
+│ DoorTactic          │ ← Extends FieldProgram
+│ TextTactic          │ ← Extends FieldProgram
+│ MailTactic          │ ← Extends FieldProgram
+│ OpenTactic          │ ← Extends FieldProgram
+│ RelationalTactic    │ ← Extends FieldProgram
+│ RegistrationTactic  │ ← Extends FieldProgram
 └─────────────────────┘
 ```
 
 ## Core Classes
 
-### 1. **FieldBudget Class**
+### 1. **FieldPlan Class**
 
-The main budget data model:
+The base class that reads field plan data from the spreadsheet:
+
+```javascript
+class FieldPlan {
+  constructor(rowData) {
+    this.data = {};
+    this._columnIndices = {};
+    this._parseHeaders();
+    this._parseRow(rowData);
+  }
+  
+  _parseHeaders() {
+    const headers = this._getHeaders();
+    headers.forEach((header, index) => {
+      if (header) {
+        const key = this._normalizeHeader(header);
+        this._columnIndices[key] = index;
+      }
+    });
+  }
+  
+  _parseRow(rowData) {
+    // Parse all 58 columns of data
+    Object.keys(this._columnIndices).forEach(key => {
+      const index = this._columnIndices[key];
+      let value = rowData[index];
+      
+      // Normalize array fields
+      if (this._isArrayField(key)) {
+        value = this._parseArrayField(value);
+      }
+      
+      this.data[key] = value;
+    });
+  }
+  
+  _normalizeHeader(header) {
+    return header.toLowerCase()
+      .replace(/[^a-z0-9]+/g, '_')
+      .replace(/^_|_$/g, '');
+  }
+  
+  _isArrayField(key) {
+    const arrayFields = [
+      'field_counties',
+      'priority_demographics',
+      'what_tools_do_you_use',
+      'coaching_support_requested'
+    ];
+    return arrayFields.includes(key);
+  }
+  
+  _parseArrayField(value) {
+    if (!value) return [];
+    if (Array.isArray(value)) return value;
+    return value.toString().split(',').map(v => v.trim()).filter(v => v);
+  }
+  
+  // Static factory methods
+  static fromLastRow() {
+    const sheet = SpreadsheetApp.getActiveSpreadsheet()
+      .getSheetByName(this.getSheetName());
+    const lastRow = sheet.getLastRow();
+    const rowData = sheet.getRange(lastRow, 1, 1, sheet.getLastColumn())
+      .getValues()[0];
+    return new this(rowData);
+  }
+  
+  static fromFirstRow() {
+    const sheet = SpreadsheetApp.getActiveSpreadsheet()
+      .getSheetByName(this.getSheetName());
+    const rowData = sheet.getRange(2, 1, 1, sheet.getLastColumn())
+      .getValues()[0];
+    return new this(rowData);
+  }
+  
+  static getSheetName() {
+    return PropertiesService.getScriptProperties()
+      .getProperty('FIELD_PLAN_SHEET') || '2025_field_plan';
+  }
+}
+```
+
+### 2. **FieldProgram Class**
+
+Extends FieldPlan to add program-specific calculations:
+
+```javascript
+class FieldProgram extends FieldPlan {
+  constructor(rowData) {
+    super(rowData);
+  }
+  
+  // Calculate total program volunteer hours
+  getTotalProgramVolunteerHours() {
+    const fields = [
+      'door_volunteer_hours',
+      'phone_volunteer_hours',
+      'text_volunteer_hours',
+      'mail_volunteer_hours',
+      'open_events_volunteer_hours',
+      'relational_volunteer_hours',
+      'registration_volunteer_hours'
+    ];
+    
+    return fields.reduce((total, field) => {
+      const hours = parseFloat(this.data[field]) || 0;
+      return total + hours;
+    }, 0);
+  }
+  
+  // Calculate weekly volunteer hours
+  getWeeklyVolunteerHours() {
+    const totalHours = this.getTotalProgramVolunteerHours();
+    const weeks = parseFloat(this.data['program_length_in_weeks']) || 1;
+    return totalHours / weeks;
+  }
+  
+  // Calculate weekly contact attempts
+  getWeeklyContactAttempts() {
+    const contactsPerWeek = parseFloat(this.data['contact_attempts_per_week']) || 0;
+    return contactsPerWeek;
+  }
+  
+  // Get total program attempts
+  getTotalProgramAttempts() {
+    const weeklyAttempts = this.getWeeklyContactAttempts();
+    const weeks = parseFloat(this.data['program_length_in_weeks']) || 1;
+    return weeklyAttempts * weeks;
+  }
+  
+  // Get program length in weeks
+  getProgramLength() {
+    return parseFloat(this.data['program_length_in_weeks']) || 0;
+  }
+  
+  // Check if a specific tactic is enabled
+  isTacticEnabled(tacticName) {
+    const field = `${tacticName}_volunteer_hours`;
+    const hours = parseFloat(this.data[field]) || 0;
+    return hours > 0;
+  }
+}
+```
+
+### 3. **Tactic-Specific Classes**
+
+Each tactic has its own class with specific metrics and thresholds:
+
+```javascript
+class PhoneTactic extends FieldProgram {
+  constructor(rowData) {
+    super(rowData);
+    this.tacticName = 'phone';
+    this.contactRateRange = { low: 0.05, high: 0.10 }; // 5-10%
+    this.reasonableHourlyAttempts = 35;
+  }
+  
+  getVolunteerHours() {
+    return parseFloat(this.data['phone_volunteer_hours']) || 0;
+  }
+  
+  checkVolunteerExpectationsReasonable() {
+    const weeklyHours = this.getVolunteerHours() / this.getProgramLength();
+    const weeklyVolunteers = parseFloat(this.data['weekly_phone_volunteers']) || 0;
+    
+    if (weeklyVolunteers === 0) return true;
+    
+    const hoursPerVolunteer = weeklyHours / weeklyVolunteers;
+    return hoursPerVolunteer >= 2 && hoursPerVolunteer <= 20;
+  }
+  
+  getTacticContactRate() {
+    const rate = parseFloat(this.data['phone_contact_rate_percentage']) || 0;
+    return rate / 100; // Convert percentage to decimal
+  }
+  
+  // Calculate expected successful contacts
+  calculateSuccessfulContacts() {
+    const attempts = this.calculateAttempts();
+    const contactRate = this.getTacticContactRate() || 
+                       (this.contactRateRange.low + this.contactRateRange.high) / 2;
+    return Math.round(attempts * contactRate);
+  }
+  
+  // Calculate total attempts for this tactic
+  calculateAttempts() {
+    const hours = this.getVolunteerHours();
+    const attemptsPerHour = parseFloat(this.data['phone_attempts_per_hour']) || 
+                           this.reasonableHourlyAttempts;
+    return Math.round(hours * attemptsPerHour);
+  }
+}
+
+// Similar structure for other tactics
+class DoorTactic extends FieldProgram {
+  constructor(rowData) {
+    super(rowData);
+    this.tacticName = 'door';
+    this.contactRateRange = { low: 0.05, high: 0.10 }; // 5-10%
+    this.reasonableHourlyAttempts = 10;
+  }
+  // ... similar methods
+}
+
+class TextTactic extends FieldProgram {
+  constructor(rowData) {
+    super(rowData);
+    this.tacticName = 'text';
+    this.contactRateRange = { low: 0.01, high: 0.05 }; // 1-5%
+    this.reasonableHourlyAttempts = 150;
+  }
+  // ... similar methods
+}
+
+class MailTactic extends FieldProgram {
+  constructor(rowData) {
+    super(rowData);
+    this.tacticName = 'mail';
+    this.contactRateRange = { low: 0.01, high: 0.05 }; // 1-5%
+    this.reasonableHourlyAttempts = 100;
+  }
+  // ... similar methods
+}
+```
+
+### 4. **FieldBudget Class**
+
+Handles budget data and analysis:
 
 ```javascript
 class FieldBudget {
   constructor(rowData) {
     this.rowData = rowData;
+    this.data = {};
     this.parseData();
   }
   
   parseData() {
-    // Map spreadsheet columns to properties
-    this.firstName = this.rowData[FieldBudget.COLUMNS.FIRSTNAME - 1];
-    this.lastName = this.rowData[FieldBudget.COLUMNS.LASTNAME - 1];
-    this.email = this.rowData[FieldBudget.COLUMNS.CONTACTEMAIL - 1];
-    this.organization = this.rowData[FieldBudget.COLUMNS.ORGANIZATIONNAME - 1];
+    // Map column indices to data fields
+    this.data.timestamp = this.rowData[0];
+    this.data.firstName = this.rowData[1];
+    this.data.lastName = this.rowData[2];
+    this.data.email = this.rowData[3];
+    this.data.organization = this.rowData[4];
     
-    // Parse financial data
-    this.totalBudget = this.parseNumber(
-      this.rowData[FieldBudget.COLUMNS.TOTALBUDGET - 1]
-    );
-    this.fundingGap = this.parseNumber(
-      this.rowData[FieldBudget.COLUMNS.FUNDINGGAP - 1]
-    );
+    // Parse budget categories (15 categories x 3 columns each)
+    this.parseBudgetCategories();
     
-    // Parse tactics
-    this.parseTactics();
+    // Parse analysis status
+    this.data.analyzed = this.rowData[49];
+    this.data.analyzedTimestamp = this.rowData[50];
+    this.data.missingFieldPlanNotificationSent = this.rowData[51];
+    this.data.missingFieldPlanTimestamp = this.rowData[52];
+  }
+  
+  parseBudgetCategories() {
+    const categories = [
+      'indirect', 'travel', 'supplies', 'literature',
+      'swag', 'phonebanking', 'textbanking', 'door',
+      'mail', 'events', 'relational', 'registration',
+      'digital', 'other', 'total'
+    ];
+    
+    this.data.budget = {};
+    let colIndex = 5; // Starting column for budget data
+    
+    categories.forEach(category => {
+      this.data.budget[category] = {
+        requested: this.parseNumber(this.rowData[colIndex]),
+        total: this.parseNumber(this.rowData[colIndex + 1]),
+        gap: this.parseNumber(this.rowData[colIndex + 2])
+      };
+      colIndex += 3;
+    });
   }
   
   parseNumber(value) {
     if (!value) return 0;
-    
-    // Remove currency symbols and commas
-    const cleaned = value.toString()
-      .replace(/[$,]/g, '')
-      .trim();
-    
+    const cleaned = value.toString().replace(/[$,]/g, '').trim();
     const num = parseFloat(cleaned);
     return isNaN(num) ? 0 : num;
   }
   
-  parseTactics() {
-    this.tactics = {};
+  // Calculate proportion of request that is indirect
+  calculateIndirectProportion() {
+    const indirect = this.data.budget.indirect.requested;
+    const total = this.data.budget.total.requested;
+    return total > 0 ? indirect / total : 0;
+  }
+  
+  // Calculate proportion of request that is outreach
+  calculateOutreachProportion() {
+    const outreachCategories = [
+      'phonebanking', 'textbanking', 'door', 'mail',
+      'events', 'relational', 'registration'
+    ];
     
-    // Door knocking
-    this.tactics.doorKnocking = {
-      amount: this.parseNumber(
-        this.rowData[FieldBudget.COLUMNS.DOORKNOCKINGREQUEST - 1]
-      ),
-      enabled: this.rowData[FieldBudget.COLUMNS.DOORKNOCKINGTACTIC - 1] === 'Yes'
-    };
+    const outreach = outreachCategories.reduce((sum, cat) => {
+      return sum + this.data.budget[cat].requested;
+    }, 0);
     
-    // Phone banking
-    this.tactics.phoneBanking = {
-      amount: this.parseNumber(
-        this.rowData[FieldBudget.COLUMNS.PHONEBANKINGREQUEST - 1]
-      ),
-      enabled: this.rowData[FieldBudget.COLUMNS.PHONEBANKINGTACTIC - 1] === 'Yes'
-    };
-    
-    // Add other tactics...
+    const total = this.data.budget.total.requested;
+    return total > 0 ? outreach / total : 0;
   }
   
-  // Getters for computed properties
-  get totalRequest() {
-    return Object.values(this.tactics)
-      .reduce((sum, tactic) => sum + (tactic.amount || 0), 0);
+  // Check if budget needs analysis
+  needsAnalysis() {
+    return !this.data.analyzed && this.data.email;
   }
   
-  get hasValidEmail() {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(this.email);
+  // Get organization name for matching
+  getOrganizationName() {
+    return this.data.organization || '';
   }
   
-  get needsAnalysis() {
-    return !this.rowData[FieldBudget.COLUMNS.ANALYZED - 1] && 
-           this.hasValidEmail &&
-           this.totalRequest > 0;
+  // Get total funding gap
+  getTotalGap() {
+    return Math.abs(this.data.budget.total.gap || 0);
   }
   
-  // Factory methods
-  static fromRow(rowData) {
-    return new FieldBudget(rowData);
-  }
-  
-  static fromLastRow() {
+  // Static factory methods
+  static getAllUnanalyzed() {
     const sheet = SpreadsheetApp.getActiveSpreadsheet()
-      .getSheetByName(FieldBudget.SHEET_NAME);
-    const lastRow = sheet.getLastRow();
-    
-    if (lastRow < 2) return null;
-    
-    const rowData = sheet.getRange(lastRow, 1, 1, sheet.getLastColumn())
-      .getValues()[0];
-    
-    return new FieldBudget(rowData);
-  }
-  
-  static getAllPending() {
-    const sheet = SpreadsheetApp.getActiveSpreadsheet()
-      .getSheetByName(FieldBudget.SHEET_NAME);
-    const data = sheet.getDataRange().getValues();
-    
+      .getSheetByName(this.getSheetName());
+    const allData = sheet.getDataRange().getValues();
     const budgets = [];
     
     // Skip header row
-    for (let i = 1; i < data.length; i++) {
-      const budget = new FieldBudget(data[i]);
-      
-      if (budget.needsAnalysis) {
-        budget.rowIndex = i + 1; // Store row number for updates
+    for (let i = 1; i < allData.length; i++) {
+      const budget = new FieldBudget(allData[i]);
+      if (budget.needsAnalysis()) {
+        budget.rowIndex = i + 1; // Store 1-based row index
         budgets.push(budget);
       }
     }
@@ -154,793 +380,100 @@ class FieldBudget {
     return budgets;
   }
   
-  // Analysis methods
-  calculateCostPerAttempt(tactic, fieldPlan) {
-    if (!this.tactics[tactic] || !this.tactics[tactic].enabled) {
-      return null;
-    }
-    
-    const amount = this.tactics[tactic].amount;
-    const attempts = fieldPlan.getTacticAttempts(tactic);
-    
-    if (attempts === 0) return null;
-    
-    return {
-      amount: amount,
-      attempts: attempts,
-      costPerAttempt: amount / attempts,
-      targetRange: FieldBudget.TARGET_RANGES[tactic]
-    };
-  }
-  
-  analyzeEfficiency(fieldPlan) {
-    const analysis = {};
-    
-    for (const tactic in this.tactics) {
-      if (this.tactics[tactic].enabled) {
-        analysis[tactic] = this.calculateCostPerAttempt(tactic, fieldPlan);
-      }
-    }
-    
-    return analysis;
-  }
-  
-  // Update methods
-  markAsAnalyzed() {
-    if (!this.rowIndex) {
-      throw new Error('Row index not set');
-    }
-    
-    const sheet = SpreadsheetApp.getActiveSpreadsheet()
-      .getSheetByName(FieldBudget.SHEET_NAME);
-    
-    sheet.getRange(this.rowIndex, FieldBudget.COLUMNS.ANALYZED)
-      .setValue('Yes');
-    sheet.getRange(this.rowIndex, FieldBudget.COLUMNS.ANALYZEDDATE)
-      .setValue(new Date());
-  }
-  
-  // Email generation
-  generateEmailBody(fieldPlan, analysis) {
-    const gap = Math.abs(this.fundingGap); // Handle negative gaps
-    
-    let html = `
-      <h2>Budget Analysis for ${this.organization}</h2>
-      
-      <h3>Summary</h3>
-      <p>${this.organization} requested $${this.formatCurrency(this.totalRequest)} 
-         and described a funding gap of $${this.formatCurrency(gap)}. 
-         Their project costs $${this.formatCurrency(this.totalBudget)} to run.</p>
-    `;
-    
-    // Add tactic analysis
-    html += '<h3>Tactic Cost Analysis</h3>';
-    
-    for (const [tactic, data] of Object.entries(analysis)) {
-      if (data) {
-        html += this.generateTacticAnalysis(tactic, data);
-      }
-    }
-    
-    // Add recommendations
-    html += this.generateRecommendations(analysis);
-    
-    return html;
-  }
-  
-  formatCurrency(amount) {
-    return new Intl.NumberFormat('en-US', {
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0
-    }).format(amount);
+  static getSheetName() {
+    return PropertiesService.getScriptProperties()
+      .getProperty('BUDGET_SHEET') || '2025_field_budget';
   }
 }
-
-// Static properties
-FieldBudget.SHEET_NAME = '2025_field_budget';
-FieldBudget.COLUMNS = {
-  FIRSTNAME: 2,
-  LASTNAME: 3,
-  CONTACTEMAIL: 4,
-  ORGANIZATIONNAME: 5,
-  TOTALBUDGET: 10,
-  FUNDINGGAP: 11,
-  DOORKNOCKINGTACTIC: 15,
-  DOORKNOCKINGREQUEST: 16,
-  PHONEBANKINGTACTIC: 20,
-  PHONEBANKINGREQUEST: 21,
-  ANALYZED: 50,
-  ANALYZEDDATE: 51
-};
-
-FieldBudget.TARGET_RANGES = {
-  doorKnocking: { min: 4.50, max: 6.00 },
-  phoneBanking: { min: 2.00, max: 3.50 },
-  textBanking: { min: 0.15, max: 0.30 }
-};
 ```
 
-### 2. **FieldPlanParent Class**
+## Usage in Trigger Functions
 
-Base class for field plan data:
-
-```javascript
-class FieldPlanParent {
-  constructor(rowData) {
-    this.rowData = rowData;
-    this.parseBaseData();
-  }
-  
-  parseBaseData() {
-    // Common properties for all field plans
-    this.timestamp = this.rowData[FieldPlanParent.COLUMNS.TIMESTAMP - 1];
-    this.email = this.rowData[FieldPlanParent.COLUMNS.EMAIL - 1];
-    this.firstName = this.rowData[FieldPlanParent.COLUMNS.FIRSTNAME - 1];
-    this.lastName = this.rowData[FieldPlanParent.COLUMNS.LASTNAME - 1];
-    this.organization = this.rowData[FieldPlanParent.COLUMNS.ORGANIZATION - 1];
-    
-    // Contact information
-    this.phone = this.rowData[FieldPlanParent.COLUMNS.PHONE - 1];
-    this.pronouns = this.rowData[FieldPlanParent.COLUMNS.PRONOUNS - 1];
-    
-    // Program details
-    this.dataStorage = this.rowData[FieldPlanParent.COLUMNS.DATASTORAGE - 1];
-    this.counties = this.parseCounties();
-    
-    // Parse confidence level
-    this.confidence = this.parseNumber(
-      this.rowData[FieldPlanParent.COLUMNS.CONFIDENCE - 1]
-    );
-  }
-  
-  parseCounties() {
-    const countiesStr = this.rowData[FieldPlanParent.COLUMNS.COUNTIES - 1];
-    if (!countiesStr) return [];
-    
-    return countiesStr.split(',').map(c => c.trim()).filter(c => c);
-  }
-  
-  parseNumber(value) {
-    const num = parseInt(value);
-    return isNaN(num) ? 0 : num;
-  }
-  
-  // Template method pattern - subclasses implement these
-  parseTacticData() {
-    throw new Error('Subclass must implement parseTacticData');
-  }
-  
-  getTacticAttempts(tacticName) {
-    throw new Error('Subclass must implement getTacticAttempts');
-  }
-  
-  // Common methods
-  get fullName() {
-    return `${this.firstName} ${this.lastName}`.trim();
-  }
-  
-  get needsCoaching() {
-    return this.confidence < 7;
-  }
-  
-  get coachingRecommendation() {
-    if (this.confidence >= 8) {
-      return 'No coaching needed - high confidence level';
-    } else if (this.confidence >= 6) {
-      return 'Light touch coaching recommended';
-    } else if (this.confidence >= 4) {
-      return 'Moderate coaching support needed';
-    } else {
-      return 'Intensive coaching support required';
-    }
-  }
-  
-  // Factory method
-  static fromRow(rowData) {
-    // Determine which subclass to instantiate based on data
-    const programType = rowData[FieldPlanParent.COLUMNS.PROGRAMTYPE - 1];
-    
-    if (programType === 'Field Program') {
-      return new FieldProgram(rowData);
-    } else if (programType === 'Field Tactics') {
-      return new FieldTactics(rowData);
-    } else {
-      // Default to base class
-      return new FieldPlanParent(rowData);
-    }
-  }
-  
-  // Email generation helper
-  generateContactSection() {
-    return `
-      <h3>Contact Information</h3>
-      <p><strong>Organization:</strong> ${this.organization}</p>
-      <p><strong>Contact:</strong> ${this.fullName}</p>
-      <p><strong>Email:</strong> ${this.email}</p>
-      <p><strong>Phone:</strong> ${this.phone || 'Not provided'}</p>
-      <p><strong>Pronouns:</strong> ${this.pronouns || 'Not specified'}</p>
-    `;
-  }
-}
-
-// Static properties
-FieldPlanParent.SHEET_NAME = '2025_field_plan';
-FieldPlanParent.COLUMNS = {
-  TIMESTAMP: 1,
-  EMAIL: 2,
-  FIRSTNAME: 3,
-  LASTNAME: 4,
-  ORGANIZATION: 5,
-  PHONE: 6,
-  PRONOUNS: 7,
-  DATASTORAGE: 10,
-  COUNTIES: 15,
-  CONFIDENCE: 25,
-  PROGRAMTYPE: 30,
-  PROCESSED: 50
-};
-```
-
-### 3. **FieldProgram Extension**
-
-Extends parent for program-specific data:
+### Field Plan Processing
 
 ```javascript
-class FieldProgram extends FieldPlanParent {
-  constructor(rowData) {
-    super(rowData);
-    this.parseTacticData();
-  }
+function checkForNewRows() {
+  const sheet = SpreadsheetApp.getActiveSpreadsheet()
+    .getSheetByName(FieldPlan.getSheetName());
   
-  parseTacticData() {
-    this.tactics = {};
-    
-    // Door knocking program
-    this.tactics.doorKnocking = {
-      enabled: this.rowData[FieldProgram.COLUMNS.DK_ENABLED - 1] === 'Yes',
-      weeks: this.parseNumber(this.rowData[FieldProgram.COLUMNS.DK_WEEKS - 1]),
-      volunteersPerWeek: this.parseNumber(
-        this.rowData[FieldProgram.COLUMNS.DK_VOLUNTEERS - 1]
-      ),
-      hoursPerVolunteer: this.parseNumber(
-        this.rowData[FieldProgram.COLUMNS.DK_HOURS - 1]
-      ),
-      attemptsPerHour: this.parseNumber(
-        this.rowData[FieldProgram.COLUMNS.DK_ATTEMPTS_HOUR - 1]
-      )
-    };
-    
-    // Phone banking program
-    this.tactics.phoneBanking = {
-      enabled: this.rowData[FieldProgram.COLUMNS.PB_ENABLED - 1] === 'Yes',
-      weeks: this.parseNumber(this.rowData[FieldProgram.COLUMNS.PB_WEEKS - 1]),
-      volunteersPerWeek: this.parseNumber(
-        this.rowData[FieldProgram.COLUMNS.PB_VOLUNTEERS - 1]
-      ),
-      hoursPerVolunteer: this.parseNumber(
-        this.rowData[FieldProgram.COLUMNS.PB_HOURS - 1]
-      ),
-      attemptsPerHour: this.parseNumber(
-        this.rowData[FieldProgram.COLUMNS.PB_ATTEMPTS_HOUR - 1]
-      )
-    };
-    
-    // Calculate derived metrics
-    this.calculateMetrics();
-  }
+  const lastProcessedRow = getLastProcessedRow();
+  const currentLastRow = sheet.getLastRow();
   
-  calculateMetrics() {
-    for (const [tacticName, tactic] of Object.entries(this.tactics)) {
-      if (tactic.enabled) {
-        // Total volunteer hours
-        tactic.totalHours = tactic.weeks * 
-                           tactic.volunteersPerWeek * 
-                           tactic.hoursPerVolunteer;
-        
-        // Total attempts
-        tactic.totalAttempts = tactic.totalHours * tactic.attemptsPerHour;
-        
-        // Weekly attempts
-        tactic.weeklyAttempts = tactic.volunteersPerWeek * 
-                               tactic.hoursPerVolunteer * 
-                               tactic.attemptsPerHour;
-      }
-    }
-  }
-  
-  getTacticAttempts(tacticName) {
-    const tactic = this.tactics[tacticName];
-    if (!tactic || !tactic.enabled) return 0;
-    
-    return tactic.totalAttempts || 0;
-  }
-  
-  // Analysis methods
-  analyzeCapacity() {
-    const analysis = {
-      totalVolunteerHours: 0,
-      totalAttempts: 0,
-      tactics: {}
-    };
-    
-    for (const [name, tactic] of Object.entries(this.tactics)) {
-      if (tactic.enabled) {
-        analysis.totalVolunteerHours += tactic.totalHours;
-        analysis.totalAttempts += tactic.totalAttempts;
-        
-        analysis.tactics[name] = {
-          hours: tactic.totalHours,
-          attempts: tactic.totalAttempts,
-          efficiency: tactic.attemptsPerHour
-        };
-      }
-    }
-    
-    return analysis;
-  }
-  
-  // Validation
-  validateProgram() {
-    const errors = [];
-    
-    for (const [name, tactic] of Object.entries(this.tactics)) {
-      if (tactic.enabled) {
-        if (tactic.weeks <= 0) {
-          errors.push(`${name}: Program length must be positive`);
-        }
-        
-        if (tactic.volunteersPerWeek <= 0) {
-          errors.push(`${name}: Must have at least one volunteer`);
-        }
-        
-        if (tactic.hoursPerVolunteer <= 0 || tactic.hoursPerVolunteer > 40) {
-          errors.push(`${name}: Hours per volunteer unrealistic`);
-        }
-        
-        if (tactic.attemptsPerHour <= 0) {
-          errors.push(`${name}: Attempts per hour must be positive`);
-        }
-      }
-    }
-    
-    return errors;
-  }
-  
-  // Report generation
-  generateProgramSummary() {
-    let html = '<h3>Field Program Summary</h3>';
-    
-    for (const [name, tactic] of Object.entries(this.tactics)) {
-      if (tactic.enabled) {
-        html += `
-          <h4>${this.formatTacticName(name)}</h4>
-          <ul>
-            <li>Program Length: ${tactic.weeks} weeks</li>
-            <li>Weekly Volunteers: ${tactic.volunteersPerWeek}</li>
-            <li>Hours per Volunteer: ${tactic.hoursPerVolunteer}</li>
-            <li>Total Program Hours: ${this.formatNumber(tactic.totalHours)}</li>
-            <li>Attempts per Hour: ${tactic.attemptsPerHour}</li>
-            <li>Total Program Attempts: ${this.formatNumber(tactic.totalAttempts)}</li>
-          </ul>
-        `;
-      }
-    }
-    
-    return html;
-  }
-  
-  formatTacticName(name) {
-    return name.replace(/([A-Z])/g, ' $1').trim()
-      .replace(/^\w/, c => c.toUpperCase());
-  }
-  
-  formatNumber(num) {
-    return new Intl.NumberFormat('en-US').format(num);
-  }
-}
-
-// Additional column definitions
-FieldProgram.COLUMNS = Object.assign({}, FieldPlanParent.COLUMNS, {
-  DK_ENABLED: 31,
-  DK_WEEKS: 32,
-  DK_VOLUNTEERS: 33,
-  DK_HOURS: 34,
-  DK_ATTEMPTS_HOUR: 35,
-  PB_ENABLED: 36,
-  PB_WEEKS: 37,
-  PB_VOLUNTEERS: 38,
-  PB_HOURS: 39,
-  PB_ATTEMPTS_HOUR: 40
-});
-```
-
-## Design Patterns
-
-### 1. **Factory Pattern**
-
-```javascript
-class FieldPlanFactory {
-  static create(rowData) {
-    // Determine type based on data
-    const indicators = this.detectType(rowData);
-    
-    if (indicators.isProgram) {
-      return new FieldProgram(rowData);
-    } else if (indicators.isTactics) {
-      return new FieldTactics(rowData);
-    } else {
-      throw new Error('Unknown field plan type');
-    }
-  }
-  
-  static detectType(rowData) {
-    // Logic to determine which type of plan this is
-    const hasWeeklyData = rowData[FieldProgram.COLUMNS.DK_WEEKS - 1] !== '';
-    const hasTotalData = rowData[FieldTactics.COLUMNS.DK_TOTAL - 1] !== '';
-    
-    return {
-      isProgram: hasWeeklyData,
-      isTactics: hasTotalData && !hasWeeklyData
-    };
-  }
-  
-  static createFromSheet(sheetName, rowIndex) {
-    const sheet = SpreadsheetApp.getActiveSpreadsheet()
-      .getSheetByName(sheetName);
-    const rowData = sheet.getRange(rowIndex, 1, 1, sheet.getLastColumn())
+  for (let row = lastProcessedRow + 1; row <= currentLastRow; row++) {
+    const rowData = sheet.getRange(row, 1, 1, sheet.getLastColumn())
       .getValues()[0];
     
-    const plan = this.create(rowData);
-    plan.rowIndex = rowIndex; // Store for updates
-    plan.sheetName = sheetName;
+    // Create appropriate tactic class instance
+    const fieldPlan = new FieldProgram(rowData);
     
-    return plan;
+    // Send notification email
+    sendFieldPlanNotification(fieldPlan);
+    
+    // Check if matching budget exists
+    const matchingBudget = findMatchingBudget(fieldPlan.data.organization_name);
+    if (matchingBudget) {
+      analyzeBudget(matchingBudget, fieldPlan);
+    }
   }
+  
+  updateLastProcessedRow(currentLastRow);
 }
 ```
 
-### 2. **Strategy Pattern**
+### Budget Analysis
 
 ```javascript
-// Define analysis strategies
-class AnalysisStrategy {
-  analyze(budget, fieldPlan) {
-    throw new Error('Subclass must implement analyze method');
-  }
-}
-
-class CostPerAttemptStrategy extends AnalysisStrategy {
-  analyze(budget, fieldPlan) {
-    const results = {};
-    
-    for (const tactic in budget.tactics) {
-      if (budget.tactics[tactic].enabled) {
-        const attempts = fieldPlan.getTacticAttempts(tactic);
-        const amount = budget.tactics[tactic].amount;
+function analyzeBudgets() {
+  const unanalyzedBudgets = FieldBudget.getAllUnanalyzed();
+  
+  unanalyzedBudgets.forEach(budget => {
+    try {
+      // Find matching field plan
+      const fieldPlan = findMatchingFieldPlan(budget.getOrganizationName());
+      
+      if (fieldPlan) {
+        // Perform analysis
+        const analysis = performCostAnalysis(budget, fieldPlan);
         
-        results[tactic] = {
-          costPerAttempt: attempts > 0 ? amount / attempts : null,
-          withinTarget: this.checkTarget(amount / attempts, tactic)
-        };
+        // Send email
+        sendBudgetAnalysisEmail(budget, fieldPlan, analysis);
+        
+        // Mark as analyzed
+        markBudgetAsAnalyzed(budget.rowIndex);
+      } else {
+        // Check if we should send missing plan notification
+        checkMissingPlanNotification(budget);
       }
+    } catch (error) {
+      console.error(`Error analyzing budget for ${budget.getOrganizationName()}:`, error);
     }
-    
-    return results;
-  }
-  
-  checkTarget(costPerAttempt, tactic) {
-    const range = FieldBudget.TARGET_RANGES[tactic];
-    if (!range) return null;
-    
-    return costPerAttempt >= range.min && costPerAttempt <= range.max;
-  }
-}
-
-class EfficiencyStrategy extends AnalysisStrategy {
-  analyze(budget, fieldPlan) {
-    const capacity = fieldPlan.analyzeCapacity();
-    
-    return {
-      costPerHour: budget.totalRequest / capacity.totalVolunteerHours,
-      costPerVolunteer: budget.totalRequest / 
-        (fieldPlan.getUniqueVolunteers() || 1),
-      utilizationRate: this.calculateUtilization(capacity)
-    };
-  }
-  
-  calculateUtilization(capacity) {
-    // Complex utilization calculation
-    const maxPossibleHours = capacity.weeks * 40 * capacity.volunteers;
-    return capacity.totalVolunteerHours / maxPossibleHours;
-  }
-}
-
-// Context class to use strategies
-class BudgetAnalyzer {
-  constructor(strategy) {
-    this.strategy = strategy;
-  }
-  
-  setStrategy(strategy) {
-    this.strategy = strategy;
-  }
-  
-  analyze(budget, fieldPlan) {
-    return this.strategy.analyze(budget, fieldPlan);
-  }
+  });
 }
 ```
 
-### 3. **Observer Pattern**
+## Key Design Principles
 
-```javascript
-// Event system for analysis updates
-class AnalysisEventEmitter {
-  constructor() {
-    this.listeners = {};
-  }
-  
-  on(event, callback) {
-    if (!this.listeners[event]) {
-      this.listeners[event] = [];
-    }
-    this.listeners[event].push(callback);
-  }
-  
-  emit(event, data) {
-    if (this.listeners[event]) {
-      this.listeners[event].forEach(callback => {
-        try {
-          callback(data);
-        } catch (error) {
-          console.error(`Error in ${event} listener:`, error);
-        }
-      });
-    }
-  }
-}
+### 1. **Simple Inheritance**
+- Base class (FieldPlan) handles data parsing
+- FieldProgram adds calculation methods
+- Tactic classes add specific metrics
 
-// Usage in analysis
-const analysisEvents = new AnalysisEventEmitter();
+### 2. **Data Encapsulation**
+- Raw spreadsheet data stored in `data` object
+- Methods provide calculated values
+- No complex state management
 
-// Register listeners
-analysisEvents.on('budgetAnalyzed', (data) => {
-  // Send email notification
-  sendAnalysisEmail(data.budget, data.analysis);
-});
+### 3. **Factory Methods**
+- Static methods for creating instances from sheets
+- Consistent interface across classes
 
-analysisEvents.on('analysisError', (data) => {
-  // Log error and notify admin
-  logError(data.error, data.context);
-  notifyAdmin(data);
-});
-
-analysisEvents.on('analysisComplete', (data) => {
-  // Update summary statistics
-  updateSummaryStats(data.totalAnalyzed, data.totalPending);
-});
-
-// Emit events during analysis
-function analyzeWithEvents(budget, fieldPlan) {
-  try {
-    const analysis = performAnalysis(budget, fieldPlan);
-    
-    analysisEvents.emit('budgetAnalyzed', {
-      budget: budget,
-      fieldPlan: fieldPlan,
-      analysis: analysis
-    });
-    
-    return analysis;
-    
-  } catch (error) {
-    analysisEvents.emit('analysisError', {
-      error: error,
-      context: { budget: budget, fieldPlan: fieldPlan }
-    });
-    throw error;
-  }
-}
-```
-
-## Best Practices
-
-### 1. **Encapsulation**
-
-Keep internal state private and provide controlled access:
-
-```javascript
-class SecureBudget {
-  #internalData; // Private field
-  
-  constructor(data) {
-    this.#internalData = this.#validateData(data);
-  }
-  
-  #validateData(data) {
-    // Private validation method
-    if (!data.organization) {
-      throw new Error('Organization required');
-    }
-    return data;
-  }
-  
-  // Public getter with computed property
-  get summary() {
-    return {
-      organization: this.#internalData.organization,
-      totalRequest: this.#calculateTotal(),
-      status: this.#determineStatus()
-    };
-  }
-  
-  #calculateTotal() {
-    // Private calculation method
-    return Object.values(this.#internalData.tactics)
-      .reduce((sum, t) => sum + t.amount, 0);
-  }
-  
-  #determineStatus() {
-    // Private business logic
-    if (this.#internalData.analyzed) return 'complete';
-    if (this.#internalData.hasFieldPlan) return 'ready';
-    return 'pending';
-  }
-}
-```
-
-### 2. **Inheritance Best Practices**
-
-```javascript
-// Good: Clear inheritance hierarchy
-class BasePlan {
-  constructor(data) {
-    if (new.target === BasePlan) {
-      throw new Error('BasePlan is abstract');
-    }
-    this.data = data;
-  }
-  
-  // Template method
-  process() {
-    this.validate();
-    this.parse();
-    this.analyze();
-    return this.generateReport();
-  }
-  
-  validate() {
-    // Common validation
-    if (!this.data.email) {
-      throw new Error('Email required');
-    }
-  }
-  
-  // Abstract methods
-  parse() {
-    throw new Error('Subclass must implement parse');
-  }
-  
-  analyze() {
-    throw new Error('Subclass must implement analyze');
-  }
-  
-  generateReport() {
-    throw new Error('Subclass must implement generateReport');
-  }
-}
-
-class ConcretePlan extends BasePlan {
-  parse() {
-    // Implementation specific parsing
-    this.parsed = {
-      name: this.data.name,
-      tactics: this.parseTactics(this.data)
-    };
-  }
-  
-  analyze() {
-    // Implementation specific analysis
-    this.analysis = {
-      score: this.calculateScore(),
-      recommendations: this.generateRecommendations()
-    };
-  }
-  
-  generateReport() {
-    return {
-      plan: this.parsed,
-      analysis: this.analysis
-    };
-  }
-}
-```
-
-### 3. **Composition Over Inheritance**
-
-```javascript
-// Compose behaviors instead of deep inheritance
-class TacticCalculator {
-  calculate(tactic, amount, attempts) {
-    return {
-      costPerAttempt: amount / attempts,
-      efficiency: this.calculateEfficiency(tactic, attempts)
-    };
-  }
-  
-  calculateEfficiency(tactic, attempts) {
-    // Tactic-specific efficiency calculation
-    const baseline = TACTIC_BASELINES[tactic];
-    return attempts / baseline;
-  }
-}
-
-class EmailGenerator {
-  generateHTML(template, data) {
-    // Email generation logic
-    return template.replace(/\{\{(\w+)\}\}/g, (match, key) => {
-      return data[key] || '';
-    });
-  }
-}
-
-class ValidationService {
-  validateBudget(budget) {
-    const errors = [];
-    
-    if (!budget.organization) {
-      errors.push('Organization required');
-    }
-    
-    if (budget.totalRequest <= 0) {
-      errors.push('Request amount must be positive');
-    }
-    
-    return errors;
-  }
-}
-
-// Compose into analyzer
-class ComposedAnalyzer {
-  constructor() {
-    this.calculator = new TacticCalculator();
-    this.emailGenerator = new EmailGenerator();
-    this.validator = new ValidationService();
-  }
-  
-  analyze(budget, fieldPlan) {
-    // Validate first
-    const errors = this.validator.validateBudget(budget);
-    if (errors.length > 0) {
-      throw new Error(errors.join(', '));
-    }
-    
-    // Calculate metrics
-    const calculations = {};
-    for (const tactic in budget.tactics) {
-      calculations[tactic] = this.calculator.calculate(
-        tactic,
-        budget.tactics[tactic].amount,
-        fieldPlan.getTacticAttempts(tactic)
-      );
-    }
-    
-    // Generate email
-    const emailBody = this.emailGenerator.generateHTML(
-      EMAIL_TEMPLATE,
-      { budget, calculations }
-    );
-    
-    return {
-      calculations,
-      emailBody
-    };
-  }
-}
-```
+### 4. **No Over-Engineering**
+- No abstract classes or interfaces
+- No complex design patterns
+- Focus on practical functionality
 
 ## Next Steps
 
-- Learn about [Functional Programming](/appsscript/developers/fieldplan-analyzer/functional-programming) patterns
-- Explore [Timer Implementation](/appsscript/developers/fieldplan-analyzer/timers)
+- Learn about [Timer Implementation](/appsscript/developers/fieldplan-analyzer/timers)
 - Master [Email Response Generation](/appsscript/developers/fieldplan-analyzer/email-responses)
+- Understand [Spreadsheet Integration](/appsscript/developers/spreadsheet-mapping/examples)

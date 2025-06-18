@@ -5,310 +5,237 @@ title: FieldPlan Analyzer Overview
 
 # FieldPlan Analyzer Overview
 
-The FieldPlan Analyzer is an automated system that processes field planning data, analyzes budgets, and generates comprehensive email reports. It runs on scheduled intervals to ensure timely analysis and communication without manual intervention.
+The FieldPlan Analyzer is an automated system that processes field planning and budget data from Google Sheets, calculates cost efficiency metrics, and sends email reports with funding recommendations. It runs every 12 hours to analyze new submissions.
 
 ## What It Does
 
 ### Core Functionality
 
-1. **Automated Data Processing**
-   - Processes form submissions automatically
-   - Validates data quality
-   - Identifies missing information
-   - Tracks changes over time
+1. **Field Plan Processing**
+   - Reads new field plan submissions from '2025_field_plan' sheet
+   - Extracts 58 columns of data including tactics, demographics, and program details
+   - Sends notification emails for each new submission
+   - Tracks last processed row to avoid duplicates
 
 2. **Budget Analysis**
-   - Compares planned vs actual spending
-   - Identifies budget gaps
-   - Calculates percentage utilization
-   - Provides recommendations
+   - Reads budget data from '2025_field_budget' sheet
+   - Matches budgets to field plans by organization name
+   - Calculates cost per attempt for 7 tactics
+   - Compares costs against predefined targets
+   - Identifies funding gaps and opportunities
 
 3. **Email Reporting**
-   - Generates formatted HTML emails
-   - Sends to relevant stakeholders
-   - Includes data summaries
-   - Provides actionable insights
+   - HTML formatted emails with analysis results
+   - Cost efficiency recommendations
+   - Gap funding suggestions
+   - Missing field plan alerts
 
 4. **Scheduled Operations**
-   - Runs analysis every 12 hours
-   - Checks for new submissions
-   - Generates weekly summaries
-   - No manual triggering needed
+   - Runs every 12 hours via Google Apps Script triggers
+   - Processes new field plans automatically
+   - Analyzes unanalyzed budgets
+   - Sends weekly summaries (if trigger configured)
 
 ## How It Works
 
 ### The Analysis Pipeline
 
-1. **Data Collection**
-   - Google Forms collect field plan submissions
-   - Budget data stored in spreadsheets
-   - Automatic timestamp tracking
-   - Version control for changes
+1. **Field Plan Detection**
+   - `checkForNewRows()` runs every 12 hours
+   - Checks '2025_field_plan' sheet for new rows
+   - Creates FieldPlan object for each new submission
+   - Sends notification email with all plan details
 
-2. **Processing Engine**
-   - Class-based data models ensure consistency
-   - Validation rules check data quality
-   - Calculations run automatically
-   - Results stored for reporting
+2. **Budget Processing**
+   - `analyzeBudgets()` runs every 12 hours
+   - Finds budgets without analysis timestamp
+   - Attempts to match with field plans
+   - Waits up to 72 hours for missing field plans
 
-3. **Report Generation**
-   - HTML emails created with inline styling
-   - Data formatted for readability
-   - Summaries included
-   - Sent to configured recipients
+3. **Cost Analysis**
+   - Calculates cost per attempt for each tactic
+   - Compares against target ranges with standard deviations
+   - Identifies which tactics are over/under funded
+   - Suggests reallocation opportunities
 
-### Automated Triggers
+### Data Structure
 
-The system uses time-based triggers:
+The system processes two main data types:
 
-- **Every 12 Hours**: Check for new field plans
-- **Every 12 Hours**: Analyze budget changes
-- **Weekly**: Generate summary reports
-- **On-Demand**: Manual analysis when needed
+**Field Plans (58 columns):**
+- Organization info and contacts
+- Field tactics data (Door, Phone, Text, Mail, etc.)
+- Demographics and counties
+- Program timeline and volunteer hours
+- Coaching assessment
+
+**Budgets (55 columns):**
+- 15 budget categories with requested/total/gap amounts
+- Organization identifier
+- Analysis status tracking
 
 ## Key Features
 
-### 1. **Smart Analysis**
+### 1. **Tactic-Specific Analysis**
 
-The analyzer doesn't just collect data—it provides insights:
+The analyzer evaluates 7 field tactics:
+- **Door Knocking**: 5-10% contact rate, $4.50-$6.00 per attempt target
+- **Phone Banking**: 5-10% contact rate, $0.30-$0.50 per attempt target
+- **Text Messaging**: 1-5% response rate, $0.25-$0.50 per attempt target
+- **Mail**: 1-5% response rate, $2.00-$4.00 per attempt target
+- **Open Events**: Various metrics
+- **Relational Organizing**: Custom thresholds
+- **Registration**: Specific targets
 
-- Identifies trends in spending
-- Flags potential issues early
-- Suggests corrective actions
-- Tracks performance metrics
+### 2. **Cost Efficiency Calculations**
 
-### 2. **Comprehensive Reporting**
+For each tactic:
+```
+Cost Per Attempt = Tactic Funding / Program Attempts
+```
 
-Reports include:
+Compares against targets with standard deviations to classify as:
+- Within target range
+- Above target (potentially overfunded)
+- Below target (potentially underfunded)
 
-- **Budget Status**: Current vs planned spending
-- **Field Coverage**: Areas completed and pending
-- **Recommendations**: Specific actions to improve
+### 3. **Gap Funding Recommendations**
 
-### 3. **Error Handling**
+When organizations report funding gaps, the analyzer:
+- Calculates how gap funding would affect cost per attempt
+- Checks if new costs remain within efficiency targets
+- Provides specific recommendations
 
-The system gracefully handles:
+### 4. **Missing Plan Tracking**
 
-- Missing data fields
-- Invalid entries
-- Network issues
-- Email delivery problems
-
-### 4. **State Management**
-
-Tracks processing state to:
-
-- Avoid duplicate processing
-- Resume after interruptions
-- Maintain data integrity
-- Provide audit trails
-
-## Benefits for Organizations
-
-### 1. **Time Savings**
-- Eliminates manual report creation
-- Reduces data entry errors
-- Automates routine analysis
-- Frees staff for strategic work
-
-### 2. **Better Decisions**
-- Timely information delivery
-- Data-driven insights
-- Clear visualizations
-- Actionable recommendations
-
-### 3. **Improved Accountability**
-- Automatic tracking
-- Transparent reporting
-- Clear ownership
-- Performance metrics
-
-### 4. **Consistency**
-- Standardized analysis
-- Regular reporting schedule
-- Uniform data presentation
-- Reliable processes
-
-## Understanding the Reports
-
-### Email Structure
-
-Reports typically include:
-
-1. **Summary Section**
-   - Key metrics at a glance
-   - Overall status indicators
-   - Critical alerts if any
-
-2. **Detailed Analysis**
-   - Line-by-line breakdowns
-   - Comparison tables
-   - Trend indicators
-
-3. **Recommendations**
-   - Specific action items
-   - Priority rankings
-   - Deadline reminders
-
-4. **Appendices**
-   - Raw data references
-   - Calculation methods
-   - Contact information
-
-### Reading the Analysis
-
-<div class="tip">
-<strong>Color Coding</strong>: Green indicates on-track, yellow needs attention, red requires immediate action.
-</div>
-
-<div class="tip">
-<strong>Percentages</strong>: Show utilization rates and help identify over/under allocation.
-</div>
-
-<div class="tip">
-<strong>Trends</strong>: Arrows indicate whether metrics are improving or declining.
-</div>
-
-## Common Use Cases
-
-### 1. **Budget Monitoring**
-- Track spending against allocations
-- Identify cost overruns early
-- Adjust plans proactively
-- Optimize resource use
-
-### 2. **Field Operations**
-- Monitor completion rates
-- Balance workloads
-- Identify bottlenecks
-- Plan future activities
-
-### 3. **Performance Management**
-- Track team productivity
-- Measure goal achievement
-- Identify training needs
-- Recognize top performers
-
-### 4. **Strategic Planning**
-- Use historical data
-- Forecast future needs
-- Optimize processes
-- Make informed decisions
+- Tracks budgets without matching field plans
+- Sends alerts after 72 hours
+- Lists missing plans in weekly summaries
 
 ## Email Report Examples
 
 ### Budget Analysis Email
-When a budget is analyzed after finding a matching field plan:
 
 ```
-Subject: Budget Analysis - [Organization Name]
+Subject: Budget Analysis - Community Action Group
 
 Summary:
-Organization ABC requested $50,000 and described a funding gap of $10,000.
-Their project costs $75,000 to run.
+Community Action Group requested $50,000 and described a funding gap of $15,000.
+Their project costs $85,000 to run.
 
-Key Findings:
-• Indirect costs: $5,000 (10% of request)
-• Outreach costs: $15,000 (30% of request)  
-• Data funding: $8,000 (160 hours of labor offset)
+Cost Analysis by Tactic:
 
-Tactic Analysis - Door Knocking:
-• Funding Requested: $25,000
-• Program Attempts: 5,000
-• Cost Per Attempt: $5.00
-• Target Range: $4.50 - $6.00
-• Status: Within target range
-• Recommendation: Funding level is appropriate
+Door Knocking:
+• Funding: $25,000
+• Attempts: 5,000
+• Cost per attempt: $5.00
+• Target: $4.50-$6.00
+• Status: ✓ Within range
 
-Gap Analysis:
-If you increase Door Knocking by $5,000:
-- New cost per attempt: $6.00
-- Still within efficiency targets ✓
+Phone Banking:
+• Funding: $5,000
+• Attempts: 20,000
+• Cost per attempt: $0.25
+• Target: $0.30-$0.50
+• Status: ⚠ Below target - may need more funding
+
+Gap Funding Analysis:
+If you fund the $15,000 gap toward Phone Banking:
+• New cost per attempt: $0.40
+• Status: ✓ Within efficiency targets
 ```
 
-### Field Plan Notification Email
-When a new field plan is submitted:
+### Field Plan Notification
 
 ```
-Subject: New Field Plan - [Organization Name]
+Subject: Field Plan Received - Community Action Group
 
-Contact Information:
-• Organization: Community Action Group
-• Contact: Jane Smith
-• Email: jane@example.org
+Organization Details:
+• Contact: Jane Smith (jane@example.org)
+• Phone: 555-0123
+• Counties: Jefferson, Madison
 
-Program Details:
-• Data Storage: VAN
-• Field Counties: County A, County B
-• Program Length: 12 weeks
-• Weekly Volunteers: 25
-• Total Program Hours: 3,000
+Program Overview:
+• Duration: 12 weeks
+• Total volunteer hours: 3,000
+• Weekly volunteers: 25
 
-Coaching Assessment:
-Confidence Level: 7/10
-Recommendation: Light touch coaching recommended
+Planned Tactics:
+• Door: 5,000 attempts
+• Phone: 20,000 attempts
+• Text: 50,000 attempts
 
-Field Metrics:
-• Door Knocking: 5,000 attempts planned
-• Phone Banking: 10,000 attempts planned
-• Expected contact rate: 25%
+Coaching Assessment: 7/10 confidence
 ```
 
-### Weekly Summary Email
-Every Monday at 9 AM:
+## Configuration
+
+### Script Properties Required
 
 ```
-Subject: Weekly Budget Analysis Summary
-
-Report Date: Monday, June 10, 2024
-
-Analysis Status:
-• Budgets Analyzed: 15
-• Budgets Pending: 3
-• Waiting for Field Plans: 2
-
-Financial Summary:
-• Total Requested: $750,000
-• Total Gap Identified: $125,000
-
-Organizations missing field plans (72+ hours):
-• Organization XYZ - submitted 4 days ago
-• Organization ABC - submitted 3 days ago
-
-Note: Follow up with these organizations to complete analysis.
+SPREADSHEET_ID - Google Sheet containing data
+FIELD_PLAN_SHEET - Field plan sheet name (default: '2025_field_plan')
+BUDGET_SHEET - Budget sheet name (default: '2025_field_budget')
+EMAIL_RECIPIENTS - Comma-separated email list
+LAST_PROCESSED_ROW - Tracks field plan processing
+MISSING_THRESHOLD_HOURS - Hours before alerting (default: 72)
 ```
 
-## Tips for Recipients
+### Cost Targets Configuration
 
-<div class="note">
-<strong>Check Regularly</strong>: Even though reports are automated, review them promptly for best results.
+Each tactic has configurable targets:
+```
+[TACTIC]_TARGET - Target cost per attempt
+[TACTIC]_SD - Standard deviation for range
+```
+
+Example: `DOOR_TARGET: 5.0, DOOR_SD: 0.75`
+
+## Limitations
+
+- **No real-time processing** - Runs on 12-hour schedule
+- **Simple name matching** - May miss organizations with name variations
+- **No data validation** - Assumes sheet data is correctly formatted
+- **Email only reporting** - No dashboard or web interface
+- **No historical tracking** - Only current state analysis
+
+## Tips for Organizations
+
+<div class="tip">
+<strong>Submit field plans promptly</strong>: Budget analysis requires matching field plan within 72 hours.
 </div>
 
-<div class="note">
-<strong>Act on Recommendations</strong>: The system's suggestions are based on data analysis—consider them seriously.
+<div class="tip">
+<strong>Use consistent naming</strong>: Organization names must match exactly between field plans and budgets.
 </div>
 
-<div class="note">
-<strong>Provide Feedback</strong>: If reports need adjustments, communicate with administrators.
+<div class="tip">
+<strong>Review cost targets</strong>: Contact administrators if your program has unique cost structures.
 </div>
 
-## Integration Benefits
+## Technical Details
 
-The FieldPlan Analyzer works seamlessly with:
+### Class Structure
 
-- **Google Forms**: For easy data collection
-- **Google Sheets**: For data storage and access
-- **Gmail**: For report distribution
-- **Google Drive**: For attachment storage
+1. **FieldPlan**: Base class reading field plan data
+2. **FieldProgram**: Extends FieldPlan with program calculations
+3. **Tactic Classes**: PhoneTactic, DoorTactic, etc. with specific metrics
+4. **FieldBudget**: Reads and processes budget data
 
-This integration means:
-- No data silos
-- Single sign-on access
-- Consistent permissions
-- Unified workflow
+### Trigger Functions
+
+- `checkForNewRows()`: Processes new field plans
+- `analyzeBudgets()`: Analyzes unprocessed budgets
+- `generateWeeklySummary()`: Weekly email summary
+
+### Error Handling
+
+- Try-catch blocks prevent complete failures
+- Error emails sent to administrators
+- Processing continues despite individual errors
 
 ## Next Steps
 
-- Explore [developer documentation](/appsscript/developers/) to build your own analyzer
+- Learn about the [Field Coordination Browser](/appsscript/end-users/field-coordination-browser-overview)
 - Read the [FAQ](/appsscript/faq) for common questions
-- Check [Troubleshooting](/appsscript/troubleshooting) for email delivery issues
+- Check [Troubleshooting](/appsscript/troubleshooting) for issues
