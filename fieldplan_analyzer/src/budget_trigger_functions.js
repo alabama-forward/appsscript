@@ -1,5 +1,5 @@
 // Cost per attempt targets with standard deviations
-const scriptProps = PropertiesService.getScriptProperties();
+// Note: scriptProps is already declared globally in field_trigger_functions.js
 const TACTIC_TARGETS = {
   DOOR: { 
     target: parseFloat(scriptProps.getProperty('COST_TARGET_DOOR') || '1.00'), 
