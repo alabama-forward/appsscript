@@ -1,7 +1,7 @@
 // Email configuration (shared with budget_trigger_functions.js)
 const scriptProps = PropertiesService.getScriptProperties();
 const EMAIL_CONFIG = {
-  recipients: (scriptProps.getProperty('EMAIL_RECIPIENTS') || 'gabri@alforward.org,sherri@alforward.org,deanna@alforward.org,datateam@alforward.org').split(','),
+  recipients: (scriptProps.getProperty('EMAIL_RECIPIENTS') || 'gabri@alforward.org,sherri@alforward.org,khadidah@alforward.org,deanna@alforward.org,datateam@alforward.org').split(','),
   testRecipients: (scriptProps.getProperty('EMAIL_TEST_RECIPIENTS') || 'datateam@alforward.org').split(','),
   replyTo: scriptProps.getProperty('EMAIL_REPLY_TO') || 'datateam@alforward.org'
 };
