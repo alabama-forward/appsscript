@@ -1,6 +1,7 @@
 // Cost per attempt targets with standard deviations
-// Note: scriptProps is already declared globally in field_trigger_functions.js
-const TACTIC_TARGETS = {
+// scriptProps is declared in field_trigger_functions.js
+function getTacticTargets() {
+  return {
   DOOR: { 
     target: parseFloat(scriptProps.getProperty('COST_TARGET_DOOR') || '1.00'), 
     stdDev: parseFloat(scriptProps.getProperty('COST_TARGET_DOOR_STDDEV') || '0.20') 
@@ -17,19 +18,10 @@ const TACTIC_TARGETS = {
     target: parseFloat(scriptProps.getProperty('COST_TARGET_OPEN') || '0.40'), 
     stdDev: parseFloat(scriptProps.getProperty('COST_TARGET_OPEN_STDDEV') || '0.10') 
   }
+  };
 }
 
-// Email configuration
-const EMAIL_CONFIG = {
-  recipients: (scriptProps.getProperty('EMAIL_RECIPIENTS') || 'gabri@alforward.org,sherri@alforward.org,deanna@alforward.org,datateam@alforward.org').split(','),
-  testRecipients: (scriptProps.getProperty('EMAIL_TEST_RECIPIENTS') || 'datateam@alforward.org').split(','),
-  replyTo: scriptProps.getProperty('EMAIL_REPLY_TO') || 'datateam@alforward.org'
-};
-
-// Helper function to get email recipients based on mode
-function getEmailRecipients(isTestMode = false) {
-  return isTestMode ? EMAIL_CONFIG.testRecipients : EMAIL_CONFIG.recipients;
-}
+// Note: EMAIL_CONFIG and getEmailRecipients are defined in field_trigger_functions.js
 
 // Create time-based trigger for budget analysis
 function createBudgetAnalysisTrigger() {
@@ -199,7 +191,7 @@ function analyzeTactic(budget, tactic) {
   const programAttempts = tactic.programAttempts();
   const costPerAttempt = programAttempts > 0 ? fundingRequested / programAttempts : Infinity;
   
-  const target = TACTIC_TARGETS[tacticType];
+  const target = getTacticTargets()[tacticType];
   const lowerBound = target.target - target.stdDev;
   const upperBound = target.target + target.stdDev;
   
@@ -286,7 +278,7 @@ function checkIfCanIncreaseFunding(category, requested, gap, tactics) {
                         relevantTactic instanceof PhoneTactic ? 'PHONE' :
                         relevantTactic instanceof TextTactic ? 'TEXT' : 'OPEN';
       
-      const target = TACTIC_TARGETS[tacticType];
+      const target = getTacticTargets()[tacticType];
       return newCostPerAttempt <= (target.target + target.stdDev);
     }
   }
@@ -377,7 +369,7 @@ function sendBudgetAnalysisEmail(budget, fieldPlan, analysis, isTestMode = false
       subject: `${isTestMode ? '[TEST] ' : ''}Budget Analysis: ${budget.memberOrgName}`,
       htmlBody: emailBody,
       name: "Budget Analysis System",
-      replyTo: EMAIL_CONFIG.replyTo
+      replyTo: scriptProps.getProperty('EMAIL_REPLY_TO') || 'datateam@alforward.org'
     });
     Logger.log(`Budget analysis email sent for ${budget.memberOrgName} (${isTestMode ? 'TEST MODE' : 'PRODUCTION'})`);
   } catch (error) {
@@ -442,7 +434,7 @@ function sendMissingFieldPlanNotification(orgName, isTestMode = false) {
         <strong>🧪 TEST MODE EMAIL</strong> - This is a test email sent only to datateam@alforward.org
       </div>` + emailBody : emailBody,
       name: "Budget Analysis System",
-      replyTo: EMAIL_CONFIG.replyTo
+      replyTo: scriptProps.getProperty('EMAIL_REPLY_TO') || 'datateam@alforward.org'
     });
     Logger.log(`Missing field plan notification sent for ${orgName} (${isTestMode ? 'TEST MODE' : 'PRODUCTION'})`);
   } catch (error) {
@@ -469,7 +461,7 @@ function sendErrorNotification(budget, error, isTestMode = false) {
         <strong>🧪 TEST MODE EMAIL</strong> - This is a test email sent only to datateam@alforward.org
       </div>` + emailBody : emailBody,
       name: "Budget Analysis System",
-      replyTo: EMAIL_CONFIG.replyTo
+      replyTo: scriptProps.getProperty('EMAIL_REPLY_TO') || 'datateam@alforward.org'
     });
     Logger.log(`Error notification sent for ${budget.memberOrgName} (${isTestMode ? 'TEST MODE' : 'PRODUCTION'})`);
   } catch (emailError) {
@@ -769,7 +761,7 @@ function generateWeeklySummary(isTestMode = false) {
       subject: `${isTestMode ? '[TEST] ' : ''}Weekly Summary Report - ${new Date().toLocaleDateString()}`,
       htmlBody: emailBody,
       name: "Field Plan & Budget Analysis System",
-      replyTo: EMAIL_CONFIG.replyTo
+      replyTo: scriptProps.getProperty('EMAIL_REPLY_TO') || 'datateam@alforward.org'
     });
     Logger.log(`Combined weekly summary report sent (${isTestMode ? 'TEST MODE' : 'PRODUCTION'})`);
   } catch (error) {
