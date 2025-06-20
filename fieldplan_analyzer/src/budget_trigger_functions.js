@@ -615,7 +615,45 @@ function generateWeeklySummary(isTestMode = false) {
       // Count counties
       const counties = fieldPlanData[i][FieldPlan.COLUMNS.FIELDCOUNTIES];
       if (counties) {
-        const countyList = Array.isArray(counties) ? counties : counties.split(',');
+        let countyList = [];
+        
+        // Handle different input formats
+        if (Array.isArray(counties)) {
+          countyList = counties;
+        } else {
+          const countyString = counties.toString().trim();
+          
+          // Check if it contains commas (properly formatted)
+          if (countyString.includes(',')) {
+            countyList = countyString.split(',');
+          } else {
+            // No commas - need to parse space-separated counties
+            // Handle known multi-word counties in Alabama
+            const multiWordCounties = ['Saint Clair', 'St. Clair', 'St Clair'];
+            let processedString = countyString;
+            
+            // Replace multi-word counties with temporary placeholders
+            multiWordCounties.forEach((mwCounty, index) => {
+              const regex = new RegExp(mwCounty, 'gi');
+              processedString = processedString.replace(regex, `__MW${index}__`);
+            });
+            
+            // Split by spaces
+            let tempList = processedString.split(/\s+/);
+            
+            // Replace placeholders back with actual county names
+            countyList = tempList.map(item => {
+              multiWordCounties.forEach((mwCounty, index) => {
+                if (item === `__MW${index}__`) {
+                  item = 'Saint Clair'; // Normalize to standard form
+                }
+              });
+              return item;
+            }).filter(county => county.length > 0);
+          }
+        }
+        
+        // Process each county
         countyList.forEach(county => {
           const trimmedCounty = county.trim();
           if (trimmedCounty) {
