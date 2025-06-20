@@ -850,3 +850,93 @@ function runAllBudgetTests() {
   
   Logger.log("===== ALL TESTS COMPLETE =====");
 }
+
+// ============================================
+// NEW TEST FUNCTIONS FOR MISSING NOTIFICATIONS
+// ============================================
+
+/**
+ * Test the missing field plan notification
+ * Sends a test email for an organization missing a field plan
+ */
+function testMissingFieldPlanNotification() {
+  Logger.log('Testing missing field plan notification...');
+  sendMissingFieldPlanNotification('Test Organization XYZ', true);
+  Logger.log('Test email sent. Check datateam@alforward.org inbox.');
+}
+
+/**
+ * Test budget analysis for a specific organization
+ * This helps test the full analysis flow
+ */
+function testSpecificBudgetAnalysis() {
+  const budgetSheet = SpreadsheetApp.getActive().getSheetByName('2025_field_budget');
+  const data = budgetSheet.getDataRange().getValues();
+  
+  if (data.length > 1) {
+    // Test with the first organization that has a field plan
+    for (let i = 1; i < data.length; i++) {
+      const orgName = data[i][FieldBudget.COLUMNS.MEMBERNAME];
+      const fieldPlanMatch = findMatchingFieldPlan(orgName);
+      
+      if (fieldPlanMatch) {
+        Logger.log(`Testing analysis for: ${orgName}`);
+        analyzeSpecificOrganization(orgName, true);
+        return;
+      }
+    }
+    Logger.log('No organizations found with both budget and field plan');
+  } else {
+    Logger.log('No budget data available for testing');
+  }
+}
+
+/**
+ * View summary of budget analysis status
+ * Shows current state of all budgets
+ */
+function viewBudgetAnalysisStatus() {
+  const budgetSheet = SpreadsheetApp.getActive().getSheetByName('2025_field_budget');
+  const data = budgetSheet.getDataRange().getValues();
+  
+  let analyzed = 0;
+  let pending = 0;
+  let missingPlans = 0;
+  
+  Logger.log('=== Budget Analysis Status ===');
+  
+  for (let i = 1; i < data.length; i++) {
+    if (data[i][0]) {
+      const orgName = data[i][FieldBudget.COLUMNS.MEMBERNAME];
+      const isAnalyzed = data[i][FieldBudget.COLUMNS.ANALYZED] === true;
+      
+      if (isAnalyzed) {
+        analyzed++;
+      } else {
+        pending++;
+        
+        // Check if has field plan
+        const fieldPlanMatch = findMatchingFieldPlan(orgName);
+        if (!fieldPlanMatch) {
+          missingPlans++;
+          Logger.log(`  Missing field plan: ${orgName}`);
+        }
+      }
+    }
+  }
+  
+  Logger.log(`\nSummary:`);
+  Logger.log(`  Analyzed: ${analyzed}`);
+  Logger.log(`  Pending: ${pending}`);
+  Logger.log(`  Missing Field Plans: ${missingPlans}`);
+}
+
+/**
+ * Test the combined weekly summary email
+ * This will generate and send the weekly summary in test mode
+ */
+function testCombinedWeeklySummary() {
+  Logger.log('Testing combined weekly summary...');
+  generateWeeklySummary(true);
+  Logger.log('Test weekly summary sent. Check datateam@alforward.org inbox.');
+}

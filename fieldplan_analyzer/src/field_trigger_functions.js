@@ -532,5 +532,3 @@ function onBudgetSubmission(budget) {
     Logger.log(`Removed missing budget tracking for ${budget.memberOrgName}`);
   }
 }
-
-

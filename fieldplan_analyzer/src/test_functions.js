@@ -120,3 +120,243 @@ function promptForTestEmail() {
     }
   }
 }
+
+// ============================================
+// TEST FUNCTIONS FOR FIELD PLAN FUNCTIONALITY
+// ============================================
+
+/**
+ * Test the missing budget notification email
+ * This will send a test email to the data team only
+ */
+function testMissingBudgetNotification() {
+  Logger.log('Testing missing budget notification...');
+  sendMissingBudgetNotification('Test Organization ABC', true);
+  Logger.log('Test email sent. Check datateam@alforward.org inbox.');
+}
+
+/**
+ * Test tracking a field plan without a budget
+ * This simulates what happens when a field plan is processed without a matching budget
+ */
+function testTrackMissingBudget() {
+  // Create a test field plan object
+  const testFieldPlan = {
+    memberOrgName: 'Test Missing Budget Org',
+    submissionDateTime: new Date().toISOString()
+  };
+  
+  Logger.log('Testing missing budget tracking...');
+  
+  // Track the missing budget
+  trackMissingBudget(testFieldPlan);
+  
+  // Verify it was tracked
+  const properties = PropertiesService.getScriptProperties();
+  const key = `MISSING_BUDGET_${testFieldPlan.memberOrgName}`;
+  const tracked = properties.getProperty(key);
+  
+  if (tracked) {
+    Logger.log(`✓ Successfully tracked missing budget for ${testFieldPlan.memberOrgName}`);
+    Logger.log(`  Timestamp: ${tracked}`);
+  } else {
+    Logger.log(`✗ Failed to track missing budget for ${testFieldPlan.memberOrgName}`);
+  }
+}
+
+/**
+ * Test the entire missing budget alert flow
+ * This sets up a test scenario with a field plan that's been waiting 73 hours
+ */
+function testMissingBudgetAlertFlow() {
+  const testOrgName = 'Test Alert Flow Org';
+  const properties = PropertiesService.getScriptProperties();
+  const key = `MISSING_BUDGET_${testOrgName}`;
+  
+  Logger.log('Testing missing budget alert flow...');
+  
+  // Set up a timestamp from 73 hours ago
+  const oldTimestamp = new Date();
+  oldTimestamp.setHours(oldTimestamp.getHours() - 73);
+  properties.setProperty(key, oldTimestamp.toISOString());
+  Logger.log(`Set up test org with timestamp from 73 hours ago`);
+  
+  // Run the check function (this should trigger an email)
+  checkForMissingBudgets();
+  
+  // Verify the tracking was removed
+  const stillTracked = properties.getProperty(key);
+  if (!stillTracked) {
+    Logger.log(`✓ Tracking successfully removed after alert`);
+  } else {
+    Logger.log(`✗ Tracking still exists: ${stillTracked}`);
+  }
+}
+
+/**
+ * Test finding a matching budget
+ * This tests the budget matching logic
+ */
+function testFindMatchingBudget() {
+  const budgetSheet = SpreadsheetApp.getActive().getSheetByName('2025_field_budget');
+  const data = budgetSheet.getDataRange().getValues();
+  
+  if (data.length > 1) {
+    // Test with the first organization in the budget sheet
+    const testOrgName = data[1][FieldBudget.COLUMNS.MEMBERNAME];
+    Logger.log(`Testing budget match for: ${testOrgName}`);
+    
+    const match = findMatchingBudget(testOrgName);
+    if (match) {
+      Logger.log(`✓ Found matching budget:`);
+      Logger.log(`  Organization: ${match.budget.memberOrgName}`);
+      Logger.log(`  Row: ${match.rowNumber}`);
+      Logger.log(`  Analyzed: ${match.analyzed}`);
+    } else {
+      Logger.log(`✗ No match found for ${testOrgName}`);
+    }
+    
+    // Test with a non-existent organization
+    const noMatch = findMatchingBudget('Non-Existent Organization XYZ');
+    if (!noMatch) {
+      Logger.log(`✓ Correctly returned null for non-existent organization`);
+    } else {
+      Logger.log(`✗ Incorrectly found match for non-existent organization`);
+    }
+  } else {
+    Logger.log('No budget data available for testing');
+  }
+}
+
+/**
+ * Test the budget submission callback
+ * This simulates what happens when a budget is submitted for an org with a waiting field plan
+ */
+function testOnBudgetSubmission() {
+  const testOrgName = 'Test Budget Submission Org';
+  const properties = PropertiesService.getScriptProperties();
+  const key = `MISSING_BUDGET_${testOrgName}`;
+  
+  Logger.log('Testing budget submission callback...');
+  
+  // First, set up tracking
+  properties.setProperty(key, new Date().toISOString());
+  Logger.log(`Set up missing budget tracking for ${testOrgName}`);
+  
+  // Create a test budget object
+  const testBudget = {
+    memberOrgName: testOrgName
+  };
+  
+  // Call the function
+  onBudgetSubmission(testBudget);
+  
+  // Verify tracking was removed
+  const stillTracked = properties.getProperty(key);
+  if (!stillTracked) {
+    Logger.log(`✓ Successfully removed tracking for ${testOrgName}`);
+  } else {
+    Logger.log(`✗ Tracking still exists for ${testOrgName}`);
+  }
+}
+
+/**
+ * View all current missing budget/plan trackings
+ * This helps debug what's currently being tracked
+ */
+function viewAllMissingTrackings() {
+  const properties = PropertiesService.getScriptProperties();
+  const allProps = properties.getProperties();
+  
+  Logger.log('=== Current Missing Document Trackings ===');
+  
+  let missingBudgets = [];
+  let missingPlans = [];
+  
+  for (const key in allProps) {
+    if (key.startsWith('MISSING_BUDGET_')) {
+      const orgName = key.replace('MISSING_BUDGET_', '');
+      const timestamp = new Date(allProps[key]);
+      const hoursAgo = Math.floor((new Date() - timestamp) / (1000 * 60 * 60));
+      missingBudgets.push({ org: orgName, hoursAgo: hoursAgo, timestamp: allProps[key] });
+    } else if (key.startsWith('MISSING_PLAN_')) {
+      const orgName = key.replace('MISSING_PLAN_', '');
+      const timestamp = new Date(allProps[key]);
+      const hoursAgo = Math.floor((new Date() - timestamp) / (1000 * 60 * 60));
+      missingPlans.push({ org: orgName, hoursAgo: hoursAgo, timestamp: allProps[key] });
+    }
+  }
+  
+  Logger.log(`\nField Plans Missing Budgets (${missingBudgets.length}):`);
+  missingBudgets.forEach(item => {
+    Logger.log(`  - ${item.org}: ${item.hoursAgo} hours ago`);
+  });
+  
+  Logger.log(`\nBudgets Missing Field Plans (${missingPlans.length}):`);
+  missingPlans.forEach(item => {
+    Logger.log(`  - ${item.org}: ${item.hoursAgo} hours ago`);
+  });
+}
+
+/**
+ * Clear all test tracking entries
+ * Use this to clean up after testing
+ */
+function clearTestTrackings() {
+  const properties = PropertiesService.getScriptProperties();
+  const allProps = properties.getProperties();
+  const testOrgs = ['Test Missing Budget Org', 'Test Alert Flow Org', 'Test Budget Submission Org'];
+  
+  Logger.log('Clearing test tracking entries...');
+  
+  for (const key in allProps) {
+    if (key.startsWith('MISSING_BUDGET_') || key.startsWith('MISSING_PLAN_')) {
+      const orgName = key.replace(/MISSING_(BUDGET|PLAN)_/, '');
+      if (testOrgs.includes(orgName) || orgName.includes('Test')) {
+        properties.deleteProperty(key);
+        Logger.log(`  Cleared: ${key}`);
+      }
+    }
+  }
+  
+  Logger.log('Test tracking entries cleared.');
+}
+
+/**
+ * Run all tests in sequence
+ * This provides a comprehensive test of all new functionality
+ */
+function runAllFieldPlanTests() {
+  Logger.log('===== Running All Field Plan Tests =====\n');
+  
+  Logger.log('1. Testing Budget Matching...');
+  testFindMatchingBudget();
+  Logger.log('');
+  
+  Logger.log('2. Testing Missing Budget Tracking...');
+  testTrackMissingBudget();
+  Logger.log('');
+  
+  Logger.log('3. Testing Budget Submission Callback...');
+  testOnBudgetSubmission();
+  Logger.log('');
+  
+  Logger.log('4. Testing Missing Budget Notification Email...');
+  testMissingBudgetNotification();
+  Logger.log('');
+  
+  Logger.log('5. Testing Weekly Summary Email...');
+  testCombinedWeeklySummary();
+  Logger.log('');
+  
+  Logger.log('6. Viewing All Current Trackings...');
+  viewAllMissingTrackings();
+  Logger.log('');
+  
+  Logger.log('7. Cleaning Up Test Data...');
+  clearTestTrackings();
+  Logger.log('');
+  
+  Logger.log('===== All Tests Complete =====');
+  Logger.log('Check datateam@alforward.org for test emails');
+}
