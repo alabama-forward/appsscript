@@ -1,3 +1,16 @@
+// Email configuration (shared with budget_trigger_functions.js)
+const scriptProps = PropertiesService.getScriptProperties();
+const EMAIL_CONFIG = {
+  recipients: (scriptProps.getProperty('EMAIL_RECIPIENTS') || 'gabri@alforward.org,sherri@alforward.org,deanna@alforward.org,datateam@alforward.org').split(','),
+  testRecipients: (scriptProps.getProperty('EMAIL_TEST_RECIPIENTS') || 'datateam@alforward.org').split(','),
+  replyTo: scriptProps.getProperty('EMAIL_REPLY_TO') || 'datateam@alforward.org'
+};
+
+// Helper function to get email recipients based on mode
+function getEmailRecipients(isTestMode = false) {
+  return isTestMode ? EMAIL_CONFIG.testRecipients : EMAIL_CONFIG.recipients;
+}
+
 //Sheet error handling function
 function getSheet(sheetName) {
   const sheet = SpreadsheetApp.getActive().getSheetByName(sheetName);
@@ -392,6 +405,15 @@ function checkForNewRows() {
           // Send email with field plan details
           sendFieldPlanEmail(fieldPlan);
           
+          // Check for matching budget
+          const budgetMatch = findMatchingBudget(fieldPlan.memberOrgName);
+          if (!budgetMatch) {
+            // No budget found - track this field plan as missing budget
+            trackMissingBudget(fieldPlan);
+          } else {
+            Logger.log(`Found matching budget for ${fieldPlan.memberOrgName}`);
+          }
+          
           // Trigger budget analysis for this organization
           onFieldPlanSubmission(fieldPlan);
           
@@ -403,11 +425,111 @@ function checkForNewRows() {
       // Update the last processed row
       PropertiesService.getScriptProperties().setProperty('LAST_PROCESSED_ROW', currentLastRow.toString());
       Logger.log(`Updated last processed row to ${currentLastRow}`);
+      
+      // Check for field plans that have been waiting too long for budgets
+      checkForMissingBudgets();
     } else {
       Logger.log('No new rows to process');
     }
   } catch (error) {
     Logger.log(`Error in checkForNewRows: ${error.message}`);
+  }
+}
+
+// Find matching budget for organization
+function findMatchingBudget(orgName) {
+  const budgetSheetName = scriptProps.getProperty('SHEET_FIELD_BUDGET') || '2025_field_budget';
+  const budgetSheet = SpreadsheetApp.getActive().getSheetByName(budgetSheetName);
+  const data = budgetSheet.getDataRange().getValues();
+  
+  // Find any budget for this org (not necessarily unanalyzed)
+  for (let i = 1; i < data.length; i++) {
+    if (data[i][FieldBudget.COLUMNS.MEMBERNAME] === orgName) {
+      return {
+        budget: new FieldBudget(data[i]),
+        rowNumber: i + 1,
+        analyzed: data[i][FieldBudget.COLUMNS.ANALYZED] === true
+      };
+    }
+  }
+  
+  return null;
+}
+
+// Track field plans missing budgets
+function trackMissingBudget(fieldPlan) {
+  const properties = PropertiesService.getScriptProperties();
+  const key = `MISSING_BUDGET_${fieldPlan.memberOrgName}`;
+  const existingTimestamp = properties.getProperty(key);
+  
+  if (!existingTimestamp) {
+    // First time checking - record timestamp
+    properties.setProperty(key, new Date().toISOString());
+    Logger.log(`Started tracking missing budget for ${fieldPlan.memberOrgName}`);
+  }
+}
+
+// Check for field plans waiting too long for budgets
+function checkForMissingBudgets() {
+  const properties = PropertiesService.getScriptProperties();
+  const allProperties = properties.getProperties();
+  const currentTime = new Date();
+  const thresholdHours = parseInt(scriptProps.getProperty('TRIGGER_MISSING_PLAN_THRESHOLD_HOURS') || '72');
+  const thresholdMilliseconds = thresholdHours * 60 * 60 * 1000; // Convert to milliseconds
+  
+  for (const key in allProperties) {
+    if (key.startsWith('MISSING_BUDGET_')) {
+      const orgName = key.replace('MISSING_BUDGET_', '');
+      const timestamp = new Date(allProperties[key]);
+      
+      if (currentTime - timestamp > thresholdMilliseconds) {
+        // Send notification about missing budget
+        sendMissingBudgetNotification(orgName);
+        
+        // Remove the tracking property
+        properties.deleteProperty(key);
+      }
+    }
+  }
+}
+
+// Send notification for missing budget
+function sendMissingBudgetNotification(orgName, isTestMode = false) {
+  const emailBody = `
+    <h2>Missing Budget Alert</h2>
+    <p><strong>Organization:</strong> ${orgName}</p>
+    <p>This organization submitted a field plan more than 72 hours ago but has not yet submitted a budget.</p>
+    <p>Cost efficiency analysis cannot be performed without budget data.</p>
+    <p>Please follow up with the organization to request their budget submission.</p>
+  `;
+  
+  try {
+    const recipients = getEmailRecipients(isTestMode);
+    MailApp.sendEmail({
+      to: recipients.join(','),
+      subject: `${isTestMode ? '[TEST] ' : ''}Missing Budget: ${orgName}`,
+      htmlBody: isTestMode ? `<div style="background-color: #ffffcc; padding: 10px; border: 2px solid #ffcc00; margin-bottom: 20px;">
+        <strong>🧪 TEST MODE EMAIL</strong> - This is a test email sent only to datateam@alforward.org
+      </div>` + emailBody : emailBody,
+      name: "Field Plan Analysis System",
+      replyTo: EMAIL_CONFIG.replyTo
+    });
+    Logger.log(`Missing budget notification sent for ${orgName} (${isTestMode ? 'TEST MODE' : 'PRODUCTION'})`);
+  } catch (error) {
+    Logger.log(`Error sending missing budget notification: ${error.message}`);
+  }
+}
+
+// Function to be called when a budget is submitted
+function onBudgetSubmission(budget) {
+  Logger.log(`Budget submitted for ${budget.memberOrgName}, removing from missing budget tracking...`);
+  
+  // Remove from missing budget tracking if exists
+  const properties = PropertiesService.getScriptProperties();
+  const key = `MISSING_BUDGET_${budget.memberOrgName}`;
+  if (properties.getProperty(key)) {
+    properties.deleteProperty(key);
+    Logger.log(`Removed missing budget tracking for ${budget.memberOrgName}`);
   }
 }
 

@@ -63,6 +63,9 @@ function analyzeBudgets() {
     // Process each unanalyzed budget
     for (const budgetData of unanalyzedBudgets) {
       try {
+        // Clear any missing budget tracking for this organization
+        onBudgetSubmission(budgetData.budget);
+        
         processBudget(budgetData);
       } catch (error) {
         Logger.log(`Error processing budget for ${budgetData.budget.memberOrgName}: ${error.message}`);
@@ -503,58 +506,253 @@ function analyzeSpecificOrganization(orgName, isTestMode = true) {
   Logger.log(`No budget found for organization: ${orgName}`);
 }
 
-// Generate weekly summary report
+// Generate combined weekly summary report for both budgets and field plans
 function generateWeeklySummary(isTestMode = false) {
-  const sheetName = scriptProps.getProperty('SHEET_FIELD_BUDGET') || '2025_field_budget';
-  const budgetSheet = SpreadsheetApp.getActive().getSheetByName(sheetName);
-  const data = budgetSheet.getDataRange().getValues();
+  const budgetSheetName = scriptProps.getProperty('SHEET_FIELD_BUDGET') || '2025_field_budget';
+  const fieldPlanSheetName = scriptProps.getProperty('SHEET_FIELD_PLAN') || '2025_field_plan';
+  const budgetSheet = SpreadsheetApp.getActive().getSheetByName(budgetSheetName);
+  const fieldPlanSheet = SpreadsheetApp.getActive().getSheetByName(fieldPlanSheetName);
+  const budgetData = budgetSheet.getDataRange().getValues();
+  const fieldPlanData = fieldPlanSheet.getDataRange().getValues();
   
-  let analyzed = 0;
-  let pending = 0;
-  let missingPlans = 0;
+  // Calculate date range for "this week" (past 7 days)
+  const oneWeekAgo = new Date();
+  oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+  
+  // Budget analysis
+  let budgetsAnalyzed = 0;
+  let budgetsPending = 0;
+  let budgetsMissingPlans = 0;
   let totalRequested = 0;
   let totalGap = 0;
+  let weeklyRequestedTotal = 0;
+  const budgetsMissingPlansList = [];
   
-  for (let i = 1; i < data.length; i++) {
-    if (data[i][0]) {
-      if (data[i][FieldBudget.COLUMNS.ANALYZED] === true) {
-        analyzed++;
+  // Field plan analysis
+  let fieldPlansTotal = 0;
+  let fieldPlansThisWeek = 0;
+  let fieldPlansMissingBudgets = 0;
+  const fieldPlansMissingBudgetsList = [];
+  const countyData = {};
+  const tacticCounts = {
+    DOOR: 0,
+    PHONE: 0,
+    TEXT: 0,
+    OPEN: 0,
+    RELATIONAL: 0,
+    REGISTRATION: 0,
+    MAIL: 0
+  };
+  const coachingNeeds = {
+    high: 0,    // 1-5
+    medium: 0,  // 6-8
+    low: 0      // 9-10
+  };
+  
+  // Process budget data
+  for (let i = 1; i < budgetData.length; i++) {
+    if (budgetData[i][0]) {
+      const orgName = budgetData[i][FieldBudget.COLUMNS.MEMBERNAME];
+      const requestedAmount = budgetData[i][FieldBudget.COLUMNS.REQUESTEDTOTAL] || 0;
+      
+      if (budgetData[i][FieldBudget.COLUMNS.ANALYZED] === true) {
+        budgetsAnalyzed++;
       } else {
-        pending++;
+        budgetsPending++;
         // Check if waiting for field plan
         const properties = PropertiesService.getScriptProperties();
-        if (properties.getProperty(`MISSING_PLAN_${data[i][FieldBudget.COLUMNS.MEMBERNAME]}`)) {
-          missingPlans++;
+        const missingPlanProp = properties.getProperty(`MISSING_PLAN_${orgName}`);
+        if (missingPlanProp) {
+          budgetsMissingPlans++;
+          const daysSince = Math.floor((new Date() - new Date(missingPlanProp)) / (1000 * 60 * 60 * 24));
+          budgetsMissingPlansList.push({ org: orgName, days: daysSince });
         }
       }
       
-      totalRequested += data[i][FieldBudget.COLUMNS.REQUESTEDTOTAL] || 0;
+      totalRequested += requestedAmount;
+      
+      // Check if submitted this week (would need timestamp column)
+      const submitDate = budgetData[i][0]; // Assuming first column is timestamp
+      if (submitDate && new Date(submitDate) >= oneWeekAgo) {
+        weeklyRequestedTotal += requestedAmount;
+      }
+      
       // Convert negative gaps to positive for totaling
-      const gapValue = data[i][FieldBudget.COLUMNS.GAPTOTAL] || 0;
+      const gapValue = budgetData[i][FieldBudget.COLUMNS.GAPTOTAL] || 0;
       totalGap += Math.abs(gapValue);
     }
   }
   
-  const emailBody = `
-    <h2>Weekly Budget Analysis Summary</h2>
+  // Process field plan data
+  const properties = PropertiesService.getScriptProperties();
+  for (let i = 1; i < fieldPlanData.length; i++) {
+    if (fieldPlanData[i][0]) {
+      fieldPlansTotal++;
+      const orgName = fieldPlanData[i][FieldPlan.COLUMNS.MEMBERNAME];
+      const submitDate = fieldPlanData[i][FieldPlan.COLUMNS.SUBMISSIONDATETIME];
+      
+      // Check if submitted this week
+      if (submitDate && new Date(submitDate) >= oneWeekAgo) {
+        fieldPlansThisWeek++;
+      }
+      
+      // Check for missing budget
+      const missingBudgetProp = properties.getProperty(`MISSING_BUDGET_${orgName}`);
+      if (missingBudgetProp) {
+        fieldPlansMissingBudgets++;
+        const daysSince = Math.floor((new Date() - new Date(missingBudgetProp)) / (1000 * 60 * 60 * 24));
+        fieldPlansMissingBudgetsList.push({ org: orgName, days: daysSince });
+      } else {
+        // Check if budget exists at all
+        let hasBudget = false;
+        for (let j = 1; j < budgetData.length; j++) {
+          if (budgetData[j][FieldBudget.COLUMNS.MEMBERNAME] === orgName) {
+            hasBudget = true;
+            break;
+          }
+        }
+        if (!hasBudget && submitDate) {
+          const daysSince = Math.floor((new Date() - new Date(submitDate)) / (1000 * 60 * 60 * 24));
+          if (daysSince > 3) {
+            fieldPlansMissingBudgets++;
+            fieldPlansMissingBudgetsList.push({ org: orgName, days: daysSince });
+          }
+        }
+      }
+      
+      // Count counties
+      const counties = fieldPlanData[i][FieldPlan.COLUMNS.FIELDCOUNTIES];
+      if (counties) {
+        const countyList = Array.isArray(counties) ? counties : counties.split(',');
+        countyList.forEach(county => {
+          const trimmedCounty = county.trim();
+          if (trimmedCounty) {
+            countyData[trimmedCounty] = (countyData[trimmedCounty] || 0) + 1;
+          }
+        });
+      }
+      
+      // Count tactics (checking which tactic columns have data)
+      const rowData = fieldPlanData[i];
+      if (rowData[PROGRAM_COLUMNS.DOOR.PROGRAMLENGTH]) tacticCounts.DOOR++;
+      if (rowData[PROGRAM_COLUMNS.PHONE.PROGRAMLENGTH]) tacticCounts.PHONE++;
+      if (rowData[PROGRAM_COLUMNS.TEXT.PROGRAMLENGTH]) tacticCounts.TEXT++;
+      if (rowData[PROGRAM_COLUMNS.OPEN.PROGRAMLENGTH]) tacticCounts.OPEN++;
+      if (rowData[PROGRAM_COLUMNS.RELATIONAL.PROGRAMLENGTH]) tacticCounts.RELATIONAL++;
+      if (rowData[PROGRAM_COLUMNS.REGISTRATION.PROGRAMLENGTH]) tacticCounts.REGISTRATION++;
+      if (rowData[PROGRAM_COLUMNS.MAIL.PROGRAMLENGTH]) tacticCounts.MAIL++;
+      
+      // Count coaching needs
+      const confidence = fieldPlanData[i][FieldPlan.COLUMNS.PLANCONFIDENCE];
+      if (confidence) {
+        if (confidence <= 5) coachingNeeds.high++;
+        else if (confidence <= 8) coachingNeeds.medium++;
+        else coachingNeeds.low++;
+      }
+    }
+  }
+  
+  // Sort missing lists by days
+  budgetsMissingPlansList.sort((a, b) => b.days - a.days);
+  fieldPlansMissingBudgetsList.sort((a, b) => b.days - a.days);
+  
+  // Build email body
+  let emailBody = `
+    <h2>Weekly Summary Report - Field Plans & Budgets</h2>
     <p>Report generated on: ${new Date().toLocaleDateString()}</p>
     
-    <h3>Analysis Status</h3>
+    <h3>Field Plan Activity</h3>
     <ul>
-      <li>Budgets Analyzed: ${analyzed}</li>
-      <li>Budgets Pending: ${pending}</li>
-      <li>Waiting for Field Plans: ${missingPlans}</li>
+      <li>New Field Plans This Week: ${fieldPlansThisWeek}</li>
+      <li>Total Active Field Plans: ${fieldPlansTotal}</li>
+      <li>Field Plans Missing Budgets: ${fieldPlansMissingBudgets}</li>
+    </ul>
+    
+    <h3>Budget Analysis Status</h3>
+    <ul>
+      <li>Budgets Analyzed: ${budgetsAnalyzed}</li>
+      <li>Budgets Pending Analysis: ${budgetsPending}</li>
+      <li>Budgets Missing Field Plans: ${budgetsMissingPlans}</li>
     </ul>
     
     <h3>Financial Summary</h3>
     <ul>
-      <li>Total Requested: $${totalRequested.toFixed(2)}</li>
+      <li>Total Requested This Week: $${weeklyRequestedTotal.toFixed(2)}</li>
+      <li>Total Requested Overall: $${totalRequested.toFixed(2)}</li>
       <li>Total Gap Identified: $${totalGap.toFixed(2)}</li>
     </ul>
     
-    <p><em>Note: All gap calculations use absolute values (negative gaps converted to positive).</em></p>
+    <h3>Tactic Distribution</h3>
+    <table border="1" cellpadding="8" cellspacing="0" style="border-collapse: collapse;">
+      <thead>
+        <tr style="background-color: #f2f2f2;">
+          <th>Tactic</th>
+          <th>Number of Programs</th>
+        </tr>
+      </thead>
+      <tbody>`;
+  
+  // Add tactic rows
+  Object.entries(tacticCounts).forEach(([tactic, count]) => {
+    if (count > 0) {
+      emailBody += `
+        <tr>
+          <td>${tactic}</td>
+          <td>${count}</td>
+        </tr>`;
+    }
+  });
+  
+  emailBody += `
+      </tbody>
+    </table>
     
-    <p>${FieldBudget.countAnalyzed()}</p>
+    <h3>Geographic Coverage</h3>
+    <p><strong>Counties with Active Programs:</strong></p>
+    <ul>`;
+  
+  // Sort counties by count
+  const sortedCounties = Object.entries(countyData).sort((a, b) => b[1] - a[1]);
+  sortedCounties.forEach(([county, count]) => {
+    emailBody += `<li>${county}: ${count} program${count > 1 ? 's' : ''}</li>`;
+  });
+  
+  emailBody += `
+    </ul>
+    
+    <h3>Organizations Needing Follow-Up</h3>`;
+  
+  // Missing budgets section
+  if (fieldPlansMissingBudgetsList.length > 0) {
+    emailBody += `
+    <h4>Field Plans Missing Budgets (>72 hours)</h4>
+    <ul>`;
+    fieldPlansMissingBudgetsList.forEach(item => {
+      emailBody += `<li>${item.org} - submitted ${item.days} days ago</li>`;
+    });
+    emailBody += `</ul>`;
+  }
+  
+  // Missing field plans section
+  if (budgetsMissingPlansList.length > 0) {
+    emailBody += `
+    <h4>Budgets Missing Field Plans (>72 hours)</h4>
+    <ul>`;
+    budgetsMissingPlansList.forEach(item => {
+      emailBody += `<li>${item.org} - submitted ${item.days} days ago</li>`;
+    });
+    emailBody += `</ul>`;
+  }
+  
+  emailBody += `
+    <h3>Coaching Needs Summary</h3>
+    <ul>
+      <li>High Need (1-5): ${coachingNeeds.high} organizations</li>
+      <li>Medium Need (6-8): ${coachingNeeds.medium} organizations</li>
+      <li>Low Need (9-10): ${coachingNeeds.low} organizations</li>
+    </ul>
+    
+    <p><em>Note: All gap calculations use absolute values. Missing documents are tracked after 72 hours.</em></p>
   `;
   
   // Add test mode indicator if in test mode
@@ -568,12 +766,12 @@ function generateWeeklySummary(isTestMode = false) {
     const recipients = getEmailRecipients(isTestMode);
     MailApp.sendEmail({
       to: recipients.join(','),
-      subject: `${isTestMode ? '[TEST] ' : ''}Weekly Budget Analysis Summary - ${new Date().toLocaleDateString()}`,
+      subject: `${isTestMode ? '[TEST] ' : ''}Weekly Summary Report - ${new Date().toLocaleDateString()}`,
       htmlBody: emailBody,
-      name: "Budget Analysis System",
+      name: "Field Plan & Budget Analysis System",
       replyTo: EMAIL_CONFIG.replyTo
     });
-    Logger.log(`Weekly summary report sent (${isTestMode ? 'TEST MODE' : 'PRODUCTION'})`);
+    Logger.log(`Combined weekly summary report sent (${isTestMode ? 'TEST MODE' : 'PRODUCTION'})`);
   } catch (error) {
     Logger.log(`Error sending weekly summary: ${error.message}`);
   }
@@ -624,5 +822,18 @@ function onFieldPlanSubmission(fieldPlan) {
   if (properties.getProperty(key)) {
     properties.deleteProperty(key);
     Logger.log(`Removed missing field plan tracking for ${fieldPlan.memberOrgName}`);
+  }
+}
+
+// Function to be called when a budget is submitted
+function onBudgetSubmission(budget) {
+  Logger.log(`Budget submitted for ${budget.memberOrgName}, removing from missing budget tracking...`);
+  
+  // Remove from missing budget tracking if exists
+  const properties = PropertiesService.getScriptProperties();
+  const key = `MISSING_BUDGET_${budget.memberOrgName}`;
+  if (properties.getProperty(key)) {
+    properties.deleteProperty(key);
+    Logger.log(`Removed missing budget tracking for ${budget.memberOrgName}`);
   }
 }
