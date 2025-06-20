@@ -198,7 +198,6 @@ function sendFieldPlanEmail(fieldPlan) {
   }
 
   // Configuration object with recipient emails array - add your emails here
-  const scriptProps = PropertiesService.getScriptProperties();
   const config = {
     recipientEmails: (scriptProps.getProperty('EMAIL_RECIPIENTS') || 'gabri@alforward.org,sherri@alforward.org,deanna@alforward.org,datateam@alforward.org').split(','),
     maxRetries: 3,
