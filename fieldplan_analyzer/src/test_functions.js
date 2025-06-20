@@ -1,7 +1,9 @@
 /**
  * Test function to analyze the most recent field plan and send a test email
- * Sends to a specified test email or uses a default test email
+ * Sends to a specified test email or uses a default test email (datateam@alforward.org)
  * Uses the exact same email formatting as the production system
+ * Note: This function overrides the sendFieldPlanEmail recipient to ensure test emails
+ * only go to the specified test address, never to production recipients
  * @param {string} testEmail - Optional email address to send the test to
  * @return {object} Status of the test operation
  */

@@ -135,8 +135,8 @@ function testWeeklySummary() {
   Logger.log("=== Testing Weekly Summary ===");
   
   try {
-    generateWeeklySummary();
-    Logger.log("Weekly summary sent - check email");
+    generateWeeklySummary(true);  // Added test mode parameter to send to datateam@alforward.org only
+    Logger.log("Weekly summary sent - check datateam@alforward.org");
   } catch (error) {
     Logger.log(`Error generating summary: ${error.message}`);
   }
