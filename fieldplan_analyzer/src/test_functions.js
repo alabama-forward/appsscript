@@ -49,8 +49,12 @@ function testMostRecentFieldPlan(testEmail) {
     };
 
     try {
+      // Get the last row number for the field plan
+      const sheet = SpreadsheetApp.getActive().getSheetByName('2025_field_plan');
+      const lastRowNumber = sheet.getLastRow();
+      
       // Call the existing function to send the email
-      sendFieldPlanEmail(fieldPlan);
+      sendFieldPlanEmail(fieldPlan, lastRowNumber);
       Logger.log(`Test email sent successfully to: ${recipientEmail}`);
 
       return {
@@ -322,6 +326,52 @@ function clearTestTrackings() {
   }
   
   Logger.log('Test tracking entries cleared.');
+}
+
+// Test that tactic analysis uses correct organization names
+function testTacticOrganizationNames() {
+  Logger.log("=== TESTING TACTIC ORGANIZATION NAMES ===");
+  
+  try {
+    const sheet = SpreadsheetApp.getActive().getSheetByName('2025_field_plan');
+    const lastRow = sheet.getLastRow();
+    
+    // Test with a specific row (not the last one)
+    const testRow = Math.max(2, lastRow - 1); // Use second to last row if available
+    
+    const fieldPlan = FieldPlan.fromSpecificRow(testRow);
+    Logger.log(`Testing with field plan from row ${testRow}: ${fieldPlan.memberOrgName}`);
+    
+    // Get the row data for this specific row
+    const rowData = sheet.getRange(testRow, 1, 1, sheet.getLastColumn()).getValues()[0];
+    
+    // Create tactic instances
+    const tactics = getTacticInstances(rowData);
+    
+    Logger.log(`Found ${tactics.length} tactics for ${fieldPlan.memberOrgName}`);
+    
+    // Check each tactic to ensure it has the correct org name
+    let allCorrect = true;
+    tactics.forEach((tactic, index) => {
+      const tacticOrgName = tactic._memberOrgName || tactic.memberOrgName;
+      Logger.log(`Tactic ${index + 1} (${tactic._name}): Organization = ${tacticOrgName}`);
+      
+      if (tacticOrgName !== fieldPlan.memberOrgName) {
+        Logger.log(`❌ MISMATCH: Tactic has '${tacticOrgName}' but should be '${fieldPlan.memberOrgName}'`);
+        allCorrect = false;
+      }
+    });
+    
+    if (allCorrect) {
+      Logger.log("✅ All tactics have correct organization name");
+    } else {
+      Logger.log("❌ Some tactics have incorrect organization names");
+    }
+    
+  } catch (error) {
+    Logger.log(`❌ Error testing tactic organization names: ${error.message}`);
+    Logger.log(`Stack trace: ${error.stack}`);
+  }
 }
 
 // Test processing all field plans

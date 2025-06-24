@@ -191,7 +191,7 @@ function getTacticMetrics(tactic) {
   }
 }
 
-function sendFieldPlanEmail(fieldPlan) {
+function sendFieldPlanEmail(fieldPlan, rowNumber = null) {
   if (!fieldPlan) {
     Logger.log('Error: fieldPlan object is undefined');
     return;
@@ -226,8 +226,33 @@ function sendFieldPlanEmail(fieldPlan) {
   try {
     // Get the row data for creating tactic instances
     const sheet = SpreadsheetApp.getActive().getSheetByName('2025_field_plan');
-    const lastRow = sheet.getLastRow();
-    const rowData = sheet.getRange(lastRow, 1, 1, sheet.getLastColumn()).getValues()[0];
+    let rowData;
+    
+    if (rowNumber) {
+      // Use the specific row number if provided
+      rowData = sheet.getRange(rowNumber, 1, 1, sheet.getLastColumn()).getValues()[0];
+      Logger.log(`Using row data from row ${rowNumber} for ${fieldPlan.memberOrgName}`);
+    } else {
+      // Fallback: try to find the row by matching organization name
+      const allData = sheet.getDataRange().getValues();
+      let foundRow = -1;
+      
+      for (let i = 1; i < allData.length; i++) {
+        if (allData[i][FieldPlan.COLUMNS.MEMBERNAME] === fieldPlan.memberOrgName) {
+          rowData = allData[i];
+          foundRow = i + 1;
+          break;
+        }
+      }
+      
+      if (foundRow === -1) {
+        Logger.log(`Warning: Could not find row for ${fieldPlan.memberOrgName}, using last row as fallback`);
+        const lastRow = sheet.getLastRow();
+        rowData = sheet.getRange(lastRow, 1, 1, sheet.getLastColumn()).getValues()[0];
+      } else {
+        Logger.log(`Found ${fieldPlan.memberOrgName} at row ${foundRow}`);
+      }
+    }
 
     // Create comprehensive email content
     let emailBody = `
@@ -402,7 +427,7 @@ function checkForNewRows() {
           Logger.log(`Processing row ${rowNumber}: ${fieldPlan.memberOrgName}`);
           
           // Send email with field plan details
-          sendFieldPlanEmail(fieldPlan);
+          sendFieldPlanEmail(fieldPlan, rowNumber);
           
           // Check for matching budget
           const budgetMatch = findMatchingBudget(fieldPlan.memberOrgName);
@@ -491,10 +516,10 @@ function processAllFieldPlans(isTestMode = false) {
           // In test mode, modify the sendFieldPlanEmail to use test recipients
           const originalRecipients = scriptProps.getProperty('EMAIL_RECIPIENTS');
           scriptProps.setProperty('EMAIL_RECIPIENTS', 'datateam@alforward.org');
-          sendFieldPlanEmail(fieldPlan);
+          sendFieldPlanEmail(fieldPlan, rowNumber);
           scriptProps.setProperty('EMAIL_RECIPIENTS', originalRecipients);
         } else {
-          sendFieldPlanEmail(fieldPlan);
+          sendFieldPlanEmail(fieldPlan, rowNumber);
         }
         
         successCount++;
