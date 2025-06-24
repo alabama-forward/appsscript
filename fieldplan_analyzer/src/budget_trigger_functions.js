@@ -1,3 +1,6 @@
+// Note: PROGRAM_COLUMNS is defined in field_program_extension_class.js
+// It's available globally since all Apps Script files share the same scope
+
 // Cost per attempt targets with standard deviations
 // scriptProps is declared in field_trigger_functions.js
 function getTacticTargets() {
@@ -500,12 +503,32 @@ function analyzeSpecificOrganization(orgName, isTestMode = true) {
 
 // Generate combined weekly summary report for both budgets and field plans
 function generateWeeklySummary(isTestMode = false) {
-  const budgetSheetName = scriptProps.getProperty('SHEET_FIELD_BUDGET') || '2025_field_budget';
-  const fieldPlanSheetName = scriptProps.getProperty('SHEET_FIELD_PLAN') || '2025_field_plan';
-  const budgetSheet = SpreadsheetApp.getActive().getSheetByName(budgetSheetName);
-  const fieldPlanSheet = SpreadsheetApp.getActive().getSheetByName(fieldPlanSheetName);
-  const budgetData = budgetSheet.getDataRange().getValues();
-  const fieldPlanData = fieldPlanSheet.getDataRange().getValues();
+  try {
+    Logger.log(`Starting generateWeeklySummary (isTestMode: ${isTestMode})`);
+    
+    const budgetSheetName = scriptProps.getProperty('SHEET_FIELD_BUDGET') || '2025_field_budget';
+    const fieldPlanSheetName = scriptProps.getProperty('SHEET_FIELD_PLAN') || '2025_field_plan';
+    
+    // Get sheets with error checking
+    const spreadsheet = SpreadsheetApp.getActive();
+    if (!spreadsheet) {
+      throw new Error('Unable to access active spreadsheet');
+    }
+    
+    const budgetSheet = spreadsheet.getSheetByName(budgetSheetName);
+    if (!budgetSheet) {
+      throw new Error(`Budget sheet '${budgetSheetName}' not found`);
+    }
+    
+    const fieldPlanSheet = spreadsheet.getSheetByName(fieldPlanSheetName);
+    if (!fieldPlanSheet) {
+      throw new Error(`Field plan sheet '${fieldPlanSheetName}' not found`);
+    }
+    
+    const budgetData = budgetSheet.getDataRange().getValues();
+    const fieldPlanData = fieldPlanSheet.getDataRange().getValues();
+    
+    Logger.log(`Loaded ${budgetData.length} budget rows and ${fieldPlanData.length} field plan rows`);
   
   // Calculate date range for "this week" (past 7 days)
   const oneWeekAgo = new Date();
@@ -792,8 +815,9 @@ function generateWeeklySummary(isTestMode = false) {
     </div>` + emailBody;
   }
 
-  try {
     const recipients = getEmailRecipients(isTestMode);
+    Logger.log(`Sending weekly summary to: ${recipients.join(', ')}`);
+    
     MailApp.sendEmail({
       to: recipients.join(','),
       subject: `${isTestMode ? '[TEST] ' : ''}Weekly Summary Report - ${new Date().toLocaleDateString()}`,
@@ -801,17 +825,49 @@ function generateWeeklySummary(isTestMode = false) {
       name: "Field Plan & Budget Analysis System",
       replyTo: scriptProps.getProperty('EMAIL_REPLY_TO') || 'datateam@alforward.org'
     });
-    Logger.log(`Combined weekly summary report sent (${isTestMode ? 'TEST MODE' : 'PRODUCTION'})`);
+    Logger.log(`Combined weekly summary report sent successfully (${isTestMode ? 'TEST MODE' : 'PRODUCTION'})`);
+    
   } catch (error) {
-    Logger.log(`Error sending weekly summary: ${error.message}`);
+    Logger.log(`ERROR in generateWeeklySummary: ${error.message}`);
+    Logger.log(`Stack trace: ${error.stack}`);
+    
+    // Try to send error notification
+    try {
+      const errorEmail = `
+        <h2>Weekly Summary Generation Failed</h2>
+        <p><strong>Error:</strong> ${error.message}</p>
+        <p><strong>Time:</strong> ${new Date().toString()}</p>
+        <p><strong>Mode:</strong> ${isTestMode ? 'TEST' : 'PRODUCTION'}</p>
+        <p>Please check the Apps Script logs for more details.</p>
+      `;
+      
+      MailApp.sendEmail({
+        to: 'datateam@alforward.org',
+        subject: 'ERROR: Weekly Summary Generation Failed',
+        htmlBody: errorEmail,
+        name: "Field Plan & Budget Analysis System"
+      });
+    } catch (emailError) {
+      Logger.log(`Failed to send error notification: ${emailError.message}`);
+    }
+    
+    // Re-throw to ensure the error is visible in the execution transcript
+    throw error;
   }
+}
+
+// Wrapper function for the weekly summary trigger
+// This ensures the function is called with the correct parameters
+function runWeeklySummaryTrigger() {
+  Logger.log('Weekly summary trigger fired');
+  generateWeeklySummary(false); // Explicitly pass false for production mode
 }
 
 // Create weekly summary trigger
 function createWeeklySummaryTrigger() {
   const triggers = ScriptApp.getProjectTriggers();
   const triggerExists = triggers.some(trigger => 
-    trigger.getHandlerFunction() === 'generateWeeklySummary' && 
+    trigger.getHandlerFunction() === 'runWeeklySummaryTrigger' && 
     trigger.getEventType() === ScriptApp.EventType.CLOCK
   );
   
@@ -819,12 +875,14 @@ function createWeeklySummaryTrigger() {
     const weekDay = scriptProps.getProperty('TRIGGER_WEEKLY_SUMMARY_DAY') || 'MONDAY';
     const hour = parseInt(scriptProps.getProperty('TRIGGER_WEEKLY_SUMMARY_HOUR') || '9');
     
-    ScriptApp.newTrigger('generateWeeklySummary')
+    ScriptApp.newTrigger('runWeeklySummaryTrigger')
       .timeBased()
       .onWeekDay(ScriptApp.WeekDay[weekDay])
       .atHour(hour)
       .create();
-    Logger.log('Weekly summary trigger created for Monday 9 AM');
+    Logger.log(`Weekly summary trigger created for ${weekDay} at ${hour}:00`);
+  } else {
+    Logger.log('Weekly summary trigger already exists');
   }
 }
 

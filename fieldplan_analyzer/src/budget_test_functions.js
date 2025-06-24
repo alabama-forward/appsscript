@@ -854,6 +854,53 @@ function runAllBudgetTests() {
   Logger.log("===== ALL TESTS COMPLETE =====");
 }
 
+// Test production weekly summary manually
+function testProductionWeeklySummary() {
+  Logger.log("=== TESTING PRODUCTION WEEKLY SUMMARY ===");
+  Logger.log("This will send to PRODUCTION recipients");
+  
+  try {
+    generateWeeklySummary(false); // false = production mode
+    Logger.log("✅ Production weekly summary sent successfully");
+  } catch (error) {
+    Logger.log(`❌ Error generating production summary: ${error.message}`);
+    Logger.log(`Stack trace: ${error.stack}`);
+  }
+}
+
+// Manually run the trigger function
+function testWeeklySummaryTrigger() {
+  Logger.log("=== TESTING WEEKLY SUMMARY TRIGGER ===");
+  Logger.log("This simulates the trigger firing");
+  
+  try {
+    runWeeklySummaryTrigger();
+    Logger.log("✅ Trigger function completed");
+  } catch (error) {
+    Logger.log(`❌ Trigger function failed: ${error.message}`);
+    Logger.log(`Stack trace: ${error.stack}`);
+  }
+}
+
+// Remove old trigger and create new one
+function recreateWeeklySummaryTrigger() {
+  Logger.log("=== RECREATING WEEKLY SUMMARY TRIGGER ===");
+  
+  // Remove all existing weekly summary triggers
+  const triggers = ScriptApp.getProjectTriggers();
+  triggers.forEach(trigger => {
+    const handler = trigger.getHandlerFunction();
+    if (handler === 'generateWeeklySummary' || handler === 'runWeeklySummaryTrigger') {
+      ScriptApp.deleteTrigger(trigger);
+      Logger.log(`Removed trigger for ${handler}`);
+    }
+  });
+  
+  // Create new trigger
+  createWeeklySummaryTrigger();
+  Logger.log("✅ New trigger created");
+}
+
 // ============================================
 // NEW TEST FUNCTIONS FOR MISSING NOTIFICATIONS
 // ============================================
