@@ -171,19 +171,19 @@ function analyzeTactic(budget, tactic) {
   if (tactic instanceof DoorTactic) {
     tacticType = 'DOOR';
     budgetField = 'canvassRequested';
-    fundingRequested = budget.canvassRequested || 0;
+    fundingRequested = parseFloat(budget.canvassRequested) || 0;
   } else if (tactic instanceof PhoneTactic) {
     tacticType = 'PHONE';
     budgetField = 'phoneRequested';
-    fundingRequested = budget.phoneRequested || 0;
+    fundingRequested = parseFloat(budget.phoneRequested) || 0;
   } else if (tactic instanceof TextTactic) {
     tacticType = 'TEXT';
     budgetField = 'textRequested';
-    fundingRequested = budget.textRequested || 0;
+    fundingRequested = parseFloat(budget.textRequested) || 0;
   } else if (tactic instanceof OpenTactic) {
     tacticType = 'OPEN';
     budgetField = 'canvassRequested';
-    fundingRequested = budget.canvassRequested || 0;
+    fundingRequested = parseFloat(budget.canvassRequested) || 0;
   } else {
     return null;
   }
@@ -305,10 +305,10 @@ function sendBudgetAnalysisEmail(budget, fieldPlan, analysis, isTestMode = false
     emailBody += `
       <h4>${tactic.tacticName}</h4>
       <ul>
-        <li>Funding Requested: $${tactic.fundingRequested.toFixed(2)}</li>
+        <li>Funding Requested: $${(parseFloat(tactic.fundingRequested) || 0).toFixed(2)}</li>
         <li>Program Attempts: ${tactic.programAttempts}</li>
-        <li>Cost Per Attempt: $${tactic.costPerAttempt.toFixed(2)}</li>
-        <li>Target Range: $${tactic.lowerBound.toFixed(2)} - $${tactic.upperBound.toFixed(2)}</li>
+        <li>Cost Per Attempt: $${(parseFloat(tactic.costPerAttempt) || 0).toFixed(2)}</li>
+        <li>Target Range: $${(parseFloat(tactic.lowerBound) || 0).toFixed(2)} - $${(parseFloat(tactic.upperBound) || 0).toFixed(2)}</li>
         <li>Status: ${tactic.status} target range</li>
       </ul>
       <p><strong>Recommendation:</strong> ${tactic.recommendation}</p>`;

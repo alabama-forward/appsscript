@@ -848,12 +848,52 @@ function runAllBudgetTests() {
   testTriggers();
   Logger.log("\n");
   
+  testNumericFieldHandling();
+  Logger.log("\n");
+  
   Logger.log("===== ALL TESTS COMPLETE =====");
 }
 
 // ============================================
 // NEW TEST FUNCTIONS FOR MISSING NOTIFICATIONS
 // ============================================
+
+// Test handling of non-numeric values in budget fields
+function testNumericFieldHandling() {
+  Logger.log('=== Testing Numeric Field Handling ===');
+  
+  try {
+    // Create a mock row with various non-numeric values
+    const mockRow = new Array(55).fill('');
+    mockRow[FieldBudget.COLUMNS.MEMBERNAME] = 'Test Organization';
+    mockRow[FieldBudget.COLUMNS.CANVASSREQUESTED] = null;  // null value
+    mockRow[FieldBudget.COLUMNS.PHONEREQUESTED] = '';     // empty string
+    mockRow[FieldBudget.COLUMNS.TEXTREQUESTED] = 'N/A';   // text value
+    mockRow[FieldBudget.COLUMNS.EVENTREQUESTED] = '1000'; // string number
+    mockRow[FieldBudget.COLUMNS.DIGITALREQUESTED] = 500;  // actual number
+    
+    const budget = new FieldBudget(mockRow);
+    
+    Logger.log('Testing getter outputs:');
+    Logger.log(`canvassRequested (null): ${budget.canvassRequested} (type: ${typeof budget.canvassRequested})`);
+    Logger.log(`phoneRequested (empty): ${budget.phoneRequested} (type: ${typeof budget.phoneRequested})`);
+    Logger.log(`textRequested (text): ${budget.textRequested} (type: ${typeof budget.textRequested})`);
+    Logger.log(`eventRequested (string): ${budget.eventRequested} (type: ${typeof budget.eventRequested})`);
+    Logger.log(`digitalRequested (number): ${budget.digitalRequested} (type: ${typeof budget.digitalRequested})`);
+    
+    // Test that toFixed works on all values
+    Logger.log('\nTesting toFixed():');
+    Logger.log(`canvassRequested.toFixed(2): ${budget.canvassRequested.toFixed(2)}`);
+    Logger.log(`phoneRequested.toFixed(2): ${budget.phoneRequested.toFixed(2)}`);
+    Logger.log(`textRequested.toFixed(2): ${budget.textRequested.toFixed(2)}`);
+    Logger.log(`eventRequested.toFixed(2): ${budget.eventRequested.toFixed(2)}`);
+    Logger.log(`digitalRequested.toFixed(2): ${budget.digitalRequested.toFixed(2)}`);
+    
+    Logger.log('✓ All numeric fields handled correctly');
+  } catch (error) {
+    Logger.log(`✗ Error in numeric field handling: ${error.message}`);
+  }
+}
 
 /**
  * Test the missing field plan notification

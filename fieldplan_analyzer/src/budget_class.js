@@ -140,69 +140,69 @@ class FieldBudget {
     get contactPhone() { return this._contactPhone || null; }
     get memberOrgName() { return this._memberOrgName || null; }
     //Admin
-    get adminRequested() { return this._adminRequested || null; }
-    get adminTotal() { return this._adminTotal || null; }
-    get adminGap() { return this._adminGap || null; }
+    get adminRequested() { return parseFloat(this._adminRequested) || 0; }
+    get adminTotal() { return parseFloat(this._adminTotal) || 0; }
+    get adminGap() { return parseFloat(this._adminGap) || 0; }
     //Data
-    get dataRequested() { return this._dataRequested || null; }
-    get dataTotal() { return this._dataTotal || null; }
-    get dataGap() { return this._dataGap || null; }
+    get dataRequested() { return parseFloat(this._dataRequested) || 0; }
+    get dataTotal() { return parseFloat(this._dataTotal) || 0; }
+    get dataGap() { return parseFloat(this._dataGap) || 0; }
     //Travel
-    get travelRequested() { return this._travelRequested || null; }
-    get travelTotal() { return this._travelTotal || null; }
-    get travelGap() { return this._travelGap || null; }
+    get travelRequested() { return parseFloat(this._travelRequested) || 0; }
+    get travelTotal() { return parseFloat(this._travelTotal) || 0; }
+    get travelGap() { return parseFloat(this._travelGap) || 0; }
     //Comms
-    get commsRequested() { return this._commsRequested || null; }
-    get commsTotal() { return this._commsTotal || null; }
-    get commsGap() { return this._commsGap || null; }
+    get commsRequested() { return parseFloat(this._commsRequested) || 0; }
+    get commsTotal() { return parseFloat(this._commsTotal) || 0; }
+    get commsGap() { return parseFloat(this._commsGap) || 0; }
     //Design
-    get designRequested() { return this._designRequested || null; }
-    get designTotal() { return this._designTotal || null; }
-    get designGap() { return this._designGap || null; }
+    get designRequested() { return parseFloat(this._designRequested) || 0; }
+    get designTotal() { return parseFloat(this._designTotal) || 0; }
+    get designGap() { return parseFloat(this._designGap) || 0; }
     //Video
-    get videoRequested() { return this._videoRequested || null; }
-    get videoTotal() { return this._videoTotal || null; }
-    get videoGap() { return this._videoGap || null; }
+    get videoRequested() { return parseFloat(this._videoRequested) || 0; }
+    get videoTotal() { return parseFloat(this._videoTotal) || 0; }
+    get videoGap() { return parseFloat(this._videoGap) || 0; }
     //Print
-    get printRequested() { return this._printRequested || null; }
-    get printTotal() { return this._printTotal || null; }
-    get printGap() { return this._printGap || null; }
+    get printRequested() { return parseFloat(this._printRequested) || 0; }
+    get printTotal() { return parseFloat(this._printTotal) || 0; }
+    get printGap() { return parseFloat(this._printGap) || 0; }
     //Postage
-    get postageRequested() { return this._postageRequested || null; }
-    get postageTotal() { return this._postageTotal || null; }
-    get postageGap() { return this._postageGap || null; }
+    get postageRequested() { return parseFloat(this._postageRequested) || 0; }
+    get postageTotal() { return parseFloat(this._postageTotal) || 0; }
+    get postageGap() { return parseFloat(this._postageGap) || 0; }
     //Training
-    get trainingRequested() { return this._trainingRequested || null; }
-    get trainingTotal() { return this._trainingTotal || null; }
-    get trainingGap() { return this._trainingGap || null; }
+    get trainingRequested() { return parseFloat(this._trainingRequested) || 0; }
+    get trainingTotal() { return parseFloat(this._trainingTotal) || 0; }
+    get trainingGap() { return parseFloat(this._trainingGap) || 0; }
     //Supplies
-    get suppliesRequested() { return this._suppliesRequested || null; }
-    get suppliesTotal() { return this._suppliesTotal || null; }
-    get suppliesGap() { return this._suppliesGap || null; }
+    get suppliesRequested() { return parseFloat(this._suppliesRequested) || 0; }
+    get suppliesTotal() { return parseFloat(this._suppliesTotal) || 0; }
+    get suppliesGap() { return parseFloat(this._suppliesGap) || 0; }
     //Canvass
-    get canvassRequested() { return this._canvassRequested || null; }
-    get canvassTotal() { return this._canvassTotal || null; }
-    get canvassGap() { return this._canvassGap || null; }
+    get canvassRequested() { return parseFloat(this._canvassRequested) || 0; }
+    get canvassTotal() { return parseFloat(this._canvassTotal) || 0; }
+    get canvassGap() { return parseFloat(this._canvassGap) || 0; }
     //Phone
-    get phoneRequested() { return this._phoneRequested || null; }
-    get phoneTotal() { return this._phoneTotal || null; }
-    get phoneGap() { return this._phoneGap || null; }
+    get phoneRequested() { return parseFloat(this._phoneRequested) || 0; }
+    get phoneTotal() { return parseFloat(this._phoneTotal) || 0; }
+    get phoneGap() { return parseFloat(this._phoneGap) || 0; }
     //Text
-    get textRequested() { return this._textRequested || null; }
-    get textTotal() { return this._textTotal || null; }
-    get textGap() { return this._textGap || null; }
+    get textRequested() { return parseFloat(this._textRequested) || 0; }
+    get textTotal() { return parseFloat(this._textTotal) || 0; }
+    get textGap() { return parseFloat(this._textGap) || 0; }
     //Event
-    get eventRequested() { return this._eventRequested || null; }
-    get eventTotal() { return this._eventTotal || null; }
-    get eventGap() { return this._eventGap || null; }
+    get eventRequested() { return parseFloat(this._eventRequested) || 0; }
+    get eventTotal() { return parseFloat(this._eventTotal) || 0; }
+    get eventGap() { return parseFloat(this._eventGap) || 0; }
     //Digital
-    get digitalRequested() { return this._digitalRequested || null; }
-    get digitalTotal() { return this._digitalTotal || null; }
-    get digitalGap() { return this._digitalGap || null; }
+    get digitalRequested() { return parseFloat(this._digitalRequested) || 0; }
+    get digitalTotal() { return parseFloat(this._digitalTotal) || 0; }
+    get digitalGap() { return parseFloat(this._digitalGap) || 0; }
     //Summary
-    get requestedTotal() { return this._requestedTotal || null; }
-    get projectTotal() { return this._projectTotal || null; }
-    get gapTotal() { return this._gapTotal || null; }
+    get requestedTotal() { return parseFloat(this._requestedTotal) || 0; }
+    get projectTotal() { return parseFloat(this._projectTotal) || 0; }
+    get gapTotal() { return parseFloat(this._gapTotal) || 0; }
     get submitFieldPlan() { return this._submitFieldPlan || null; }
     //Meta
     get analyzed() { return this._analyzed || null; }
