@@ -901,6 +901,31 @@ function recreateWeeklySummaryTrigger() {
   Logger.log("✅ New trigger created");
 }
 
+// Test field plan object creation and properties
+function testFieldPlanObject() {
+  Logger.log("=== TESTING FIELD PLAN OBJECT CREATION ===");
+  
+  try {
+    // Test with last row
+    const fieldPlan = FieldPlan.fromLastRow();
+    Logger.log(`Field Plan created for: ${fieldPlan.memberOrgName}`);
+    Logger.log(`Submission Date: ${fieldPlan.submissionDateTime}`);
+    Logger.log(`Confidence: ${fieldPlan.fieldPlanConfidence}`);
+    Logger.log(`Has needsCoaching method: ${typeof fieldPlan.needsCoaching === 'function'}`);
+    
+    // Test needsCoaching method
+    if (fieldPlan.needsCoaching) {
+      const coachingMessage = fieldPlan.needsCoaching();
+      Logger.log(`Coaching message: ${coachingMessage}`);
+    }
+    
+    Logger.log("✅ Field plan object test successful");
+  } catch (error) {
+    Logger.log(`❌ Error testing field plan object: ${error.message}`);
+    Logger.log(`Stack trace: ${error.stack}`);
+  }
+}
+
 // ============================================
 // NEW TEST FUNCTIONS FOR MISSING NOTIFICATIONS
 // ============================================

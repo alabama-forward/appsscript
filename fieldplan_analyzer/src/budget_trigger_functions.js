@@ -92,6 +92,12 @@ function processBudget(budgetData, isTestMode = false) {
   
   Logger.log(`Found field plan for ${budget.memberOrgName}, analyzing...`);
   
+  // Verify fieldPlanMatch has the expected structure
+  if (!fieldPlanMatch.fieldPlan) {
+    Logger.log(`Error: fieldPlanMatch.fieldPlan is undefined for ${budget.memberOrgName}`);
+    return;
+  }
+  
   // Perform analysis
   const analysis = analyzeBudgetWithFieldPlan(budget, fieldPlanMatch);
   
@@ -292,6 +298,12 @@ function checkIfCanIncreaseFunding(category, requested, gap, tactics) {
 
 // Send budget analysis email
 function sendBudgetAnalysisEmail(budget, fieldPlan, analysis, isTestMode = false) {
+  // Defensive check for fieldPlan
+  if (!fieldPlan) {
+    Logger.log('Error in sendBudgetAnalysisEmail: fieldPlan is null or undefined');
+    throw new Error('Cannot send budget analysis email without field plan data');
+  }
+  
   let emailBody = `
     <h2>Budget Analysis for ${budget.memberOrgName}</h2>
     
@@ -353,9 +365,9 @@ function sendBudgetAnalysisEmail(budget, fieldPlan, analysis, isTestMode = false
   // Add field plan connection
   emailBody += `
     <h3>Field Plan Details</h3>
-    <p>This analysis is based on the field plan submitted on ${fieldPlan.submissionDateTime}</p>
-    <p>Confidence Level: ${fieldPlan.fieldPlanConfidence}/10</p>
-    <p>${fieldPlan.needsCoaching()}</p>`;
+    <p>This analysis is based on the field plan submitted on ${fieldPlan.submissionDateTime || 'Unknown date'}</p>
+    <p>Confidence Level: ${fieldPlan.fieldPlanConfidence || 'Not specified'}/10</p>
+    <p>${fieldPlan.needsCoaching ? fieldPlan.needsCoaching() : 'Coaching needs assessment not available'}</p>`;
   
   // Add test mode indicator to email if in test mode
   if (isTestMode) {

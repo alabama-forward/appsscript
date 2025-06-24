@@ -147,14 +147,14 @@ class FieldPlan {
     needsCoaching() {
       let message = '';
       
-      if (this._coachingNeed <= 5) {
-        message = `${this._memberOrgName} had a confidence score of ${this._coachingNeed}.
+      if (this._fieldPlanConfidence <= 5) {
+        message = `${this._memberOrgName} had a confidence score of ${this._fieldPlanConfidence}.
         Reach out to them to confirm what coaching they will need.`;
-      } else if (this._coachingNeed >= 6 && this._coachingNeed <= 8) {
-        message = `${this._memberOrgName} had a confidence score of ${this._coachingNeed}.
+      } else if (this._fieldPlanConfidence >= 6 && this._fieldPlanConfidence <= 8) {
+        message = `${this._memberOrgName} had a confidence score of ${this._fieldPlanConfidence}.
         Reach out to them to ask if they would like some coaching on their field plan.`;
       } else {
-        message = `${this._memberOrgName} had a confidence score of ${this._coachingNeed}.
+        message = `${this._memberOrgName} had a confidence score of ${this._fieldPlanConfidence}.
         They did not request coaching on their field plan.`;
       }
       Logger.log(message);
