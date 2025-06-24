@@ -468,6 +468,55 @@ function trackMissingBudget(fieldPlan) {
   }
 }
 
+// Function to process ALL field plans regardless of previous processing
+function processAllFieldPlans(isTestMode = false) {
+  try {
+    Logger.log(`=== PROCESSING ALL FIELD PLANS (${isTestMode ? 'TEST MODE' : 'PRODUCTION'}) ===`);
+    
+    const sheetName = scriptProps.getProperty('SHEET_FIELD_PLAN') || '2025_field_plan';
+    const sheet = SpreadsheetApp.getActive().getSheetByName(sheetName);
+    const currentLastRow = sheet.getLastRow();
+    
+    let successCount = 0;
+    let errorCount = 0;
+    
+    // Process ALL rows (starting from row 2 to skip header)
+    for (let rowNumber = 2; rowNumber <= currentLastRow; rowNumber++) {
+      try {
+        const fieldPlan = FieldPlan.fromSpecificRow(rowNumber);
+        Logger.log(`Processing row ${rowNumber}: ${fieldPlan.memberOrgName}`);
+        
+        // Send email with field plan details
+        if (isTestMode) {
+          // In test mode, modify the sendFieldPlanEmail to use test recipients
+          const originalRecipients = scriptProps.getProperty('EMAIL_RECIPIENTS');
+          scriptProps.setProperty('EMAIL_RECIPIENTS', 'datateam@alforward.org');
+          sendFieldPlanEmail(fieldPlan);
+          scriptProps.setProperty('EMAIL_RECIPIENTS', originalRecipients);
+        } else {
+          sendFieldPlanEmail(fieldPlan);
+        }
+        
+        successCount++;
+        
+      } catch (error) {
+        Logger.log(`Error processing row ${rowNumber}: ${error.message}`);
+        errorCount++;
+      }
+    }
+    
+    Logger.log(`=== FIELD PLAN PROCESSING COMPLETE ===`);
+    Logger.log(`Successfully processed: ${successCount} field plans`);
+    Logger.log(`Errors encountered: ${errorCount}`);
+    
+    return { success: successCount, errors: errorCount };
+    
+  } catch (error) {
+    Logger.log(`Critical error in processAllFieldPlans: ${error.message}`);
+    throw error;
+  }
+}
+
 // Check for field plans waiting too long for budgets
 function checkForMissingBudgets() {
   const properties = PropertiesService.getScriptProperties();

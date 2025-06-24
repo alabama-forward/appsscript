@@ -484,6 +484,60 @@ function sendErrorNotification(budget, error, isTestMode = false) {
   }
 }
 
+// Function to process ALL budgets regardless of analysis status
+function processAllBudgets(isTestMode = false) {
+  try {
+    Logger.log(`=== PROCESSING ALL BUDGETS (${isTestMode ? 'TEST MODE' : 'PRODUCTION'}) ===`);
+    
+    const sheetName = scriptProps.getProperty('SHEET_FIELD_BUDGET') || '2025_field_budget';
+    const budgetSheet = SpreadsheetApp.getActive().getSheetByName(sheetName);
+    const data = budgetSheet.getDataRange().getValues();
+    
+    let successCount = 0;
+    let errorCount = 0;
+    let skippedCount = 0;
+    
+    // Process ALL budget rows (starting from row 2 to skip header)
+    for (let i = 1; i < data.length; i++) {
+      const rowNumber = i + 1;
+      
+      try {
+        if (data[i][FieldBudget.COLUMNS.MEMBERNAME]) {
+          const budget = new FieldBudget(data[i]);
+          const budgetData = { budget: budget, rowNumber: rowNumber };
+          
+          // Check if field plan exists
+          const fieldPlanMatch = findMatchingFieldPlan(budget.memberOrgName);
+          
+          if (!fieldPlanMatch) {
+            Logger.log(`Skipping ${budget.memberOrgName} - no field plan found`);
+            skippedCount++;
+            continue;
+          }
+          
+          Logger.log(`Processing budget for ${budget.memberOrgName} (row ${rowNumber})`);
+          processBudget(budgetData, isTestMode);
+          successCount++;
+        }
+      } catch (error) {
+        Logger.log(`Error processing budget row ${rowNumber}: ${error.message}`);
+        errorCount++;
+      }
+    }
+    
+    Logger.log(`=== BUDGET PROCESSING COMPLETE ===`);
+    Logger.log(`Successfully processed: ${successCount} budgets`);
+    Logger.log(`Skipped (no field plan): ${skippedCount}`);
+    Logger.log(`Errors encountered: ${errorCount}`);
+    
+    return { success: successCount, skipped: skippedCount, errors: errorCount };
+    
+  } catch (error) {
+    Logger.log(`Critical error in processAllBudgets: ${error.message}`);
+    throw error;
+  }
+}
+
 // Manually analyze a specific organization
 function analyzeSpecificOrganization(orgName, isTestMode = true) {
   Logger.log(`Manual analysis requested for ${orgName} (${isTestMode ? 'TEST MODE' : 'PRODUCTION'})`);
@@ -511,6 +565,37 @@ function analyzeSpecificOrganization(orgName, isTestMode = true) {
   }
   
   Logger.log(`No budget found for organization: ${orgName}`);
+}
+
+// Convenience function to reprocess ALL field plans and budgets
+function reprocessAllAnalyses(isTestMode = false) {
+  try {
+    Logger.log(`=== REPROCESSING ALL ANALYSES (${isTestMode ? 'TEST MODE' : 'PRODUCTION'}) ===`);
+    Logger.log(`Starting at: ${new Date().toString()}`);
+    
+    // First, process all field plans
+    Logger.log('\n--- Phase 1: Processing Field Plans ---');
+    const fieldPlanResults = processAllFieldPlans(isTestMode);
+    
+    // Then, process all budgets
+    Logger.log('\n--- Phase 2: Processing Budgets ---');
+    const budgetResults = processAllBudgets(isTestMode);
+    
+    // Summary
+    Logger.log('\n=== REPROCESSING COMPLETE ===');
+    Logger.log(`Field Plans - Success: ${fieldPlanResults.success}, Errors: ${fieldPlanResults.errors}`);
+    Logger.log(`Budgets - Success: ${budgetResults.success}, Skipped: ${budgetResults.skipped}, Errors: ${budgetResults.errors}`);
+    Logger.log(`Completed at: ${new Date().toString()}`);
+    
+    return {
+      fieldPlans: fieldPlanResults,
+      budgets: budgetResults
+    };
+    
+  } catch (error) {
+    Logger.log(`Critical error in reprocessAllAnalyses: ${error.message}`);
+    throw error;
+  }
 }
 
 // Generate combined weekly summary report for both budgets and field plans

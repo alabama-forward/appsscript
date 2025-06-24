@@ -324,6 +324,47 @@ function clearTestTrackings() {
   Logger.log('Test tracking entries cleared.');
 }
 
+// Test processing all field plans
+function testProcessAllFieldPlans() {
+  Logger.log("=== TESTING PROCESS ALL FIELD PLANS ===");
+  Logger.log("This will send test emails for ALL field plans to datateam@alforward.org");
+  
+  try {
+    const results = processAllFieldPlans(true); // true = test mode
+    Logger.log(`✅ Test completed - Processed ${results.success} field plans with ${results.errors} errors`);
+  } catch (error) {
+    Logger.log(`❌ Error: ${error.message}`);
+  }
+}
+
+// Test processing all budgets
+function testProcessAllBudgets() {
+  Logger.log("=== TESTING PROCESS ALL BUDGETS ===");
+  Logger.log("This will send test emails for ALL budgets to datateam@alforward.org");
+  
+  try {
+    const results = processAllBudgets(true); // true = test mode
+    Logger.log(`✅ Test completed - Processed ${results.success} budgets, skipped ${results.skipped}, with ${results.errors} errors`);
+  } catch (error) {
+    Logger.log(`❌ Error: ${error.message}`);
+  }
+}
+
+// Test reprocessing everything
+function testReprocessAllAnalyses() {
+  Logger.log("=== TESTING REPROCESS ALL ANALYSES ===");
+  Logger.log("This will process ALL field plans and budgets in test mode");
+  
+  try {
+    const results = reprocessAllAnalyses(true); // true = test mode
+    Logger.log("✅ Test completed");
+    Logger.log(`Field Plans: ${results.fieldPlans.success} success, ${results.fieldPlans.errors} errors`);
+    Logger.log(`Budgets: ${results.budgets.success} success, ${results.budgets.skipped} skipped, ${results.budgets.errors} errors`);
+  } catch (error) {
+    Logger.log(`❌ Error: ${error.message}`);
+  }
+}
+
 /**
  * Run all tests in sequence
  * This provides a comprehensive test of all new functionality
