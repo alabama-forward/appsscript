@@ -88,12 +88,33 @@ Each field tactic has a specialized class with unique analysis parameters:
 
 ## Budget-Field Plan Integration
 
+### Budget Class (`budget_class.js`)
+
+The FieldBudget class provides comprehensive budget analysis capabilities:
+
+#### Core Methods
+- `fromLastRow()`: Gets the most recent budget entry
+- `fromFirstRow()`: Gets the first budget entry after the header
+- `fromSpecificRow(rowNumber)`: Gets a specific budget by row
+- `sumNotOutreach()`: Calculates total indirect costs (admin, data, travel, etc.) with percentage of total
+- `sumOutreach()`: Calculates total outreach costs (canvass, phone, text, event, digital) with percentage
+- `needDataStipend()`: Calculates data stipend needs based on hourly rate ($20/hour)
+- `requestSummary()`: Enhanced summary that handles negative gaps and null values
+- `markAsAnalyzed()`: Marks a specific budget row as analyzed
+
+#### Static Methods
+- `countAnalyzed()`: Returns count of analyzed vs unanalyzed budgets
+- `getUnanalyzedBudgets()`: Returns array of all unanalyzed budget objects with row numbers
+
 ### Matching Process
 The system intelligently matches field plans with budgets:
-1. Searches for exact organization name matches
-2. Tracks unmatched budgets for up to 72 hours
-3. Sends alerts if field plans aren't submitted within threshold
-4. Automatically triggers analysis when matches are found
+1. Searches for exact organization name matches with enhanced normalization
+2. Handles whitespace, line breaks, and special characters in organization names
+3. Falls back to case-insensitive matching when exact matching fails
+4. Tracks unmatched documents for up to 72 hours
+5. Sends alerts if matching documents aren't submitted within threshold
+6. Automatically triggers analysis when matches are found
+7. Removes tracking entries after successful matching
 
 ### Cost Analysis Algorithm
 For each tactic, the system:
@@ -139,6 +160,15 @@ When a field plan is submitted:
 3. Removes organization from missing plan tracking
 4. Sends comprehensive analysis email
 
+### 4. Cross-Document Tracking System
+The system maintains bidirectional tracking between field plans and budgets:
+- `trackMissingFieldPlan()`: Tracks budgets waiting for field plans
+- `trackMissingBudget()`: Tracks field plans waiting for budgets
+- `checkForMissingFieldPlans()`: Monitors budgets without field plans > 72 hours
+- `checkForMissingBudgets()`: Monitors field plans without budgets > 72 hours
+- `sendMissingFieldPlanNotification()`: Sends alerts for missing field plans
+- `sendMissingBudgetNotification()`: Sends alerts for missing budgets
+
 ## Analysis Outputs
 
 ### Cost Efficiency Report
@@ -158,17 +188,31 @@ When a field plan is submitted:
 - **Expected successful contacts** based on standard rates
 - **Program duration** and volunteer requirements
 - **Geographic and demographic reach**
+- **County-by-county program distribution**
 
 ### Funding Recommendations
 - **Gap funding analysis** with efficiency impact
 - **Reallocation suggestions** between tactics
 - **Priority funding** recommendations
-- **Data stipend** calculations
+- **Data stipend** calculations ($20/hour labor equivalent)
+- **Funding proportion analysis** (indirect vs outreach costs)
+
+### Weekly Summary Reports
+The system generates comprehensive weekly summaries including:
+- **Tactic distribution**: Shows which tactics are most commonly used
+- **Geographic coverage**: County-by-county program breakdown
+- **Coaching needs**: High/Medium/Low categorization based on confidence scores
+- **Budget submission tracking**: Organizations with/without matching documents
+- **Processing statistics**: Number of plans and budgets analyzed
 
 ## Key Features
 
 ### Multi-dimensional Validation
 - Validates all numeric inputs for data integrity
+- Email address validation using regex patterns
+- County name parsing for multi-word counties (e.g., "Saint Clair")
+- Array field normalization for various input formats
+- Null value handling throughout the system
 - Checks volunteer workload against reasonable thresholds
 - Ensures cost efficiency across all tactics
 - Flags potential data entry errors
@@ -218,6 +262,10 @@ FieldPlan (Base Class)
 - Individual row errors don't stop batch processing
 - Error notifications sent to administrators
 - Detailed logging for debugging
+- Email retry logic (3 attempts with 1-second delays)
+- Fallback error notifications if main email fails
+- Sheet access validation before operations
+- Row number validation for valid ranges
 
 ## Configuration
 
@@ -227,18 +275,27 @@ SPREADSHEET_ID - Google Sheet containing data
 SHEET_FIELD_PLAN - Field plan sheet name (default: '2025_field_plan')
 SHEET_FIELD_BUDGET - Budget sheet name (default: '2025_field_budget')
 EMAIL_RECIPIENTS - Comma-separated email list
+EMAIL_TEST_RECIPIENTS - Test mode recipients (default: datateam@alforward.org)
 LAST_PROCESSED_ROW - Tracks field plan processing
 TRIGGER_MISSING_PLAN_THRESHOLD_HOURS - Hours before alerting (default: 72)
+TRIGGER_BUDGET_ANALYSIS_HOURS - Budget analysis interval (default: 12)
+TRIGGER_WEEKLY_SUMMARY_DAY - Day for weekly summary (default: MONDAY)
+TRIGGER_WEEKLY_SUMMARY_HOUR - Hour for weekly summary (default: 9)
+TRIGGER_FIELD_PLAN_CHECK_HOURS - Field plan check interval (default: 12)
 ```
 
 ### Cost Target Configuration
-Each tactic has configurable targets:
+Each tactic has configurable targets with standard deviations:
 ```
-COST_TARGET_[TACTIC] - Target cost per attempt
-COST_TARGET_[TACTIC]_STDDEV - Standard deviation for range
+COST_TARGET_DOOR - Door knocking cost per attempt (default: 1.00)
+COST_TARGET_DOOR_STDDEV - Standard deviation (default: 0.20)
+COST_TARGET_PHONE - Phone banking cost per attempt (default: 0.66)
+COST_TARGET_PHONE_STDDEV - Standard deviation (default: 0.15)
+COST_TARGET_TEXT - Text messaging cost per attempt (default: 0.02)
+COST_TARGET_TEXT_STDDEV - Standard deviation (default: 0.01)
+COST_TARGET_OPEN - Open events cost per attempt (default: 0.40)
+COST_TARGET_OPEN_STDDEV - Standard deviation (default: 0.10)
 ```
-
-Example: `COST_TARGET_DOOR: 1.00, COST_TARGET_DOOR_STDDEV: 0.20`
 
 ## Usage
 
@@ -249,8 +306,34 @@ The system runs automatically every 12 hours, processing new submissions and gen
 - `analyzeSpecificOrganization(orgName, isTestMode)`: Manually analyze a specific organization
 - `generateWeeklySummary()`: Generate summary report on demand
 - `checkForNewRows()`: Manually trigger field plan processing
+- `processBudget(budgetRow, isTest)`: Process a specific budget row
+- `findMatchingFieldPlan(orgName)`: Find matching field plan for an organization
+- `findMatchingBudget(orgName)`: Find matching budget for an organization
 
-### Testing
+### Testing Framework
+The application includes a comprehensive testing suite with 20+ test functions:
+
+#### Field Plan Tests
+- `testMostRecentFieldPlan()`: Tests email for most recent entry
+- `testMissingBudgetNotification()`: Tests missing budget alerts
+- `testTrackMissingBudget()`: Tests tracking functionality
+- `testFindMatchingBudget()`: Tests budget matching logic
+- `runAllFieldPlanTests()`: Runs complete field plan test suite
+
+#### Budget Tests
+- `testBudgetClass()`: Tests all budget class methods
+- `testAnalyzeOrg()`: Tests full analysis flow
+- `testEmailFormatting()`: Tests email generation
+- `testWeeklySummary()`: Tests weekly summary generation
+- `testEnhancedMatching()`: Tests normalized name matching
+- `runAllBudgetTests()`: Runs complete budget test suite
+
+#### Debug Utilities
+- `debugMatchingIssue()`: Advanced debugging for name matching
+- `debugBudgetNullValues()`: Debugs null value issues
+- `viewAllMissingTrackings()`: Displays all tracking entries
+- `viewBudgetAnalysisStatus()`: Shows analysis status summary
+
 All email functions support test mode, which sends emails only to the data team for validation before production use.
 
 ## Best Practices
@@ -268,6 +351,36 @@ All email functions support test mode, which sends emails only to the data team 
 - **Data Validation**: Assumes correctly formatted spreadsheet data
 - **Email Reporting**: No web dashboard (email-only reporting)
 - **Historical Data**: Focuses on current state (limited historical analysis)
+
+## Additional Features
+
+### UI Integration
+- Custom menu system for running tests directly from the spreadsheet
+- Dialog prompts for test email input
+- Interactive test result displays
+
+### Email System
+- HTML formatted emails with tables and styling
+- Rich formatting for tactic analysis sections
+- Color-coded status indicators
+- Comprehensive error notifications with stack traces
+
+### State Management
+- Atomic Script Property updates for persistent state
+- Cross-execution tracking using Script Properties
+- Automatic cleanup of completed tracking entries
+
+## OAuth Scopes Required
+
+The application requires the following Google OAuth scopes:
+- `https://mail.google.com/` - Gmail access
+- `https://www.googleapis.com/auth/script.send_mail` - Send email
+- `https://www.googleapis.com/auth/spreadsheets` - Spreadsheet access
+- `https://www.googleapis.com/auth/gmail.send` - Gmail send
+- `https://www.googleapis.com/auth/gmail.compose` - Gmail compose
+- `https://www.googleapis.com/auth/gmail.modify` - Gmail modify
+- `https://www.googleapis.com/auth/script.scriptapp` - Script app access
+- `https://www.googleapis.com/auth/userinfo.email` - User email access
 
 ## Future Enhancements
 
