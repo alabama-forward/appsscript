@@ -19,8 +19,8 @@ class PhoneTactic extends FieldProgram{
     }
   
     phoneExpectedContacts() {
-      const phoneLowerRange = this.programAttempts() * this._phoneRange[0];
-      const phoneUpperRange = this.programAttempts()* this._phoneRange[1];
+      const phoneLowerRange = Math.round(this.programAttempts() * this._phoneRange[0]);
+      const phoneUpperRange = Math.round(this.programAttempts()* this._phoneRange[1]);
   
       return `${this._memberOrgName} intends to successfully reach between ${phoneLowerRange} and ${phoneUpperRange} people during the course of their ${this._programLength} week program`
     }
@@ -47,8 +47,8 @@ class DoorTactic extends FieldProgram{
   }
 
   doorExpectedContacts() {
-    const doorLowerRange = this.programAttempts() * this._doorRange[0];
-    const doorUpperRange = this.programAttempts()* this._doorRange[1];
+    const doorLowerRange = Math.round(this.programAttempts() * this._doorRange[0]);
+    const doorUpperRange = Math.round(this.programAttempts()* this._doorRange[1]);
 
     return `${this._memberOrgName} intends to successfully reach between ${doorLowerRange} and ${doorUpperRange} people during the course of their ${this._programLength} week program`
   }
@@ -75,8 +75,8 @@ class OpenTactic extends FieldProgram{
   }
 
   openExpectedContacts() {
-    const openLowerRange = this.programAttempts() * this._openRange[0];
-    const openUpperRange = this.programAttempts()* this._openRange[1];
+    const openLowerRange = Math.round(this.programAttempts() * this._openRange[0]);
+    const openUpperRange = Math.round(this.programAttempts()* this._openRange[1]);
 
     return `${this._memberOrgName} intends to successfully reach between ${openLowerRange} and ${openUpperRange} people during the course of their ${this._programLength} week program`
   }
@@ -102,8 +102,8 @@ class RelationalTactic extends FieldProgram{
   }
 
   relationalExpectedContacts() {
-    const relationalLowerRange = this.programAttempts() * this._relationalRange[0];
-    const relationalUpperRange = this.programAttempts()* this._relationalRange[1];
+    const relationalLowerRange = Math.round(this.programAttempts() * this._relationalRange[0]);
+    const relationalUpperRange = Math.round(this.programAttempts()* this._relationalRange[1]);
 
     return `${this._memberOrgName} intends to successfully reach between ${relationalLowerRange} and ${relationalUpperRange} people during the course of their ${this._programLength} week program`
   }
@@ -130,8 +130,8 @@ class RegistrationTactic extends FieldProgram{
   }
 
   registrationExpectedContacts() {
-    const registrationLowerRange = this.programAttempts() * this._registrationRange[0];
-    const registrationUpperRange = this.programAttempts()* this._registrationRange[1];
+    const registrationLowerRange = Math.round(this.programAttempts() * this._registrationRange[0]);
+    const registrationUpperRange = Math.round(this.programAttempts()* this._registrationRange[1]);
 
     return `${this._memberOrgName} intends to successfully reach between ${registrationLowerRange} and ${registrationUpperRange} during the course of their ${this._programLength} week program`
   }
@@ -158,8 +158,8 @@ class TextTactic extends FieldProgram{
   }
 
   textExpectedContacts() {
-    const textLowerRange = this.programAttempts() * this._textRange[0];
-    const textUpperRange = this.programAttempts()* this._textRange[1];
+    const textLowerRange = Math.round(this.programAttempts() * this._textRange[0]);
+    const textUpperRange = Math.round(this.programAttempts()* this._textRange[1]);
 
     return `${this._memberOrgName} intends to successfully reach between ${textLowerRange} and ${textUpperRange} people during the course of their ${this._programLength} week program`
   }
@@ -185,8 +185,8 @@ class MailTactic extends FieldProgram{
   }
 
   mailExpectedContacts() {
-    const mailLowerRange = this.programAttempts() * this._mailRange[0];
-    const mailUpperRange = this.programAttempts()* this._mailRange[1];
+    const mailLowerRange = Math.round(this.programAttempts() * this._mailRange[0]);
+    const mailUpperRange = Math.round(this.programAttempts()* this._mailRange[1]);
 
     return `${this._memberOrgName} intends to successfully reach between ${mailLowerRange} and ${mailUpperRange} people during the course of their ${this._programLength} week program`
   }
