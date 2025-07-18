@@ -601,6 +601,11 @@ function reprocessAllAnalyses(isTestMode = false) {
 // Generate combined weekly summary report for both budgets and field plans
 function generateWeeklySummary(isTestMode = false) {
   try {
+    if (typeof isTestMode !== 'boolean') {
+      Logger.log(`Warning: isTestMode received as ${typeof isTestMode}, defaulting to false`);
+      isTestMode = false;
+    }
+    
     Logger.log(`Starting generateWeeklySummary (isTestMode: ${isTestMode})`);
     
     const budgetSheetName = scriptProps.getProperty('SHEET_FIELD_BUDGET') || '2025_field_budget';
@@ -955,7 +960,8 @@ function generateWeeklySummary(isTestMode = false) {
 
 // Wrapper function for the weekly summary trigger
 // This ensures the function is called with the correct parameters
-function runWeeklySummaryTrigger() {
+// Passes empty object to catch 
+function runWeeklySummaryTrigger(e) {
   Logger.log('Weekly summary trigger fired');
   generateWeeklySummary(false); // Explicitly pass false for production mode
 }
