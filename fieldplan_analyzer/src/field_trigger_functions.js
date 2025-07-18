@@ -283,10 +283,10 @@ function sendFieldPlanEmail(fieldPlan, rowNumber = null) {
         (Array.isArray(fieldPlan.fieldCounties) ? fieldPlan.fieldCounties.toString().replace(/\n/g, ', ') : fieldPlan.fieldCounties.join(', ')
         ) :
         'None specified'}</p>
-        
-      <p><strong>Field Counties:</strong> ${
-        fieldPlan.fieldCounties ?
-        (Array.isArray(fieldPlan.fieldCounties) ? fieldPlan.fieldCounties.toString().replace(/\n/g, ', ') : fieldPlan.fieldCounties.join(', ')
+
+      <p><strong>Precincts:</strong> ${
+        fieldPlan.fieldPrecincts ?
+        (Array.isArray(fieldPlan.fieldPrecincts) ? fieldPlan.fieldPrecincts.toString().replace(/\n/g, ', ') : fieldPlan.fieldPrecincts.join(', ')
         ) :
         'None specified'}</p>
       
