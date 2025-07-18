@@ -65,11 +65,12 @@ class FieldPlan {
       this._contactPhone = rowData[FieldPlan.COLUMNS.CONTACTPHONE];
       //Data & Tools
       this._dataStorage = normalizeField(rowData[FieldPlan.COLUMNS.DATASTORAGE]);
-      this._vanCommittee = rowData[FieldPlan.COLUMNS.VANCOMMITTEE];
+      this._vanCommittee = normalizeField(rowData[FieldPlan.COLUMNS.VANCOMMITTEE]);
       this._programTools = normalizeField(rowData[FieldPlan.COLUMNS.PROGRAMTOOLS]);
       //Tactics & Locations
-      this._fieldTactics = rowData[FieldPlan.COLUMNS.FIELDTACTICS];
+      this._fieldTactics = normalizeField(rowData[FieldPlan.COLUMNS.FIELDTACTICS]);
       this._fieldCounties = normalizeField(rowData[FieldPlan.COLUMNS.FIELDCOUNTIES]);
+      this._fieldPrecincts = normalizeField(rowData[FieldPlan.COLUMNS.PRECINCTS]);
       //Demographics
       this._demoRace = normalizeField(rowData[FieldPlan.COLUMNS.DEMORACE]);
       this._demoAge = normalizeField(rowData[FieldPlan.COLUMNS.DEMOAGE]);
@@ -95,6 +96,7 @@ class FieldPlan {
     get programTools() { return this._programTools || null; }
     get fieldTactics() { return this._fieldTactics || null; }
     get fieldCounties() { return this._fieldCounties || null; }
+    get fieldPrecincts() { return this._fieldPrecincts || null;}
     get demoRace() { return this._demoRace || null; }
     get demoAge() { return this._demoAge || null; }
     get demoGender() { return this._demoGender || null; }
@@ -111,6 +113,7 @@ class FieldPlan {
     hasProgramTool(tool) { return this._programTools.includes(tool); }
     hasFieldTactic(tactic) { return this._programTools.includes(tactic); }
     hasFieldCounties(county) { return this._fieldCounties.includes(county); }
+    hasFieldPrecincts(precinct) { return this._fieldPrecincts.includes(precinct); }
     hasDemoRace(race) { return this._demoRace.includes(race); }
     hasDemoGender(gender) { return this._demoGender.includes(gender); }
     hasDemoAffinity(affinity) { return this._demoAffinity.includes(affinity); }

@@ -283,6 +283,12 @@ function sendFieldPlanEmail(fieldPlan, rowNumber = null) {
         (Array.isArray(fieldPlan.fieldCounties) ? fieldPlan.fieldCounties.toString().replace(/\n/g, ', ') : fieldPlan.fieldCounties.join(', ')
         ) :
         'None specified'}</p>
+        
+      <p><strong>Field Counties:</strong> ${
+        fieldPlan.fieldCounties ?
+        (Array.isArray(fieldPlan.fieldCounties) ? fieldPlan.fieldCounties.toString().replace(/\n/g, ', ') : fieldPlan.fieldCounties.join(', ')
+        ) :
+        'None specified'}</p>
       
       <h3>Demographics</h3>
       <p><strong>Race:</strong> ${
