@@ -208,7 +208,7 @@ function buildFieldTargetsTable(fieldPlans) {
   
   //Add each field plan as a row to table
   fieldPlans.forEach(fp => {
-    html += createFieldPlanRow(fp);
+    html += createFieldTargetsRow(fp);
   });
 
   html += `
