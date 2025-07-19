@@ -578,7 +578,7 @@ function sendTargetsSummaryEmail(htmlBody) {
 
   try {
     MailApp.sendEmail({
-      to: recipients.jorn(','),
+      to: recipients.join(','),
       subject: 'Field Wide Targets Summary',
       htmlBody: htmlBody,
       name: "Field Targets Summary Email",
