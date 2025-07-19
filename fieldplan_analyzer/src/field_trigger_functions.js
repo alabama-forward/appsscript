@@ -433,6 +433,8 @@ function createSpreadsheetTrigger() {
   }
 }
 
+
+
 // Helper function to get the last row number
 function getLastRow() {
   const sheetName = scriptProps.getProperty('SHEET_FIELD_PLAN') || '2025_field_plan';
@@ -492,6 +494,31 @@ function checkForNewRows() {
   } catch (error) {
     Logger.log(`Error in checkForNewRows: ${error.message}`);
   }
+}
+
+//Create row fore fieldtargets function
+function createFieldTargetsRow(fieldPlan) {
+  //Format county arrays as comma-separated strings
+  const counties = Array.isArray(fieldPlan.fieldCounties)
+  ? fieldPlan.fieldCounties.join(', ')
+  : fieldPlan.fieldCounties || 'None specified';
+
+  //Combine demos into one cell
+  const demographics = formatDemographics(fieldPlan);
+
+  //Format precinct array as comma-separated strings
+  const precincts = Array.isArray(fieldPlan.fieldPrecincts)
+  ? fieldPlan.fieldPrecincts.join(', ')
+  : fieldPlan.fieldPrecincts || 'None specified';
+
+  return `
+    <tr>
+      <td>${fieldPlan.memberOrgName || 'Unknown'}</td>
+      <td>${counties}</td>
+      <td>${demographics}</td>
+      <td>${precincts}</td>
+    </tr>
+  `;
 }
 
 // Find matching budget for organization
