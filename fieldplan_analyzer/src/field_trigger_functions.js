@@ -624,6 +624,37 @@ function processAllFieldPlans(isTestMode = false) {
   }
 }
 
+//Combines demographics for fieldplan target summary email
+function formatDemographics(fieldPlan) {
+  const parts = [];
+
+  //Test if demoRace array contains data, then format
+  if (fieldPlan.demoRace && fieldPlan.demoRace.length > 0) {
+    const race = Array.isArray(fieldPlan.demoRace)
+      ? fieldPlan.demoRace.join(', ')
+      : fieldPlan.demoRace;
+    parts.push(`Race: ${race}`);
+  }
+
+  //Test if demoAge array contains data, then format
+  if (fieldPlan.demoAge && fieldPlan.demoAge.length > 0) {
+    const age = Array.isArray(fieldPlan.demoAge)
+      ? fieldPlan.demoAge.join(', ')
+      : fieldPlan.demoAge;
+    parts.push(`Age: ${age}`);
+  }
+
+  if (fieldPlan.demoGender && fieldPlan.demoGender.length > 0) {
+    const gender = Array.isArray(fieldPlan.demoGender)
+      ? fieldPlan.demoGender.join(', ')
+      : fieldPlan.demoGender;
+    parts.push(`Gender: ${gender}`);
+  }
+
+  return parts.length > 0 ? parts.join('<br>') : 'None specified';
+
+}
+
 // Check for field plans waiting too long for budgets
 function checkForMissingBudgets() {
   const properties = PropertiesService.getScriptProperties();
