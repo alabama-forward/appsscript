@@ -191,6 +191,34 @@ function getTacticMetrics(tactic) {
   }
 }
 
+function buildFieldTargetsTable(fieldPlans) {
+  let html = `
+    <h2>Field Wide Targets</h2>
+    <table border="1" cellpadding="5" cellspacing="0" style="border-collapse: collapse;">
+      <thead>
+        <tr style="background-color: #f0f0f0;">
+          <th>Organization</th>
+          <th>Counties</th>
+          <th>Demographics</th>
+          <th>Precincts</th>
+        </tr>
+      </thead>
+      <tbody>
+      `;
+  
+  //Add each field plan as a row to table
+  fieldPlans.forEach(fp => {
+    html += createFieldPlanRow(fp);
+  });
+
+  html += `
+      </tbody
+    </table>
+    `;
+  
+    return html;
+};
+
 function sendFieldPlanEmail(fieldPlan, rowNumber = null) {
   if (!fieldPlan) {
     Logger.log('Error: fieldPlan object is undefined');
@@ -498,6 +526,27 @@ function trackMissingBudget(fieldPlan) {
     Logger.log(`Started tracking missing budget for ${fieldPlan.memberOrgName}`);
   }
 }
+// Function to process the county, precinct, and demo for each field submission at once
+function sendFieldPlanTargetsSummary() {
+  //Get the field plan sheet using existing helpers
+  const sheet = getSheet('2025_field_plan');
+  const data = sheet.getDataRange().getValues();
+
+  //Process field plans, skip header row
+  const fieldPlans = [];
+  for (let i = 1; i < data.length; i++) {
+    const fieldPlan = new FieldPlan(data[i]);
+    fieldPlans.push(fieldPlan)
+  }
+
+  //Build the html
+  const emailBody = buildFieldTargetsTable(fieldPlans);
+
+  //Send using existing email config
+  sendSummaryEmail(emailBody)
+}
+
+
 
 // Function to process ALL field plans regardless of previous processing
 function processAllFieldPlans(isTestMode = false) {
