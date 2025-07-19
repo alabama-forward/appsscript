@@ -453,3 +453,15 @@ function runAllFieldPlanTests() {
   Logger.log('===== All Tests Complete =====');
   Logger.log('Check datateam@alforward.org for test emails');
 }
+
+function testFieldTargetsSummaryEmail() {
+  //Temporarily use test recipients
+  const originalRecipients = scriptProps.getProperty('EMAIL_RECIPIENTS');
+
+  scriptProps.setProperty('EMAIL_RECIPIENTS', 'datateam@alforward.org');
+
+  sendFieldPlanTargetsSummary();
+
+  //Restore original recipients
+  scriptProps.setProperty('EMAIL_RECIPIENTS', originalRecipients);
+}
