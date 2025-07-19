@@ -499,17 +499,21 @@ function checkForNewRows() {
 //Create row fore fieldtargets function
 function createFieldTargetsRow(fieldPlan) {
   //Format county arrays as comma-separated strings
-  const counties = Array.isArray(fieldPlan.fieldCounties)
-  ? fieldPlan.fieldCounties.join(', ')
-  : fieldPlan.fieldCounties || 'None specified';
+  const counties = fieldPlan.fieldCounties ?
+    (Array.isArray(fieldPlan.fieldCounties) 
+      ? fieldPlan.fieldCounties.toString().replace(/\n/g, ', ') 
+      : fieldPlan.fieldCounties.toString().replace(/\n/g, ', ')
+    ) : 'None specified';
 
   //Combine demos into one cell
   const demographics = formatDemographics(fieldPlan);
 
   //Format precinct array as comma-separated strings
-  const precincts = Array.isArray(fieldPlan.fieldPrecincts)
-  ? fieldPlan.fieldPrecincts.join(', ')
-  : fieldPlan.fieldPrecincts || 'None specified';
+  const precincts = fieldPlan.fieldPrecincts ?
+    (Array.isArray(fieldPlan.fieldPrecincts) 
+      ? fieldPlan.fieldPrecincts.toString().replace(/\n/g, ', ') 
+      : fieldPlan.fieldPrecincts.toString().replace(/\n/g, ', ')
+    ) : 'None specified';
 
   return `
     <tr>
@@ -646,23 +650,23 @@ function formatDemographics(fieldPlan) {
   //Test if demoRace array contains data, then format
   if (fieldPlan.demoRace && fieldPlan.demoRace.length > 0) {
     const race = Array.isArray(fieldPlan.demoRace)
-      ? fieldPlan.demoRace.join(', ')
-      : fieldPlan.demoRace;
+      ? fieldPlan.demoRace.toString().replace(/\n/g, ', ')
+      : fieldPlan.demoRace.toString().replace(/\n/g, ', ');
     parts.push(`Race: ${race}`);
   }
 
   //Test if demoAge array contains data, then format
   if (fieldPlan.demoAge && fieldPlan.demoAge.length > 0) {
     const age = Array.isArray(fieldPlan.demoAge)
-      ? fieldPlan.demoAge.join(', ')
-      : fieldPlan.demoAge;
+      ? fieldPlan.demoAge.toString().replace(/\n/g, ', ')
+      : fieldPlan.demoAge.toString().replace(/\n/g, ', ');
     parts.push(`Age: ${age}`);
   }
 
   if (fieldPlan.demoGender && fieldPlan.demoGender.length > 0) {
     const gender = Array.isArray(fieldPlan.demoGender)
-      ? fieldPlan.demoGender.join(', ')
-      : fieldPlan.demoGender;
+      ? fieldPlan.demoGender.toString().replace(/\n/g, ', ')
+      : fieldPlan.demoGender.toString().replace(/\n/g, ', ');
     parts.push(`Gender: ${gender}`);
   }
 
