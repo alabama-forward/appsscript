@@ -570,10 +570,25 @@ function sendFieldPlanTargetsSummary() {
   const emailBody = buildFieldTargetsTable(fieldPlans);
 
   //Send using existing email config
-  sendSummaryEmail(emailBody)
+  sendTargetsSummaryEmail(emailBody)
+};
+
+function sendTargetsSummaryEmail(htmlBody) {
+  const recipients = getEmailRecipients();
+
+  try {
+    MailApp.sendEmail({
+      to: recipients.jorn(','),
+      subject: 'Field Wide Targets Summary',
+      htmlBody: htmlBody,
+      name: "Field Targets Summary Email",
+      replyTo: EMAIL_CONFIG.replyTo
+    });
+    Logger.log('Field Wide Targets summary email sent successfull');
+  } catch (error) {
+    Logger.log(`Error sending field targets email: ${error.message}`);
+  }
 }
-
-
 
 // Function to process ALL field plans regardless of previous processing
 function processAllFieldPlans(isTestMode = false) {
