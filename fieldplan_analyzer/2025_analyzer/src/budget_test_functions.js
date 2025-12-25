@@ -1,5 +1,3 @@
-// Test functions for the budget analyzer system
-
 // Test budget class functionality
 function testBudgetClass() {
   Logger.log("=== Testing Budget Class ===");

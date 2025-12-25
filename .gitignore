@@ -62,3 +62,6 @@ node_modules/
 **/config_*.json
 **/*_config.json
 **/*_credentials.json
+
+# Files
+field_quiz/references
