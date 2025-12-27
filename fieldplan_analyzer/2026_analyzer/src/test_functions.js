@@ -465,3 +465,29 @@ function testFieldTargetsSummaryEmail() {
   //Restore original recipients
   scriptProps.setProperty('EMAIL_RECIPIENTS', originalRecipients);
 }
+
+function testColumnMappings() {
+  const results = validateColumnMappings();
+
+  Logger.log('=== Column Mapping Validation ===');
+  Logger.log(`Status: ${results.valid ? '✅ VALID' : '❌ ERRORS FOUND'}`);
+
+  if (results.errors.length > 0) {
+    Logger.log('\n❌ ERRORS:');
+    results.errors.forEach(err => Logger.log(`   ${err}`));
+  }
+
+  if (results.warnings.length > 0) {
+    Logger.log('\n⚠️ WARNINGS:');
+    results.warnings.forEach(warn => Logger.log(`   ${warn}`));
+  }
+
+  Logger.log('\n📊 STATS:');
+  Logger.log(`   Field Plan Columns: ${results.stats.totalFieldPlanColumns}`);
+  Logger.log(`   Program Columns: ${results.stats.totalProgramColumns}`);
+  Logger.log(`   Total Mapped: ${results.stats.totalMappedColumns}`);
+  Logger.log(`   Field Plan Range: ${results.stats.fieldPlanRange}`);
+  Logger.log(`   Program Range: ${results.stats.programRange}`);
+
+  return results.valid;
+}

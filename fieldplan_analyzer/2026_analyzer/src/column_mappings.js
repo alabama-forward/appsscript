@@ -207,10 +207,6 @@ const PROGRAM_METRIC_QUESTIONS = {
     HOURLYATTEMPTS: "Attempts each Hour"
 };
 
-
-
-
-
 //===============================
 // VALIDATION FUNCTIONS
 //===============================
