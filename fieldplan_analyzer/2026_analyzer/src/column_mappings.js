@@ -361,3 +361,36 @@ function getColumnNameByIndex(index) {
 
   return names.length > 0 ? names.join(', ') : 'Not mapped';
 }
+
+/**
+ * Generates a complete column map as a formatted string
+ * Useful for creating documentation or sharing with team
+ * @returns {string} Formatted column mapping documentation
+ */
+function generateColumnMapDocumentation() {
+  let doc = '=== 2026 FIELD PLAN COLUMN MAP ===\n\n';
+
+  // Field Plan Columns
+  doc += 'FIELD_PLAN_COLUMNS:\n';
+  const sortedFieldPlan = Object.entries(FIELD_PLAN_COLUMNS)
+    .sort((a, b) => a[1] - b[1]);
+
+  sortedFieldPlan.forEach(([key, value]) => {
+    doc += `  ${value.toString().padStart(3, ' ')} => ${key}\n`;
+  });
+
+  doc += '\nPROGRAM_COLUMNS:\n';
+
+  // Program Columns by tactic
+  for (const [tacticName, metrics] of Object.entries(PROGRAM_COLUMNS)) {
+    doc += `  ${tacticName}:\n`;
+    const sortedMetrics = Object.entries(metrics)
+      .sort((a, b) => a[1] - b[1]);
+
+    sortedMetrics.forEach(([key, value]) => {
+      doc += `    ${value.toString().padStart(3, ' ')} => ${key}\n`;
+    });
+  }
+
+  return doc;
+}
