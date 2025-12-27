@@ -333,3 +333,31 @@ function logColumnMappingSummary() {
     Logger.log(`  ${key}: ${value}`);
   }
 }
+
+/**
+ * Helper function to get a column name from an index
+ * Useful for debugging when you know the index but forgot what it maps to
+ * @param {number} index - Column index to look up
+ * @returns {string} Column name(s) that use this index, or 'Not mapped'
+ */
+function getColumnNameByIndex(index) {
+  const names = [];
+
+  // Search FIELD_PLAN_COLUMNS
+  for (const [key, value] of Object.entries(FIELD_PLAN_COLUMNS)) {
+    if (value === index) {
+      names.push(`FIELD_PLAN_COLUMNS.${key}`);
+    }
+  }
+
+  // Search PROGRAM_COLUMNS
+  for (const [tacticName, metrics] of Object.entries(PROGRAM_COLUMNS)) {
+    for (const [metricName, value] of Object.entries(metrics)) {
+      if (value === index) {
+        names.push(`PROGRAM_COLUMNS.${tacticName}.${metricName}`);
+      }
+    }
+  }
+
+  return names.length > 0 ? names.join(', ') : 'Not mapped';
+}
