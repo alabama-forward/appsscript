@@ -41,7 +41,7 @@ class FieldPlan {
       Logger.log('FieldPlan Constructor rowData:');
       Logger.log(rowData);
       Logger.log('FieldTactics column value:');
-      Logger.log(rowData[FieldPlan.COLUMNS.FIELDTACTICS]);
+      Logger.log(rowData[FIELD_PLAN_COLUMNS.FIELDTACTICS]);
   
       // Helper function to normalize the data if they are in lists
       const normalizeField = (value) => {
@@ -57,32 +57,66 @@ class FieldPlan {
         return [value];
       };
       
-      //Contact
-      this._memberOrgName = rowData[FieldPlan.COLUMNS.MEMBERNAME];
-      this._firstName = rowData[FieldPlan.COLUMNS.FIRSTNAME];
-      this._lastName = rowData[FieldPlan.COLUMNS.LASTNAME];
-      this._contactEmail = rowData[FieldPlan.COLUMNS.CONTACTEMAIL];
-      this._contactPhone = rowData[FieldPlan.COLUMNS.CONTACTPHONE];
-      //Data & Tools
-      this._dataStorage = normalizeField(rowData[FieldPlan.COLUMNS.DATASTORAGE]);
-      this._vanCommittee = normalizeField(rowData[FieldPlan.COLUMNS.VANCOMMITTEE]);
-      this._programTools = normalizeField(rowData[FieldPlan.COLUMNS.PROGRAMTOOLS]);
-      //Tactics & Locations
-      this._fieldTactics = normalizeField(rowData[FieldPlan.COLUMNS.FIELDTACTICS]);
-      this._fieldCounties = normalizeField(rowData[FieldPlan.COLUMNS.FIELDCOUNTIES]);
-      this._fieldPrecincts = normalizeField(rowData[FieldPlan.COLUMNS.PRECINCTS]);
-      //Demographics
-      this._demoRace = normalizeField(rowData[FieldPlan.COLUMNS.DEMORACE]);
-      this._demoAge = normalizeField(rowData[FieldPlan.COLUMNS.DEMOAGE]);
-      this._demoGender = normalizeField(rowData[FieldPlan.COLUMNS.DEMOGENDER]);
-      this._demoAffinity = normalizeField(rowData[FieldPlan.COLUMNS.DEMOAFFINITY]);
-      //Confidence & Experience
-      this._fieldPlanConfidence = rowData[FieldPlan.COLUMNS.PLANCONFIDENCE];
-      this._implementationAffect = rowData[FieldPlan.COLUMNS.IMPLEMENTATION];
-      this._coachingNeed = rowData[FieldPlan.COLUMNS.NEEDCOACHING];
-      this._experienceUsingForm = rowData[FieldPlan.COLUMNS.FPEXPERIENCE];
       //Meta
-      this._submissionDateTime = rowData[FieldPlan.COLUMNS.SUBMISSIONDATETIME];
+      this._submissionDateTime = rowData[FIELD_PLAN_COLUMNS.SUBMISSIONDATETIME];
+      this._submissionUrl = rowData[FIELD_PLAN_COLUMNS.SUBMISSIONURL];
+      this._submissionId = rowData[FIELD_PLAN_COLUMNS.SUBMISSIONURL];
+
+      //Training
+      this._attendedTraining = rowData[FIELD_PLAN_COLUMNS.ATTENDEDTRAINING];
+
+      //Contact
+      this._memberOrgName = rowData[FIELD_PLAN_COLUMNS.MEMBERNAME];
+      this._firstName = rowData[FIELD_PLAN_COLUMNS.FIRSTNAME];
+      this._lastName = rowData[FIELD_PLAN_COLUMNS.LASTNAME];
+      this._contactEmail = rowData[FIELD_PLAN_COLUMNS.CONTACTEMAIL];
+      this._contactPhone = rowData[FIELD_PLAN_COLUMNS.CONTACTPHONE];
+
+      //Data & Tools
+      this._dataStorage = normalizeField(rowData[FIELD_PLAN_COLUMNS.DATASTORAGE]);
+      this._dataStipend = rowData[FIELD_PLAN_COLUMNS.DATASTIPEND];
+      this._dataPlan = normalizeField(rowData[FIELD_PLAN_COLUMNS.DATAPLAN]);
+      this._vanCommittee = normalizeField(rowData[FIELD_PLAN_COLUMNS.VANCOMMITTEE]);
+      this._dataShare = rowData[FIELD_PLAN_COLUMNS.DATASHARE];
+      this._shareOrg = normalizeField(rowData[FIELD_PLAN_COLUMNS.SHAREORG]);
+      this._programTools = normalizeField(rowData[FIELD_PLAN_COLUMNS.PROGRAMTOOLS]);
+      this._programDates = rowData[FIELD_PLAN_COLUMNS.PROGRAMDATES];
+      this._programTypes = normalizeField(rowData[FIELD_PLAN_COLUMNS.PROGRAMTYPES]);
+
+      //Tactics & Locations
+      this._fieldTactics = normalizeField(rowData[FIELD_PLAN_COLUMNS.FIELDTACTICS]);
+      this._teachComfortable = normalizeField(rowData[FIELD_PLAN_COLUMNS.TEACHCOMFORTABLE]);
+      this._fieldStaff = normalizeField(rowData[FIELD_PLAN_COLUMNS.FIELDSTAFF]);
+      this._fieldNarrative = rowData[FIELD_PLAN_COLUMNS.FIELDNARRATIVE];
+      this._reviewedPlan = rowData[FIELD_PLAN_COLUMNS.REVIEWEDPLAN];
+      this._runningForOffice = rowData[FIELD_PLAN_COLUMNS.RUNNINGFOROFFICE];
+      this._fieldCounties = normalizeField(rowData[FIELD_PLAN_COLUMNS.FIELDCOUNTIES]);
+      this._cities = normalizeField(rowData[FIELD_PLAN_COLUMNS.CITIES]);
+      this._knowsPrecincts = rowData[FIELD_PLAN_COLUMNS.KNOWSPRECINCTS];
+      this._fieldPrecincts = normalizeField(rowData[FIELD_PLAN_COLUMNS.PRECINCTS]);
+      this._diffPrecincts = rowData[FIELD_PLAN_COLUMNS.DIFFPRECINCTS];
+      this._specialGeo = normalizeField(rowData[FIELD_PLAN_COLUMNS.SPECIALGEO]);
+
+      //Demographics
+      this._demoRace = normalizeField(rowData[FIELD_PLAN_COLUMNS.DEMORACE]);
+      this._demoAge = normalizeField(rowData[FIELD_PLAN_COLUMNS.DEMOAGE]);
+      this._demoGender = normalizeField(rowData[FIELD_PLAN_COLUMNS.DEMOGENDER]);
+      this._demoAffinity = normalizeField(rowData[FIELD_PLAN_COLUMNS.DEMOAFFINITY]);
+      this._demoNotes = rowData[FIELD_PLAN_COLUMNS.DEMONOTES];
+      this._demoConfidence = rowData[FIELD_PLAN_COLUMNS.DEMOCONFIDENCE];
+
+      //Acknowledgements
+      this._understandsReasonable = rowData[FIELD_PLAN_COLUMNS.UNDERSTANDSREASONABLE];
+      this._understandsDisbursement = rowData[FIELD_PLAN_COLUMNS.UNDERSTANDSDISBURSEMENT];
+      this._understandsTraining = rowData[FIELD_PLAN_COLUMNS.UNDERSTANDSTRAINING];
+
+      //Confidence & Experience
+      this._confidenceReasonable = rowData[FIELD_PLAN_COLUMNS.CONFIDENCEREASONABLE];
+      this._confidenceData = rowData[FIELD_PLAN_COLUMNS.CONFIDENCEDATA];
+      this._confidencePlan = rowData[FIELD_PLAN_COLUMNS.CONFIDENCEPLAN];
+      this._confidenceCapacity = rowData[FIELD_PLAN_COLUMNS.CONFIDENCECAPACITY];
+      this._confidenceSkills = rowData[FIELD_PLAN_COLUMNS.CONFIDENCESKILLS];
+      this._confidenceGoals = rowData[FIELD_PLAN_COLUMNS.CONFIDENCEGOALS];
     }
 
     //Getters
@@ -165,7 +199,7 @@ class FieldPlan {
     };
   };
   
-  FieldPlan.COLUMNS = {
+  FIELD_PLAN_COLUMNS = {
     // All caps bcause they are constants
     SUBMISSIONDATETIME: 0,
     MEMBERNAME: 1,

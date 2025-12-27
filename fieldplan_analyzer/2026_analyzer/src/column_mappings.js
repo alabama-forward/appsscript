@@ -17,7 +17,7 @@
 
 const FIELD_PLAN_COLUMNS = {
     //Meta
-    SUBMISSIONDATE: 0,
+    SUBMISSIONDATETIME: 0,
     //
     ATTENDEDTRAINING: 1,
     //Contact
