@@ -491,3 +491,47 @@ function testColumnMappings() {
 
   return results.valid;
 }
+
+function runColumnMappingTests() {
+  Logger.log('=== RUNNING COLUMN MAPPING TESTS ===\n');
+
+  // Test 1: Validation
+  Logger.log('TEST 1: Validation');
+  const isValid = testColumnMappings();
+  Logger.log(`Result: ${isValid ? '✅ PASS' : '❌ FAIL'}\n`);
+
+  // Test 2: Summary
+  Logger.log('TEST 2: Summary');
+  logColumnMappingSummary();
+  Logger.log('✅ PASS\n');
+
+  // Test 3: Reverse Lookup
+  Logger.log('TEST 3: Reverse Lookup');
+  const tests = [0, 1, 2, 37, 65, 72, 999];
+  tests.forEach(idx => {
+    const name = getColumnNameByIndex(idx);
+    Logger.log(`  Column ${idx}: ${name}`);
+  });
+  Logger.log('✅ PASS\n');
+
+  // Test 4: Read actual data
+  Logger.log('TEST 4: Read Real Data');
+  try {
+    const sheet = SpreadsheetApp.getActive().getSheetByName('2026_field_plan');
+    if (sheet && sheet.getLastRow() > 1) {
+      const data = sheet.getRange(2, 1, 1, sheet.getLastColumn()).getValues()[0];
+
+      // Test a few key fields
+      Logger.log(`  Organization: ${data[FIELD_PLAN_COLUMNS.MEMBERNAME]}`);
+      Logger.log(`  Attended Training: ${data[FIELD_PLAN_COLUMNS.ATTENDEDTRAINING]}`);
+      Logger.log(`  Phone Length: ${data[PROGRAM_COLUMNS.PHONE.PROGRAMLENGTH]}`);
+      Logger.log('✅ PASS\n');
+    } else {
+      Logger.log('⚠️ SKIP - No data in sheet\n');
+    }
+  } catch (error) {
+    Logger.log(`❌ FAIL - ${error.message}\n`);
+  }
+
+  Logger.log('=== TESTS COMPLETE ===');
+}
