@@ -1,3 +1,4 @@
+// Main Field Plan Class //
 class FieldPlan {
 
     // Get most recent entry (last row)
@@ -199,34 +200,3 @@ class FieldPlan {
     };
   };
   
-  FIELD_PLAN_COLUMNS = {
-    // All caps bcause they are constants
-    SUBMISSIONDATETIME: 0,
-    MEMBERNAME: 1,
-    FIRSTNAME: 2,
-    LASTNAME: 3,
-    CONTACTEMAIL: 4,
-    CONTACTPHONE: 5,
-    DATASTORAGE: 6,
-    DATASTIPEND: 7, // Add getter
-    DATAPLAN: 8, //Add getter
-    VANCOMMITTEE: 9, //Add getter?? Minimum add to email
-    DATASHARE: 10, //Add getter
-    SHAREORG: 11, //Add getter
-    PROGRAMTOOLS: 12,
-    PROGRAMDATES: 13, //Add getter
-    PROGRAMTYPES: 14, //Add getter
-    FIELDTACTICS: 15,
-    FIELDSTAFF: 16, //Add getter
-    FIELDCOUNTIES: 17,
-    PRECINCTS: 19, //Add getter
-    DIFFPRECINCTS: 20, //Add getter
-    DEMORACE: 21,
-    DEMOAGE: 22,
-    DEMOGENDER: 23,
-    DEMOAFFINITY: 24,
-    PLANCONFIDENCE: 54,
-    IMPLEMENTATION: 55,
-    NEEDCOACHING: 56,
-    FPEXPERIENCE: 57
-  };
