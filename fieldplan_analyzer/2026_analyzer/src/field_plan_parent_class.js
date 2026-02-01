@@ -122,6 +122,7 @@ class FieldPlan {
 
     //Getters
     get memberOrgName() { return this._memberOrgName || null; }
+    get attendedTraining() { return this._attendedTraining || null;}
     get firstName() { return this._firstName || null; }
     get lastName() { return this._lastName || null; }
     get contactEmail() { return this._contactEmail || null; }

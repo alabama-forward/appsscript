@@ -227,7 +227,7 @@ function sendFieldPlanEmail(fieldPlan, rowNumber = null) {
 
   // Configuration object with recipient emails array - add your emails here
   const config = {
-    recipientEmails: (scriptProps.getProperty('EMAIL_RECIPIENTS') || 'gabri@alforward.org,sherri@alforward.org,deanna@alforward.org,datateam@alforward.org,khadidah@alforward.org').split(','),
+    recipientEmails: (scriptProps.getProperty('EMAIL_RECIPIENTS')),
     maxRetries: 3,
     retryDelay: 1000 // milliseconds
   };
@@ -253,7 +253,7 @@ function sendFieldPlanEmail(fieldPlan, rowNumber = null) {
 
   try {
     // Get the row data for creating tactic instances
-    const sheet = SpreadsheetApp.getActive().getSheetByName('2025_field_plan');
+    const sheet = SpreadsheetApp.getActive().getSheetByName('2025_field_plan'); //Why by name and not by the business logic that grabs it?
     let rowData;
     
     if (rowNumber) {
@@ -338,8 +338,14 @@ function sendFieldPlanEmail(fieldPlan, rowNumber = null) {
         'None specified'}</p>
       <p><strong>Affinity Groups:</strong> ${Array.isArray(fieldPlan.demoAffinity) ? fieldPlan.demoAffinity.join(', ') : 'None specified'}</p>
 
-      <h3>Coaching Assessment</h3>
-      <p>${fieldPlan.needsCoaching()}</p>`;
+      <h3>Training & Preparation</h3>
+      <p><strong>Attended Training:</strong>${fieldPlan.attendedTraining || 'Not Specified'}</p>
+      <p><strong>Reviewed Table Field Plan:</strong>${fieldPlan.reviewedPlan || 'Not Specified'}</p>
+      <p><strong>Understands Requirements:</strong>${fieldPlan.understandsReasonable || 'Not Specified'}, 
+          Grant Disbursement: ${fieldPlan.understandsDisbursement || 'Not specified'},
+          Training Importance: ${fieldPlan.understandsTraining || 'Not Specified'}
+      </p>
+      `
 
     // Get all tactics with data
     const tactics = getTacticInstances(rowData);
@@ -737,3 +743,4 @@ function onBudgetSubmission(budget) {
     Logger.log(`Removed missing budget tracking for ${budget.memberOrgName}`);
   }
 }
+  
