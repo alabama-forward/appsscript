@@ -50,7 +50,7 @@ function testMostRecentFieldPlan(testEmail) {
 
     try {
       // Get the last row number for the field plan
-      const sheet = SpreadsheetApp.getActive().getSheetByName('2025_field_plan');
+      const sheet = SpreadsheetApp.getActive().getSheetByName('2025_field_plan'); //Why hard coded?
       const lastRowNumber = sheet.getLastRow();
       
       // Call the existing function to send the email
