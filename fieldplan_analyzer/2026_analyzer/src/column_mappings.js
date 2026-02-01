@@ -108,6 +108,12 @@ const PROGRAM_COLUMNS = {
         WEEKLYHOURS: 55,
         HOURLYATTEMPTS: 56
     },
+    TEXT: {
+        PROGRAMLENGTH: 57,
+        WEEKLYVOLUNTEERS: 58,
+        WEEKLYHOURS: 59,
+        HOURLYATTEMPTS: 60
+    },
     MAIL: {
         PROGRAMLENGTH: 61,
         WEEKLYVOLUNTEERS: 62,
@@ -131,6 +137,13 @@ const COLUMN_QUESTIONS = {
     ATTENDEDTRAINING: "Did you attend the Field Planning Training offered by the Data Team or receive any coaching from the Field Team before completing this form?",
 
     //Contact Information
+    MEMBERNAME: "Table Member Organization Name",
+    FIRSTNAME: "Data & Tech Contact on Your Team - First Name",
+    LASTNAME: "Data & Tech Contact on Your Team - Last Name",
+    CONTACTEMAIL: "Data & Tech Contact's Email",
+    CONTACTPHONE: "Data & Tech Contact's Phone",
+
+    //Data & Tools
     DATASTORAGE: "Where will you store data related to your voter engagement?",
     DATASTIPEND: "You marked \"Paper\" or \"Spreadsheet\"... have you applied for a \"Data Entry\" stipend?",
     DATAPLAN: "You marked \"Paper\" or \"Spreadsheet\"... What is your plan for digitizing your data?",
@@ -168,7 +181,7 @@ const COLUMN_QUESTIONS = {
     FIELDCOUNTIES: "In what counties will you conduct your program?",
     CITIES: "If you plan to work in specific cities, add each of them below. Add one city at a time.",
     KNOWSPRECINCTS: "Do you know the specific precincts you will target with your program?",
-    PRECINCTS: "Add your precincts below. Add your precincts one at a time.",
+    FIELDPRECINCTS: "Add your precincts below. Add your precincts one at a time.",
     DIFFPRECINCTS: "To avoid over-saturation, we may limit our table coordination to 2 members per precinct. Are you willing to work in a precinct other than the ones you listed?",
     SPECIALGEO: "Mark if any of these special geographic areas apply to your program",
 
@@ -176,8 +189,8 @@ const COLUMN_QUESTIONS = {
     DEMORACE: "These are the racial and ethnic demographics I intend to reach through my program:",
     DEMOAGE: "These are the age demographics I intend to reach through my programs:",
     DEMOGENDER: "These are the gender and sexuality demographics I intend to reach through my programs:",
-    DEMONOTES: "These are additional communities I intend to reach through my programs:",
-    DEMOCONFIDENCE: "[If needed] Use the space below to describe your demographic targets more clearly.",
+    DEMOAFFINITY: "These are additional communities I intend to reach through my programs:",
+    DEMONOTES: "[If needed] Use the space below to describe your demographic targets more clearly.",
     DEMOCONFIDENCE: "I believe that my organization will effectively reach and be able to maintain relationships with all of the communities I marked above",
 
     //Acknowledgements
@@ -188,6 +201,7 @@ const COLUMN_QUESTIONS = {
     //Confidence & Self-assessment
     CONFIDENCEREASONABLE: "I feel confident that the field plan I am submitting meets the \"reasonable and realistic\" expectations set by the Alabama Forward data team.",
     CONFIDENCEDATA: "I feel confident in my organization's ability to use data and technology to execute our field programming",
+    CONFIDENCEPLAN: "I feel confident in the field plan I am submitting for review by the data and field team",
     CONFIDENCECAPACITY: "I feel confident in my staff or volunteer capacity to implement my field plan",
     CONFIDENCESKILLS: "I feel like my organization is highly skilled in the field tactics we listed in our field plan",
     CONFIDENCEGOALS: "I feel confident that my organization can meet the attempt and contact goals we detailed in our field plan",
@@ -238,7 +252,7 @@ function validateColumnMappings() {
 
         //Warn about unusual indices
         if (value < 0 || value > 100) {
-            results.warnings.push(`FIELD_PLAN_COLUMNS.${keys} has unusual index: ${value}`);
+            results.warnings.push(`FIELD_PLAN_COLUMNS.${key} has unusual index: ${value}`);
         }
 
         //Check for duplicates by comparing index to set contents
@@ -246,9 +260,8 @@ function validateColumnMappings() {
             duplicates.push(`Column ${value} is mapped multiple times in FIELD_PLAN_COLUMNS`);
             results.valid = false;
         }
-    }
-
         fieldPlanIndices.add(value);
+    }
     
     if (duplicates.length > 0) {
         results.errors.push(...duplicates); //The ... means unpack 
