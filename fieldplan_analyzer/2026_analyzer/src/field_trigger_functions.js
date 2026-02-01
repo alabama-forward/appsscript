@@ -644,7 +644,7 @@ function trackMissingBudget(fieldPlan) {
 // Function to process the county, precinct, and demo for each field submission at once
 function sendFieldPlanTargetsSummary() {
   //Get the field plan sheet using existing helpers
-  const sheet = getSheet('2025_field_plan');
+  const sheet = getSheet('2025_field_plan'); //Why by name and not by script property or business logic?
   const data = sheet.getDataRange().getValues();
 
   //Process field plans, skip header row
