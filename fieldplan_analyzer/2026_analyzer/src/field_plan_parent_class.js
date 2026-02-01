@@ -121,27 +121,60 @@ class FieldPlan {
     }
 
     //Getters
-    get memberOrgName() { return this._memberOrgName || null; }
+    //Meta
+    get submissionDateTime() { return this._submissionDateTime || null; }
+    get submissionId() { return this._submissionId || null; }
+    get submissionUrl() { return this._submissionUrl || null; }
+    //Training
     get attendedTraining() { return this._attendedTraining || null;}
+    get memberOrgName() { return this._memberOrgName || null; }
+    //Contact
+    get memberOrgName() {return this._memberOrgName || null; }
     get firstName() { return this._firstName || null; }
     get lastName() { return this._lastName || null; }
     get contactEmail() { return this._contactEmail || null; }
     get contactPhone() { return this._contactPhone || null; }
+    //Data & Tools
     get dataStorage() { return this._dataStorage || null; }
+    get dataStipend() { return this._dataStipend || null; }
+    get dataPlan() { return this._dataPlan || null; }
+    get dataShare() { return this._dataShare || null; }
     get vanCommittee() { return this._vanCommittee || null; }
+    get shareOrg() { return this._shareOrg || null; }
     get programTools() { return this._programTools || null; }
+    get programDates() { return this._programDates || null; }
+    get programTypes() { return this._programTypes || null; }
+    //Geo & Tactics
     get fieldTactics() { return this._fieldTactics || null; }
+    get teachComfortable() { return this._teachComfortable || null; }
+    get fieldStaff() { return this._fieldStaff || null; }
+    get fieldNarrative() { return this._fieldNarrative || null; }
+    get reviewedPlan() { return this._reviewedPlan || null; }
+    get runningForOffice() { return this._runningForOffice || null; }
     get fieldCounties() { return this._fieldCounties || null; }
+    get cities() { return this._cities || null; }
+    get knowsPrecincts() { return this._knowsPrecincts || null; }
     get fieldPrecincts() { return this._fieldPrecincts || null;}
+    get diffPrecincts() { return this._diffPrecincts || null; }
+    get specialGeo() { return this._specialGeo || null; }
+    //Demos
     get demoRace() { return this._demoRace || null; }
     get demoAge() { return this._demoAge || null; }
     get demoGender() { return this._demoGender || null; }
     get demoAffinity() { return this._demoAffinity || null; }
-    get fieldPlanConfidence() { return this._fieldPlanConfidence || null; }
-    get implementationAffect() { return this._implementationAffect || null; }
-    get coachingNeed() { return this._coachingNeed || null; }
-    get experienceUsingForm() { return this._experienceUsingForm || null;}
-    get submissionDateTime() { return this._submissionDateTime || null; }
+    get demoNotes() { return this._demoNotes || null; }
+    get demoConfidence() { return this._demoConfidence || null; }
+    //Acknowledgements
+    get understandsReasonable() { return this._understandsReasonable || null; }
+    get understandsDisbursement() { return this._understandsDisbursement || null; }
+    get understandsTraining() { return this._understandsTraining || null; }
+    //Confidence & Self Assessment
+    get confidenceReasonable() { return this._confidenceReasonable || null; }
+    get confidenceData() { return this._confidenceData || null; }
+    get confidencePlan() { return this._confidencePlan || null; }
+    get confidenceCapacity() { return this._confidenceCapacity || null; }
+    get confidenceSkills() { return this._confidenceSkills || null; }
+    get confidenceGoals() { return this._confidenceGoals || null; }
   
     // Helper functions for checking if arrays have items
   

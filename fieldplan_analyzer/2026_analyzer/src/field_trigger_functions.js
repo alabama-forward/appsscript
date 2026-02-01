@@ -291,18 +291,70 @@ function sendFieldPlanEmail(fieldPlan, rowNumber = null) {
       <p><strong>Contact:</strong> ${(fieldPlan.firstName || '') + ' ' + (fieldPlan.lastName || '')}</p>
       <p><strong>Email:</strong> ${fieldPlan.contactEmail || 'Not provided'}</p>
       <p><strong>Phone:</strong> ${fieldPlan.contactPhone || 'Not provided'}</p>
+
+      <h3>Field Tactics & Capacity</h3>
+      <p><strong>Can Teach These Tactics:</strong> ${
+        fieldPlan.teachComfortable ?
+        (Array.isArray(fieldPlan.teachComfortable) ? fieldPlan.teachComfortable.join(', ') : fieldPlan.teachComfortable
+        ) :
+        'None specified'}</p>
+
+      <p><strong>Field Staff Type:</strong> ${
+        fieldPlan.fieldStaff ?
+        (Array.isArray(fieldPlan.fieldStaff) ? fieldPlan.fieldStaff.join(', ') : fieldPlan.fieldStaff
+        ) :
+        'Not specified'}</p>
       
+      <p><strong>Field Staff Notes:</strong> ${fieldPlan.fieldStaffNotes || 'None provided'}</p>
+      
+      <p><strong>Running for Office:</strong> ${fieldPlan.runningForOffice || 'Not specified'}</p>
+            
       <h3>Program Details</h3>
       <p><strong>Data Storage:</strong> ${
         fieldPlan.dataStorage ?
         (Array.isArray(fieldPlan.dataStorage) ? fieldPlan.dataStorage.toString().replace(/\n/g, ', ') : fieldPlan.dataStorage.join(', ')
         ) :
         'None specified'}</p>
+      
+      <p><strong>Data Entry Stipend:</strong> ${fieldPlan.dataStipend || 'Not Specified'}</p>
+
+      <p><strong>Data Digitization Plan:</strong> ${fieldPlan.dataPlan || 'Not Specified'}</p>
+
+      <P><strong>Data Sharing:</strong> ${fieldPlan.dataShare || 'Not Specified'}</p>
+      
       <p><strong>VAN Committee:</strong> ${fieldPlan.vanCommittee || 'None specified'}</p>
+
+      <p><strong>Share With Organizations:</strong> ${
+        fieldPlan.shareOrg ?
+        (Array.isArray(fieldPlan.shareOrg) ? fieldPlan.shareOrg.join(', ') : fieldPlan.shareOrg
+        ): 
+        'None Specified'}</p>
+      
+      <p><strong>Program Dates:</strong> ${fieldPlan.programDates || 'Not specified'}</p>
+
+      <p><strong>Program Activity Types:</strong> ${
+        fieldPlan.programTypes ?
+        (Array.isArray(fieldPlan.programTypes) ? fieldPlan.programTypes.join(', ') : fieldPlan.programTypes
+        ) :
+        'None specified'}</p>
 
       <p><strong>Program Tools:</strong> ${
         fieldPlan.programTools ?
         (Array.isArray(fieldPlan.programTools) ? fieldPlan.programTools.toString().replace(/\n/g, ', ') : fieldPlan.programTools.join(', ')
+        ) :
+        'None specified'}</p>
+      
+      <h3>Geographic Targeting</h3>
+      <p><strong>Counties:</strong> ${/* existing code */}</p>
+      <p><strong>Cities:</strong> ${
+        fieldPlan.cities ?
+        (Array.isArray(fieldPlan.cities) ? fieldPlan.cities.join(', ') : fieldPlan.cities
+        ) :
+        'None specified'}</p>
+      
+      <p><strong>Special Geographic Areas:</strong> ${
+        fieldPlan.specialGeo ?
+        (Array.isArray(fieldPlan.specialGeo) ? fieldPlan.specialGeo.join(', ') : fieldPlan.specialGeo
         ) :
         'None specified'}</p>
 
@@ -312,12 +364,16 @@ function sendFieldPlanEmail(fieldPlan, rowNumber = null) {
         ) :
         'None specified'}</p>
 
+      <p><strong>Knows Specific Precincts:</strong> ${fieldPlan.knowsPrecincts || 'Not specified'}</p>
+
       <p><strong>Precincts:</strong> ${
         fieldPlan.fieldPrecincts ?
         (Array.isArray(fieldPlan.fieldPrecincts) ? fieldPlan.fieldPrecincts.toString().replace(/\n/g, ', ') : fieldPlan.fieldPrecincts.join(', ')
         ) :
         'None specified'}</p>
-      
+
+      <p><strong>Willing to Work Different Precincts:</strong> ${fieldPlan.diffPrecincts || 'Not specified'}</p>
+            
       <h3>Demographics</h3>
       <p><strong>Race:</strong> ${
         fieldPlan.demoRace ?
@@ -328,7 +384,7 @@ function sendFieldPlanEmail(fieldPlan, rowNumber = null) {
       <p><strong>Age:</strong> ${
         fieldPlan.demoAge ?
         (Array.isArray(fieldPlan.demoAge) ? fieldPlan.demoAge.toString().replace(/\n/g, ', ') : fieldPlan.demoAge.join(', ')
-        ):
+        ) :
         'None specified'}</p>
 
       <p><strong>Gender:</strong> ${
@@ -336,15 +392,32 @@ function sendFieldPlanEmail(fieldPlan, rowNumber = null) {
         (Array.isArray(fieldPlan.demoGender) ? fieldPlan.demoGender.toString().replace(/\n/g, ', ') : fieldPlan.demoGender.join(', ')
         ) :
         'None specified'}</p>
+      
       <p><strong>Affinity Groups:</strong> ${Array.isArray(fieldPlan.demoAffinity) ? fieldPlan.demoAffinity.join(', ') : 'None specified'}</p>
+      <p><strong>Additional Demographic Notes:</strong> ${fieldPlan.demoNotes || 'None provided'}</p>
+      <p><strong>Demographic Reach Confidence:</strong> ${fieldPlan.demoConfidence || 'Not specified'}</p>
 
       <h3>Training & Preparation</h3>
+
       <p><strong>Attended Training:</strong>${fieldPlan.attendedTraining || 'Not Specified'}</p>
       <p><strong>Reviewed Table Field Plan:</strong>${fieldPlan.reviewedPlan || 'Not Specified'}</p>
       <p><strong>Understands Requirements:</strong>${fieldPlan.understandsReasonable || 'Not Specified'}, 
           Grant Disbursement: ${fieldPlan.understandsDisbursement || 'Not specified'},
           Training Importance: ${fieldPlan.understandsTraining || 'Not Specified'}
       </p>
+
+      <h3>Confidence & Coaching Assessment</h3>
+      <p>${fieldPlan.needsCoaching()}</p>
+
+      <h4>Detailed Confidence Scores</h4>
+      <ul>
+        <li><strong>Meets Reasonable/Realistic Expectations:</strong> ${fieldPlan.confidenceReasonable || 'Not provided'}/10</li>
+        <li><strong>Data & Technology Usage:</strong> ${fieldPlan.confidenceData || 'Not provided'}/10</li>
+        <li><strong>Field Plan Quality:</strong> ${fieldPlan.confidencePlan || 'Not provided'}/10</li>
+        <li><strong>Staff/Volunteer Capacity:</strong> ${fieldPlan.confidenceCapacity || 'Not provided'}/10</li>
+        <li><strong>Field Tactic Skills:</strong> ${fieldPlan.confidenceSkills || 'Not provided'}/10</li>
+        <li><strong>Meeting Goals:</strong> ${fieldPlan.confidenceGoals || 'Not provided'}/10</li>
+      </ul>
       `
 
     // Get all tactics with data
