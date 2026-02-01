@@ -84,7 +84,7 @@ class FieldPlan {
       this._programDates = rowData[FIELD_PLAN_COLUMNS.PROGRAMDATES];
       this._programTypes = normalizeField(rowData[FIELD_PLAN_COLUMNS.PROGRAMTYPES]);
 
-      //Tactics & Locations
+      //Geo & Tactics
       this._fieldTactics = normalizeField(rowData[FIELD_PLAN_COLUMNS.FIELDTACTICS]);
       this._teachComfortable = normalizeField(rowData[FIELD_PLAN_COLUMNS.TEACHCOMFORTABLE]);
       this._fieldStaff = normalizeField(rowData[FIELD_PLAN_COLUMNS.FIELDSTAFF]);
@@ -94,7 +94,7 @@ class FieldPlan {
       this._fieldCounties = normalizeField(rowData[FIELD_PLAN_COLUMNS.FIELDCOUNTIES]);
       this._cities = normalizeField(rowData[FIELD_PLAN_COLUMNS.CITIES]);
       this._knowsPrecincts = rowData[FIELD_PLAN_COLUMNS.KNOWSPRECINCTS];
-      this._fieldPrecincts = normalizeField(rowData[FIELD_PLAN_COLUMNS.PRECINCTS]);
+      this._fieldPrecincts = normalizeField(rowData[FIELD_PLAN_COLUMNS.FIELDPRECINCTS]); //Updated the name here, need to make sure it's updated across the code
       this._diffPrecincts = rowData[FIELD_PLAN_COLUMNS.DIFFPRECINCTS];
       this._specialGeo = normalizeField(rowData[FIELD_PLAN_COLUMNS.SPECIALGEO]);
 
@@ -145,10 +145,14 @@ class FieldPlan {
     // Helper functions for checking if arrays have items
   
     hasDataStorage(item) { return this._dataStorage.includes(item); }
+    hasShareOrg(org) {return this._shareOrg.includes(org); }
     hasProgramTool(tool) { return this._programTools.includes(tool); }
+    hasProgramType(type) { return this._programTypes.includes(type); }
     hasFieldTactic(tactic) { return this._programTools.includes(tactic); }
     hasFieldCounties(county) { return this._fieldCounties.includes(county); }
+    hasCity(city) { return this._cities.includes(city); }
     hasFieldPrecincts(precinct) { return this._fieldPrecincts.includes(precinct); }
+    hasSpecialGeo(area) {return this._specialGeo.includes(area); }
     hasDemoRace(race) { return this._demoRace.includes(race); }
     hasDemoGender(gender) { return this._demoGender.includes(gender); }
     hasDemoAffinity(affinity) { return this._demoAffinity.includes(affinity); }
