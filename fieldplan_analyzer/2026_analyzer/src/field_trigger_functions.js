@@ -199,8 +199,12 @@ function buildFieldTargetsTable(fieldPlans) {
         <tr style="background-color: #f0f0f0;">
           <th>Organization</th>
           <th>Counties</th>
+          <th>Cities</th>
+          <th>Special Areas</th>
           <th>Demographics</th>
           <th>Precincts</th>
+          <th>Running for Office</th>
+          <th>Can Teach</th>
         </tr>
       </thead>
       <tbody>
@@ -351,7 +355,7 @@ function sendFieldPlanEmail(fieldPlan, rowNumber = null) {
       (Array.isArray(fieldPlan.fieldCounties) ? fieldPlan.fieldCounties.toString().replace(/\n/g, ', ') : fieldPlan.fieldCounties.join(', ')
       ) :
       'None specified'}</p>
-      
+
       <p><strong>Cities:</strong> ${
         fieldPlan.cities ?
         (Array.isArray(fieldPlan.cities) ? fieldPlan.cities.join(', ') : fieldPlan.cities
@@ -418,6 +422,7 @@ function sendFieldPlanEmail(fieldPlan, rowNumber = null) {
         <li><strong>Field Tactic Skills:</strong> ${fieldPlan.confidenceSkills || 'Not provided'}/10</li>
         <li><strong>Meeting Goals:</strong> ${fieldPlan.confidenceGoals || 'Not provided'}/10</li>
       </ul>
+
       `
 
     // Get all tactics with data
