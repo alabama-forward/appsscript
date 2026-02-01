@@ -754,6 +754,18 @@ function formatDemographics(fieldPlan) {
     parts.push(`Gender: ${gender}`);
   }
 
+  if (fieldPlan.demoAffinity && fieldPlan.demoAffinity.length > 0) {
+    const affinity = Array.isArray(fieldPlan.demoAffinity)
+      ? fieldPlan.demoAffinity.toString().replace(/\n/g, ', ')
+      : fieldPlan.demoAffinity.toString().replace(/\n/g, ', ');
+    parts.push(`Affinity: ${affinity}`);
+  }
+
+  // NEW in 2026: Add notes if provided
+  if (fieldPlan.demoNotes) {
+    parts.push(`<em>Notes: ${fieldPlan.demoNotes}</em>`);
+  }
+
   return parts.length > 0 ? parts.join('<br>') : 'None specified';
 
 }
