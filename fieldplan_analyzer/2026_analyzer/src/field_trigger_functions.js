@@ -345,7 +345,13 @@ function sendFieldPlanEmail(fieldPlan, rowNumber = null) {
         'None specified'}</p>
       
       <h3>Geographic Targeting</h3>
-      <p><strong>Counties:</strong> ${/* existing code */}</p>
+
+      <p><strong>Field Counties:</strong> ${
+      fieldPlan.fieldCounties ?
+      (Array.isArray(fieldPlan.fieldCounties) ? fieldPlan.fieldCounties.toString().replace(/\n/g, ', ') : fieldPlan.fieldCounties.join(', ')
+      ) :
+      'None specified'}</p>
+      
       <p><strong>Cities:</strong> ${
         fieldPlan.cities ?
         (Array.isArray(fieldPlan.cities) ? fieldPlan.cities.join(', ') : fieldPlan.cities
@@ -355,12 +361,6 @@ function sendFieldPlanEmail(fieldPlan, rowNumber = null) {
       <p><strong>Special Geographic Areas:</strong> ${
         fieldPlan.specialGeo ?
         (Array.isArray(fieldPlan.specialGeo) ? fieldPlan.specialGeo.join(', ') : fieldPlan.specialGeo
-        ) :
-        'None specified'}</p>
-
-      <p><strong>Field Counties:</strong> ${
-        fieldPlan.fieldCounties ?
-        (Array.isArray(fieldPlan.fieldCounties) ? fieldPlan.fieldCounties.toString().replace(/\n/g, ', ') : fieldPlan.fieldCounties.join(', ')
         ) :
         'None specified'}</p>
 
