@@ -1,9 +1,9 @@
 // Email configuration (shared with budget_trigger_functions.js)
 const scriptProps = PropertiesService.getScriptProperties();
 const EMAIL_CONFIG = {
-  recipients: (scriptProps.getProperty('EMAIL_RECIPIENTS') || 'gabri@alforward.org,sherri@alforward.org,khadidah@alforward.org,deanna@alforward.org,datateam@alforward.org').split(','),
-  testRecipients: (scriptProps.getProperty('EMAIL_TEST_RECIPIENTS') || 'datateam@alforward.org').split(','),
-  replyTo: scriptProps.getProperty('EMAIL_REPLY_TO') || 'datateam@alforward.org'
+  recipients: (scriptProps.getProperty('EMAIL_RECIPIENTS').split(',')),
+  testRecipients: (scriptProps.getProperty('EMAIL_TEST_RECIPIENTS')).split(','),
+  replyTo: scriptProps.getProperty('EMAIL_REPLY_TO')
 };
 
 // Helper function to get email recipients based on mode
@@ -455,7 +455,7 @@ function sendFieldPlanEmail(fieldPlan, rowNumber = null) {
           subject: `New Field Plan: ${fieldPlan.memberOrgName || 'Unknown Organization'}`,
           htmlBody: emailBody,
           name: "Field Plan Notification System",
-          replyTo: scriptProps.getProperty('EMAIL_REPLY_TO') || "datateam@alforward.org"
+          replyTo: scriptProps.getProperty('EMAIL_REPLY_TO')
         });
         success = true;
         Logger.log('Email sent successfully');
@@ -503,7 +503,7 @@ function createSpreadsheetTrigger() {
   
   if (!triggerExists) {
     // Create trigger to run twice a day (every 12 hours)
-    const triggerHours = parseInt(scriptProps.getProperty('TRIGGER_FIELD_PLAN_CHECK_HOURS') || '12');
+    const triggerHours = parseInt(scriptProps.getProperty('TRIGGER_FIELD_PLAN_CHECK_HOURS'));
     ScriptApp.newTrigger('checkForNewRows')
       .timeBased()
       .everyHours(triggerHours)
@@ -521,7 +521,7 @@ function createSpreadsheetTrigger() {
 
 // Helper function to get the last row number
 function getLastRow() {
-  const sheetName = scriptProps.getProperty('SHEET_FIELD_PLAN') || '2025_field_plan';
+  const sheetName = scriptProps.getProperty('SHEET_FIELD_PLAN');
   const sheet = SpreadsheetApp.getActive().getSheetByName(sheetName);
   return sheet.getLastRow();
 }
@@ -529,7 +529,7 @@ function getLastRow() {
 // Function to check for new rows and process them
 function checkForNewRows() {
   try {
-    const sheetName = scriptProps.getProperty('SHEET_FIELD_PLAN') || '2025_field_plan';
+    const sheetName = scriptProps.getProperty('SHEET_FIELD_PLAN');
     const sheet = SpreadsheetApp.getActive().getSheetByName(sheetName);
     const currentLastRow = sheet.getLastRow();
     
@@ -611,7 +611,7 @@ function createFieldTargetsRow(fieldPlan) {
 
 // Find matching budget for organization
 function findMatchingBudget(orgName) {
-  const budgetSheetName = scriptProps.getProperty('SHEET_FIELD_BUDGET') || '2025_field_budget';
+  const budgetSheetName = scriptProps.getProperty('SHEET_FIELD_BUDGET');
   const budgetSheet = SpreadsheetApp.getActive().getSheetByName(budgetSheetName);
   const data = budgetSheet.getDataRange().getValues();
   
@@ -683,7 +683,7 @@ function processAllFieldPlans(isTestMode = false) {
   try {
     Logger.log(`=== PROCESSING ALL FIELD PLANS (${isTestMode ? 'TEST MODE' : 'PRODUCTION'}) ===`);
     
-    const sheetName = scriptProps.getProperty('SHEET_FIELD_PLAN') || '2025_field_plan';
+    const sheetName = scriptProps.getProperty('SHEET_FIELD_PLAN');
     const sheet = SpreadsheetApp.getActive().getSheetByName(sheetName);
     const currentLastRow = sheet.getLastRow();
     
@@ -699,10 +699,10 @@ function processAllFieldPlans(isTestMode = false) {
         // Send email with field plan details
         if (isTestMode) {
           // In test mode, modify the sendFieldPlanEmail to use test recipients
-          const originalRecipients = scriptProps.getProperty('EMAIL_RECIPIENTS');
-          scriptProps.setProperty('EMAIL_RECIPIENTS', 'datateam@alforward.org');
+          const originalRecipients = scriptProps.getProperty('TEST_RECIPIENTS');
+          scriptProps.setProperty('TEST_RECIPIENTS');
           sendFieldPlanEmail(fieldPlan, rowNumber);
-          scriptProps.setProperty('EMAIL_RECIPIENTS', originalRecipients);
+          scriptProps.setProperty('TEST_RECIPIENTS', originalRecipients);
         } else {
           sendFieldPlanEmail(fieldPlan, rowNumber);
         }
