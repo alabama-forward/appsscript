@@ -51,28 +51,22 @@ function getTacticInstances(rowData) {
     return tactics;
 }
 
+/**
+ * Creates a single tactic instance by type
+ * Uses the new config-driven TacticProgram class
+ * @param {*} rowData 
+ * @param {*} tacticType 
+ * @returns 
+ */
 function getFieldTacticDetails(rowData, tacticType) {
   try {
-    // Apps Script needs global class access
-    switch(tacticType) {
-      case 'PHONE':
-        return new PhoneTactic(rowData);
-      case 'DOOR':
-        return new DoorTactic(rowData);
-      case 'OPEN':
-        return new OpenTactic(rowData);
-      case 'RELATIONAL':
-        return new RelationalTactic(rowData);
-      case 'REGISTRATION':
-        return new RegistrationTactic(rowData);
-      case 'TEXT':
-        return new TextTactic(rowData);
-      case 'MAIL':
-        return new MailTactic(rowData);
-      default:
-        Logger.log(`Unknown tactic type: ${tacticType}`);
-        return null;
+    // Validate tacticType exists in configuration
+    if (!TACTIC_CONFIG[tacticType]) {
+      Logger.log(`Unknown tactic type: ${tacticType}. Valid types: ${Object.keys(TACTIC_CONFIG).join(', ')}`);
+      return null;
     }
+
+    return new TacticProgram(rowData, tacticType);
   } catch (error) {
     Logger.log(`Error creating ${tacticType} tactic: ${error.message}`);
     return null;
