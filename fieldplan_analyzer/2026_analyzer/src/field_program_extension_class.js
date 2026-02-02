@@ -87,4 +87,46 @@
     reasonableRange() {
       return (this._hourlyAttempts)
     }
+
+    /**
+     * REFACTORED: Generic attempt reasonable check
+     * Works for all tactic types using their specific threshold
+     * Eliminates need for duplicate tactical calculations
+     * @param {number} threshold -  Reasonable hourly attempts threshold for this tactic
+     * @param {string} tacticName - Displau name (e.g. "Phone Banking")
+     * @returns {string} Formatted message
+     */
+    attemptReasonableMessage(threshold, tacticName) {
+      const range = this.reasonableRange();
+
+      if (range <= threshold) {
+        return `${this._memberOrgName} has a reasonable hourly attempt for ${tacticName} 
+          where each volunteer is only expected to attempt to contact ${range} people per hour`;
+      } else if (range > threshold && range <= threshold + 10) {
+        return `${this._memberOrgName} is at risk of expecting too many ${tacticName} 
+          attempts for each volunteer. They expect ${range} attempts per hour per volunteer.`;
+      } else {
+        return `${this._memberOrgName} is expecting an unreasonable number of ${tacticName} 
+          attempts per hour for their volunteers. They expect ${range} contacts each hour per volunteer.`;
+      }
+    }
+
+    /**
+     * REFACTORED: Generic expected contacts calculation
+     * Works for all tactic types using their specific contact rate range
+     * Eliminates need for phoneExceptedContacts and other like methods
+     * @param {Array<number>} contactRange - [min, max] contact rate
+     * @param {string} tacticName - Display name
+     * @returns {string} Formatted message
+     */
+    expectedContactsMessage(contactRange, tacticName) {
+      const lowerContacts = Math.round(this.programAttempts() * contactRange[0]);
+      const upperContacts = Math.round(this.programAttempts() * contactRange[1]);
+
+      return `${this._memberOrgName} intends to successfully reach between ${lowerContacts}
+        and ${upperContacts} people through ${tacticName} during the course of their
+        ${this._programLength} week program`
+    }
+
+
   };
