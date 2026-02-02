@@ -21,56 +21,33 @@ function getSheet(sheetName) {
   return sheet;
 }
 
+/**
+ * Creates tactic instances for all tactics that have data in the row
+ * Uses NEW config-drive TacticProgram class
+ * @param {*} rowData 
+ * @returns tactics and associated data
+ */
 function getTacticInstances(rowData) {
-    const tactics = [];
-    
-    // Check each set of tactic columns for data
+  const tactics = [];
+
+  //Iterate through all tactic configurations
+  for (const [tacticKey, config] of Object.entries(TACTIC_CONFIG)) {
     try {
-      // Phone Tactic Check
-      if (rowData[PROGRAM_COLUMNS.PHONE.PROGRAMLENGTH] || 
-          rowData[PROGRAM_COLUMNS.PHONE.WEEKLYVOLUNTEERS]) {
-        tactics.push(new PhoneTactic(rowData));
+      //Check if this TACTIC_CONFIG key has corresponding key in PROGRAM_COLUMNS
+      const columns = PROGRAM_COLUMNS[config.columnKey];
+      if (!columns) {
+        Logger.log(`Warning: No PROGRAM_COLUMNS found for ${tacticKey}`);
+        continue;
       }
-      
-      // Door Tactic Check
-      if (rowData[PROGRAM_COLUMNS.DOOR.PROGRAMLENGTH] || 
-          rowData[PROGRAM_COLUMNS.DOOR.WEEKLYVOLUNTEERS]) {
-        tactics.push(new DoorTactic(rowData));
-      }
-      
-      // Open Tactic Check
-      if (rowData[PROGRAM_COLUMNS.OPEN.PROGRAMLENGTH] || 
-          rowData[PROGRAM_COLUMNS.OPEN.WEEKLYVOLUNTEERS]) {
-        tactics.push(new OpenTactic(rowData));
-      }
-      
-      // Relational Tactic Check
-      if (rowData[PROGRAM_COLUMNS.RELATIONAL.PROGRAMLENGTH] || 
-          rowData[PROGRAM_COLUMNS.RELATIONAL.WEEKLYVOLUNTEERS]) {
-        tactics.push(new RelationalTactic(rowData));
-      }
-      
-      // Registration Tactic Check
-      if (rowData[PROGRAM_COLUMNS.REGISTRATION.PROGRAMLENGTH] || 
-          rowData[PROGRAM_COLUMNS.REGISTRATION.WEEKLYVOLUNTEERS]) {
-        tactics.push(new RegistrationTactic(rowData));
-      }
-      
-      // Text Tactic Check
-      if (rowData[PROGRAM_COLUMNS.TEXT.PROGRAMLENGTH] || 
-          rowData[PROGRAM_COLUMNS.TEXT.WEEKLYVOLUNTEERS]) {
-        tactics.push(new TextTactic(rowData));
-      }
-      
-      // Mail Tactic Check
-      if (rowData[PROGRAM_COLUMNS.MAIL.PROGRAMLENGTH] || 
-          rowData[PROGRAM_COLUMNS.MAIL.WEEKLYVOLUNTEERS]) {
-        tactics.push(new MailTactic(rowData));
+
+      //Check if this tactic has any data filled in
+      if (rowData[columns.PROGRAM_LENGTH] || rowData[columns.WEEKLYVOLUNTEERS]) {
+        tactics.push(new TacticProgram(rowData, tacticKey));
       }
     } catch (error) {
-      Logger.log(`Error creating tactics: ${tactics} ${error.message}`);
+      Logger.log(`Error creating ${tacticKey} tactic: ${error.message}`);
     }
-    
+  }
     return tactics;
 }
 
