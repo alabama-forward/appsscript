@@ -145,4 +145,3 @@ class TacticProgram extends FieldProgram {
     };
   }
 }
-
