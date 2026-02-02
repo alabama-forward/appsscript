@@ -125,7 +125,7 @@ class TacticProgram extends FieldProgram {
    */
   analyzeCost(fundingAmount) {
     const programAttempts = this.programAttempts();
-    const costPerAttempt = programAttempts > 0 ? fundingAmount / programAttempts : Infinity;
+    const costPerAttempt = programAttempts > 0 ? fundingAmount / programAttempts : 0;
 
     const lowerBound = this._costTarget - this._costStdDev;
     const upperBound = this._costTarget + this._costStdDev;
