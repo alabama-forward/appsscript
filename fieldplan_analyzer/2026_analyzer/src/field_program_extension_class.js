@@ -127,6 +127,4 @@
         and ${upperContacts} people through ${tacticName} during the course of their
         ${this._programLength} week program`
     }
-
-
   };

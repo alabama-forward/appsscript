@@ -174,28 +174,28 @@ function analyzeBudgetWithFieldPlan(budget, fieldPlanMatch) {
 
 // Analyze a single tactic
 function analyzeTactic(budget, tactic) {
-  let tacticType, budgetField, fundingRequested;
+  //NEW use of tacticKey property instead of instanceof
+  const tacticType = tactic.tacticKey;
   
-  // Map tactic to budget field and type
-  if (tactic instanceof DoorTactic) {
-    tacticType = 'DOOR';
-    budgetField = 'canvassRequested';
-    fundingRequested = parseFloat(budget.canvassRequested) || 0;
-  } else if (tactic instanceof PhoneTactic) {
-    tacticType = 'PHONE';
-    budgetField = 'phoneRequested';
-    fundingRequested = parseFloat(budget.phoneRequested) || 0;
-  } else if (tactic instanceof TextTactic) {
-    tacticType = 'TEXT';
-    budgetField = 'textRequested';
-    fundingRequested = parseFloat(budget.textRequested) || 0;
-  } else if (tactic instanceof OpenTactic) {
-    tacticType = 'OPEN';
-    budgetField = 'canvassRequested';
-    fundingRequested = parseFloat(budget.canvassRequested) || 0;
-  } else {
+  // Map tactic keys to budget fields
+  const tacticBudgetMap = {
+    'PHONE': { field: 'phoneRequested' },
+    'DOOR': { field: 'canvassRequested' },
+    'OPEN': { field: 'canvassRequested' },
+    'TEXT': { field: 'textRequested' },
+    'REGISTRATION': { field: 'registrationRequested' },
+    'RELATIONAL': { field: 'relationalRequested' },
+    'MAIL': { field: 'mailRequested' }
+  };
+
+  const budgetMapping = tacticBudgetMap[tacticType];
+  if (!budgetMapping) {
+    Logger.log(`No budget mapping for tactic type: ${tacticType}`);
     return null;
   }
+
+  const budgetField = budgetMapping.field;
+  const fundingRequested = parseFloat(budget[budgetField]) || 0;
   
   const programAttempts = tactic.programAttempts();
   const costPerAttempt = programAttempts > 0 ? fundingRequested / programAttempts : Infinity;
@@ -270,31 +270,26 @@ function analyzeGaps(budget, tactics) {
 
 // Check if funding can be increased within targets
 function checkIfCanIncreaseFunding(category, requested, gap, tactics) {
-  // For tactic-related categories, check if increased funding stays within bounds
-  if (['canvass', 'phone', 'text', 'open'].includes(category)) {
-    const relevantTactic = tactics.find(t => {
-      if ((category === 'canvass' || category === 'open') && (t instanceof DoorTactic || t instanceof OpenTactic)) return true;
-      if (category === 'phone' && t instanceof PhoneTactic) return true;
-      if (category === 'text' && t instanceof TextTactic) return true;
-      return false;
-    });
-    
-    if (relevantTactic) {
-      const programAttempts = relevantTactic.programAttempts();
-      const newCostPerAttempt = (requested + gap) / programAttempts;
-      
-      const tacticType = relevantTactic instanceof DoorTactic ? 'DOOR' :
-                        relevantTactic instanceof PhoneTactic ? 'PHONE' :
-                        relevantTactic instanceof TextTactic ? 'TEXT' : 'OPEN';
+  // NEW CODE: Use tacticKey property
+  const tacticKey = t.tacticKey;
+
+  //Map budget categories to tactic keys
+  if ((category === 'canvass' || category === 'open') && (tacticKey === 'DOOR' || tacticKey === 'OPEN')) return true;
+  if (category === 'phone' && tacticKey === 'PHONE') return true;
+  if (category === 'text' && tacticKey === 'TEXT') return true;
+  if (category === 'registration' && tacticKey === 'REGISTRATION') return true;
+  if (category === 'relational' && tacticKey === 'RELATIONAL') return true;
+  if (category === 'mail' && tacticKey === 'MAIL') return true;
+
+  const tacticType = relevantTactic.tacticKey;
+
       
       const target = getTacticTargets()[tacticType];
       return newCostPerAttempt <= (target.target + target.stdDev);
     }
-  }
   
   // For non-tactic categories, allow increase if gap exists
   return true;
-}
 
 // Send budget analysis email
 function sendBudgetAnalysisEmail(budget, fieldPlan, analysis, isTestMode = false) {
