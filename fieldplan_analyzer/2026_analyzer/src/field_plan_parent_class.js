@@ -127,7 +127,6 @@ class FieldPlan {
     get submissionUrl() { return this._submissionUrl || null; }
     //Training
     get attendedTraining() { return this._attendedTraining || null;}
-    get memberOrgName() { return this._memberOrgName || null; }
     //Contact
     get memberOrgName() {return this._memberOrgName || null; }
     get firstName() { return this._firstName || null; }

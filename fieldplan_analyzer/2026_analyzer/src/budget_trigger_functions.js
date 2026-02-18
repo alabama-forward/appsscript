@@ -268,28 +268,50 @@ function analyzeGaps(budget, tactics) {
   return gaps;
 }
 
-// Check if funding can be increased within targets
+/**
+ * Check if funding can be increased wtihin cost efficiency targets.
+ * 
+ * For tactic-related categories, finds the matching tactic from the tactics array,
+ * calculates what the new cost-per-attempt would be with increased funding,
+ * and checks if it remains within the acceptable range defined in TACTIC_CONFIG.
+ * 
+ * @param {string} category - Budget category (e.g., 'canvass', 'phone', 'text')
+ * @param {number} requested - Current funding amount requested
+ * @param {number} gap - Additional funding gap amount
+ * @param {Array} tactics - Array of TacticProgram instances from the field plan
+ * @returns {boolean} True if increased funding stays within cost efficiency targets;
+ *                    False if no efficiency measurement is possible (unmapped or missing tactic or category)
+ */
+//This function may not be needed - because we have a budget cap of $32,500
 function checkIfCanIncreaseFunding(category, requested, gap, tactics) {
-  // NEW CODE: Use tacticKey property
-  const tacticKey = t.tacticKey;
+  //Map budget categories to tactic keys for lookup
+  const categoryToTacticKeys = {
+    'canvass': ['DOOR', 'OPEN'],
+    'open': ['DOOR', 'OPEN'],
+    'phone': ['PHONE'],
+    'text': ['TEXT'],
+    'registration': ['REGISTRATION'],
+    'relational': ['RELATIONAL'],
+    'mail': ['MAIL']
+  };
 
-  //Map budget categories to tactic keys
-  if ((category === 'canvass' || category === 'open') && (tacticKey === 'DOOR' || tacticKey === 'OPEN')) return true;
-  if (category === 'phone' && tacticKey === 'PHONE') return true;
-  if (category === 'text' && tacticKey === 'TEXT') return true;
-  if (category === 'registration' && tacticKey === 'REGISTRATION') return true;
-  if (category === 'relational' && tacticKey === 'RELATIONAL') return true;
-  if (category === 'mail' && tacticKey === 'MAIL') return true;
+  const matchingKeys = categoryToTacticKeys[category];
+  if (!matchingKeys) {
+    return false;
+  }
 
-  const tacticType = relevantTactic.tacticKey;
+  const relevantTactic = tactics.find (t => matchingKeys.includes(t.tacticKey));
 
-      
-      const target = getTacticTargets()[tacticType];
-      return newCostPerAttempt <= (target.target + target.stdDev);
-    }
-  
-  // For non-tactic categories, allow increase if gap exists
-  return true;
+  if (relevantTactic) {
+    const programAttempts = relevantTactic.programAttempts();
+    const newCostPerAttempt = (requested + gap) / programAttempts;
+
+    const config = TACTIC_CONFIG[relevantTactic.tacticKey];
+    return newCostPerAttempt <= (config.costTarget + config.costStdDev)
+  }
+
+  return false;
+}
 
 // Send budget analysis email
 function sendBudgetAnalysisEmail(budget, fieldPlan, analysis, isTestMode = false) {
