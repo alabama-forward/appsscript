@@ -61,7 +61,7 @@ class FieldPlan {
       //Meta
       this._submissionDateTime = rowData[FIELD_PLAN_COLUMNS.SUBMISSIONDATETIME];
       this._submissionUrl = rowData[FIELD_PLAN_COLUMNS.SUBMISSIONURL];
-      this._submissionId = rowData[FIELD_PLAN_COLUMNS.SUBMISSIONURL];
+      this._submissionId = rowData[FIELD_PLAN_COLUMNS.SUBMISSIONID];
 
       //Training
       this._attendedTraining = rowData[FIELD_PLAN_COLUMNS.ATTENDEDTRAINING];
