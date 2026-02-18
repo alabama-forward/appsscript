@@ -73,92 +73,37 @@ function getFieldTacticDetails(rowData, tacticType) {
   }
 }
 
+/**
+ * Generates HTML metrics for a single tactic instance.
+ * 
+ * Uses the unified TacticProgram class methods: attemptReasonable() and
+ * expectedContacts(), which work for all tactic types via TACTIC_CONFIG.
+ * 
+ * @param {TacticProgram} tactic - A tactic instance created by getTacticInstances()
+ * @returns {string}. HTML string with tactic metrics or empty string if tactic is null
+ */
 function getTacticMetrics(tactic) {
   if (!tactic) return '';
-  
+
   try {
     let metrics = `
-      <h4>${tactic._name} Metrics</h4>
+      <h4>${tactic.tacticName} Metrics</h4>
       <ul>
         <li>Program Length: ${tactic.programLength} weeks</li>
         <li>Weekly Volunteers: ${tactic.weeklyVolunteers}</li>
         <li>Weekly Hours per Volunteer: ${tactic.weeklyVolunteerHours}</li>
         <li>Total Program Hours: ${tactic.programVolunteerHours()}</li>
         <li>Weekly Contact Attempts: ${tactic.weeklyAttempts()}</li>
-        <li>Total Program Attempts: ${tactic.programAttempts()}</li>
+        <li>Total Program Attempts: ${tactic.programAttemts()}</li>
       </ul>`;
-
-    // More robust way to get the constructor name that handles various JavaScript implementations
-    let constructorName;
-    try {
-      // Try direct constructor.name first (works in modern browsers)
-      if (tactic.constructor && tactic.constructor.name) {
-        constructorName = tactic.constructor.name;
-      }
-      // Fall back to regex matching for older JavaScript engines
-      else if (tactic.constructor && tactic.constructor.toString) {
-        const match = tactic.constructor.toString().match(/function\s+(\w+)/) ||
-                      tactic.constructor.toString().match(/class\s+(\w+)/) ||
-                      tactic.constructor.toString().match(/\[object\s+(\w+)/);
-        if (match && match[1]) {
-          constructorName = match[1];
-        } else {
-          // Last resort - derive from object property
-          for (const tacticType of ['Phone', 'Door', 'Open', 'Relational', 'Registration', 'Text', 'Mail']) {
-            if (tactic['_' + tacticType.toLowerCase() + 'Range']) {
-              constructorName = tacticType + 'Tactic';
-              break;
-            }
-          }
-        }
-      }
-
-      // If we still can't determine the name, log and use a fallback
-      if (!constructorName) {
-        Logger.log('Could not determine tactic constructor name:', tactic);
-        constructorName = 'UnknownTactic';
-      }
-    } catch (nameError) {
-      Logger.log('Error determining tactic type: ' + nameError.message);
-      constructorName = 'UnknownTactic';
-    }
     
-    // Add tactic-specific metrics
-    switch(constructorName) {
-      case 'PhoneTactic':
-        metrics += `<p>${tactic.phoneAttemptReasonable()}</p>
-                    <p>${tactic.phoneExpectedContacts()}</p>`;
-        break;
-      case 'DoorTactic':
-        metrics += `<p>${tactic.doorAttemptReasonable()}</p>
-                    <p>${tactic.doorExpectedContacts()}</p>`;
-        break;
-      case 'OpenTactic':
-        metrics += `<p>${tactic.openAttemptReasonable()}</p>
-                    <p>${tactic.openExpectedContacts()}</p>`;
-        break;
-      case 'RelationalTactic':
-        metrics += `<p>${tactic.relationalAttemptReasonable()}</p>
-                    <p>${tactic.relationalExpectedContacts()}</p>`;
-        break;
-      case 'RegistrationTactic':
-        metrics += `<p>${tactic.registrationAttemptReasonable()}</p>
-                    <p>${tactic.registrationExpectedContacts()}</p>`;
-        break;
-      case 'TextTactic':
-        metrics += `<p>${tactic.textAttemptReasonable()}</p>
-                    <p>${tactic.textExpectedContacts()}</p>`;
-        break;
-      case 'MailTactic':
-        metrics += `<p>${tactic.mailAttemptReasonable()}</p>
-                    <p>${tactic.mailExpectedContacts()}</p>`;
-        break;
-    }
-    
+    metrics += `<p>${tactic.attemptReasonable()}</p>`;
+    metrics += `<p>${tactic.expectedContacts()}</p>`
+
     return metrics;
   } catch (error) {
-    Logger.log(`Error getting metrics: ${error.message}`);
-    return '<p>Error calculating tactic metrics</p>';
+    Logger.log(`Error getting metrics for ${tactic.tacticName}: ${error.message}`);
+    return '<p>Error calculating tactic metrics</p>'
   }
 }
 
