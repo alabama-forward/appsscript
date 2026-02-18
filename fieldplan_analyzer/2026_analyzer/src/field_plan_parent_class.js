@@ -181,7 +181,7 @@ class FieldPlan {
     hasShareOrg(org) {return this._shareOrg.includes(org); }
     hasProgramTool(tool) { return this._programTools.includes(tool); }
     hasProgramType(type) { return this._programTypes.includes(type); }
-    hasFieldTactic(tactic) { return this._programTools.includes(tactic); }
+    hasFieldTactic(tactic) { return this._fieldTactics.includes(tactic); }
     hasFieldCounties(county) { return this._fieldCounties.includes(county); }
     hasCity(city) { return this._cities.includes(city); }
     hasFieldPrecincts(precinct) { return this._fieldPrecincts.includes(precinct); }

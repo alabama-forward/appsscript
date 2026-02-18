@@ -1,5 +1,21 @@
-// Note: PROGRAM_COLUMNS is defined in field_program_extension_class.js
-// It's available globally since all Apps Script files share the same scope
+/**
+ * The budget spreadsheet does not have dedicate line items for every tactic.
+ * This creates a centralized mapping from tactic keys, budget categories, and field prefixes
+ * 
+ * Three functions depend on this mapping:
+ *      - analyzeTactic()
+ *      - analyzeGaps()
+ *      - checkIfCanIncreaseFunding()
+ */
+const TACTIC_BUDGET_MAP = {
+  'DOOR':         { category: 'canvass',      budgetPrefix: 'canvass' },
+  'OPEN':         { category: 'open',         budgetPrefix: 'canvass' },
+  'PHONE':        { category: 'phone',        budgetPrefix: 'phone' },
+  'TEXT':         { category: 'text',         budgetPrefix: 'text' },
+  'REGISTRATION': { category: 'registration', budgetPrefix: 'canvass' },
+  'RELATIONAL':   { category: 'relational',   budgetPrefix: 'canvass' },
+  'MAIL':         { category: 'mail',         budgetPrefix: 'postage' }
+};
 
 // Cost per attempt targets with standard deviations
 // scriptProps is declared in field_trigger_functions.js
@@ -232,41 +248,24 @@ function generateTacticRecommendation(tacticType, costPerAttempt, target, status
   }
 }
 
-// Analyze gaps and opportunities
-function analyzeGaps(budget, tactics) {
-  const gaps = [];
-  
-  // Only include tactic-related categories for recommendations
-  const tacticCategories = ['canvass', 'phone', 'text', 'open'];
-  
-  // Check each tactic category for gaps
-  for (const category of tacticCategories) {
-    const requested = budget[category + 'Requested'] || 0;
-    const rawGap = budget[category + 'Gap'] || 0;
-    
-    // Convert negative gaps to positive values
-    const gap = Math.abs(rawGap);
-    
-    if (gap > 0) {
-      // Check if we can recommend increased funding
-      const canIncrease = checkIfCanIncreaseFunding(category, requested, gap, tactics);
-      gaps.push({
-        category: category,
-        requested: requested,
-        gap: gap,
-        originalGap: rawGap,
-        canIncrease: canIncrease,
-        recommendation: canIncrease ? 
-          `Consider increasing ${category} funding by up to $${gap} while maintaining cost efficiency.` +
-          (rawGap < 0 ? ' (Note: Original gap was negative, converted to positive for analysis)' : '') :
-          `Gap identified in ${category} but increasing funding would exceed efficiency targets.` +
-          (rawGap < 0 ? ' (Note: Original gap was negative, converted to positive for analysis)' : '')
-      });
-    }
-  }
-  
-  return gaps;
-}
+/**
+ * Analyzes budget gaps across all 7 tactic categories from TACTIC_CONFIG.
+ * 
+ * Maps each tactic category to its corresponding budget field prefix.
+ * Some categories share budget columns because the budget spreadsheet
+ * does not have dedicated line items for every tactic type:
+ *    - canvass, open, registration, relational -> 'canvass' budget prefix
+ *    - phone -> 'phone' budget prefix
+ *    - text -> 'text' budget prefix
+ *    - mail -> 'postage' budget prefix
+ * 
+ * @param {FieldBudget} budget - The budget object with column accessors
+ * @param {Array} tactics - Array of TacticProgram instances
+ * @returns {Array<Object>} Array of gap analysis results per category
+ */
+
+
+
 
 /**
  * Check if funding can be increased wtihin cost efficiency targets.
