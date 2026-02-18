@@ -192,25 +192,14 @@ function analyzeBudgetWithFieldPlan(budget, fieldPlanMatch) {
 function analyzeTactic(budget, tactic) {
   //NEW use of tacticKey property instead of instanceof
   const tacticType = tactic.tacticKey;
-  
-  // Map tactic keys to budget fields
-  const tacticBudgetMap = {
-    'PHONE': { field: 'phoneRequested' },
-    'DOOR': { field: 'canvassRequested' },
-    'OPEN': { field: 'canvassRequested' },
-    'TEXT': { field: 'textRequested' },
-    'REGISTRATION': { field: 'registrationRequested' },
-    'RELATIONAL': { field: 'relationalRequested' },
-    'MAIL': { field: 'mailRequested' }
-  };
 
-  const budgetMapping = tacticBudgetMap[tacticType];
+  const budgetMapping = TACTIC_BUDGET_MAP[tacticType];
   if (!budgetMapping) {
     Logger.log(`No budget mapping for tactic type: ${tacticType}`);
     return null;
   }
 
-  const budgetField = budgetMapping.field;
+  const budgetField = `${budgetMapping.budgetPrefix}Requested`;
   const fundingRequested = parseFloat(budget[budgetField]) || 0;
   
   const programAttempts = tactic.programAttempts();
