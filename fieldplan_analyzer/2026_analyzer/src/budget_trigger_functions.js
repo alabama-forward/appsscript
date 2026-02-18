@@ -263,9 +263,38 @@ function generateTacticRecommendation(tacticType, costPerAttempt, target, status
  * @param {Array} tactics - Array of TacticProgram instances
  * @returns {Array<Object>} Array of gap analysis results per category
  */
+function analyzeGaps(budget, tactics) {
+  const seen = new Set();
+  const categoryMappings = []
+  Object.values(TACTIC_BUDGET_MAP).forEach(({ category, budgetPrefix }) => {
+    if (!seen.has(category)) {
+      seen.add(category);
+      categoryMappings.push({ category, budgetPrefix });
+    }
+  });
 
+  const results = [];
 
+  categoryMappings.forEach(({ category, budgetPrefix }) => {
+    const requestedKey = `${budgetPrefix}Requested`;
+    const gapKey = `${budgetPrefix}Gap`;
 
+    const requested = budget[requestedKey] || 0;
+    const gap = budget[gapKey] || 0;
+
+    if (gap > 0) {
+      const canIncrease = checkIfCanIncreaseFunding(category, requested, gap, tactics);
+      results.push({
+        category: category,
+        budgetPrefix: budgetPrefix,
+        requested: requested,
+        gap: gap,
+        canIncreaseFunding: canIncrease
+      });
+    }
+  });
+  return results;
+}
 
 /**
  * Check if funding can be increased wtihin cost efficiency targets.
