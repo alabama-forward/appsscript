@@ -400,9 +400,7 @@ function sendBudgetAnalysisEmail(budget, fieldPlan, analysis, isTestMode = false
   // Add field plan connection
   emailBody += `
     <h3>Field Plan Details</h3>
-    <p>This analysis is based on the field plan submitted on ${fieldPlan.submissionDateTime || 'Unknown date'}</p>
-    <p>Confidence Level: ${fieldPlan.fieldPlanConfidence || 'Not specified'}/10</p>
-    <p>${fieldPlan.needsCoaching ? fieldPlan.needsCoaching() : 'Coaching needs assessment not available'}</p>`;
+    <p>This analysis is based on the field plan submitted on ${fieldPlan.submissionDateTime || 'Unknown date'}</p>`;
   
   // Add test mode indicator to email if in test mode
   if (isTestMode) {

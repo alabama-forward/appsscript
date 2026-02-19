@@ -219,21 +219,62 @@ class FieldPlan {
       return this._dataStorage.length > 1;
     };
   
+    /**
+     * Assesses coaching needs based on the six 2026 confidence scores
+     * 
+     * Calculates an average confidence score across all six dimensions:
+     * reasonable expectations, data/technology, plan quality, staff capacity, 
+     * tactic skills, and goal attainment.
+     * 
+     * Scoring thresholds:
+     *    - Average <= 5: High coaching need, reach out
+     *    - Average: 6-8: Medium need, offer coaching
+     *    - Average: > 8: Low, no coaching needed
+     * 
+     * Also highlights specific low-scoring areas for targeted coaching
+     * 
+     * @returns {string} A formatted message describing coaching needs
+     */
     needsCoaching() {
-      let message = '';
-      
-      if (this._fieldPlanConfidence <= 5) {
-        message = `${this._memberOrgName} had a confidence score of ${this._fieldPlanConfidence}.
-        Reach out to them to confirm what coaching they will need.`;
-      } else if (this._fieldPlanConfidence >= 6 && this._fieldPlanConfidence <= 8) {
-        message = `${this._memberOrgName} had a confidence score of ${this._fieldPlanConfidence}.
-        Reach out to them to ask if they would like some coaching on their field plan.`;
-      } else {
-        message = `${this._memberOrgName} had a confidence score of ${this._fieldPlanConfidence}.
-        They did not request coaching on their field plan.`;
+      const scores = {
+        'meeting expectations': this._confidenceReasonable,
+        'data and technology': this._confidenceData,
+        'field plan quality': this._confidencePlan,
+        'staff / volunteer capacity': this._confidenceCapacity,
+        'field tactic skills': this._confidenceSkills,
+        'meeting goals': this._confidenceGoals
+      };
+
+      const validScores = Object.entries(scores)
+        .filter(([_, val]) => val != null && !isNaN(val));
+
+      if (validScores.length === 0) {
+        return `${this._memberOrgName} did not provide confidence scores.`;
       }
+
+      const avgConfidence = validScores
+        .reduce((sum, [_, val]) => sum + Number(val), 0) / validScores.length;
+      
+      const lowAreas = validScores
+        .filter(([_, val]) => Number(val) <=5)
+        .map(([area, _]) => area);
+      
+      let message = '';
+
+      if (avgConfidence <= 5) {
+        message = `${this._memberOrgName} had an average confidence score of ${avgConfidence.toFixed(1)}/10. Reach out to them to confirm what coaching they will need.`;
+      } else if (avgConfidence <= 8) {
+        message = `${this._memberOrgName} had an average confidence score of ${avgConfidence.toFixed(1)}/10. Reach out to them to ask if they would like some coaching on their field plan.`;
+      } else {
+        message = `${this._memberOrgName} had an average confidence score of ${avgConfidence.toFixed(1)}/10. They did not request coaching on their field plan.`;
+      }
+
+      if (lowAreas.length > 0) {
+        message += ` Specific areas needing attention: ${lowAreas.join(', ')}.`;
+      }
+
       Logger.log(message);
       return message;
-    };
+    }
   };
   
