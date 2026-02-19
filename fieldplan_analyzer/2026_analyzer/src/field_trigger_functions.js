@@ -94,7 +94,7 @@ function getTacticMetrics(tactic) {
         <li>Weekly Hours per Volunteer: ${tactic.weeklyVolunteerHours}</li>
         <li>Total Program Hours: ${tactic.programVolunteerHours()}</li>
         <li>Weekly Contact Attempts: ${tactic.weeklyAttempts()}</li>
-        <li>Total Program Attempts: ${tactic.programAttemts()}</li>
+        <li>Total Program Attempts: ${tactic.programAttempts()}</li>
       </ul>`;
     
     metrics += `<p>${tactic.attemptReasonable()}</p>`;
