@@ -139,7 +139,7 @@ function findMatchingFieldPlan(orgName) {
   
   // Find the most recent field plan for this org
   for (let i = 1; i < data.length; i++) {
-    if (data[i][FieldPlan.COLUMNS.MEMBERNAME] === orgName) {
+    if (data[i][FIELD_PLAN_COLUMNS.MEMBERNAME] === orgName) {
       if (!latestMatch || i > latestRow) {
         latestMatch = new FieldPlan(data[i]);
         latestRow = i + 1;
@@ -740,8 +740,8 @@ function generateWeeklySummary(isTestMode = false) {
   for (let i = 1; i < fieldPlanData.length; i++) {
     if (fieldPlanData[i][0]) {
       fieldPlansTotal++;
-      const orgName = fieldPlanData[i][FieldPlan.COLUMNS.MEMBERNAME];
-      const submitDate = fieldPlanData[i][FieldPlan.COLUMNS.SUBMISSIONDATETIME];
+      const orgName = fieldPlanData[i][FIELD_PLAN_COLUMNS.MEMBERNAME];
+      const submitDate = fieldPlanData[i][FIELD_PLAN_COLUMNS.SUBMISSIONDATETIME];
       
       // Check if submitted this week
       if (submitDate && new Date(submitDate) >= oneWeekAgo) {
@@ -773,7 +773,7 @@ function generateWeeklySummary(isTestMode = false) {
       }
       
       // Count counties
-      const counties = fieldPlanData[i][FieldPlan.COLUMNS.FIELDCOUNTIES];
+      const counties = fieldPlanData[i][FIELD_PLAN_COLUMNS.FIELDCOUNTIES];
       if (counties) {
         let countyList = [];
         
@@ -833,7 +833,7 @@ function generateWeeklySummary(isTestMode = false) {
       if (rowData[PROGRAM_COLUMNS.MAIL.PROGRAMLENGTH]) tacticCounts.MAIL++;
       
       // Count coaching needs
-      const confidence = fieldPlanData[i][FieldPlan.COLUMNS.PLANCONFIDENCE];
+      const confidence = fieldPlanData[i][FIELD_PLAN_COLUMNS.PLANCONFIDENCE];
       if (confidence) {
         if (confidence <= 5) coachingNeeds.high++;
         else if (confidence <= 8) coachingNeeds.medium++;

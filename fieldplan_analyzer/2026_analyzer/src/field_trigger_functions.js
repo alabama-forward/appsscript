@@ -187,7 +187,7 @@ function sendFieldPlanEmail(fieldPlan, rowNumber = null) {
       let foundRow = -1;
       
       for (let i = 1; i < allData.length; i++) {
-        if (allData[i][FieldPlan.COLUMNS.MEMBERNAME] === fieldPlan.memberOrgName) {
+        if (allData[i][FIELD_PLAN_COLUMNS.MEMBERNAME] === fieldPlan.memberOrgName) {
           rowData = allData[i];
           foundRow = i + 1;
           break;
