@@ -151,7 +151,7 @@ function findMatchingOrganizations() {
 
   // Get column indices for member org names
   const budgetOrgCol = FieldBudget.COLUMNS.MEMBERNAME;
-  const planOrgCol = FieldPlan.COLUMNS.MEMBERNAME;
+  const planOrgCol = FIELD_PLAN_COLUMNS.MEMBERNAME;
 
   // Results storage
   const matches = [];
@@ -237,7 +237,7 @@ function debugMatchingIssue() {
     
     // Get column indices
     const budgetOrgCol = FieldBudget.COLUMNS.MEMBERNAME; // Column 6
-    const planOrgCol = FieldPlan.COLUMNS.MEMBERNAME;     // Column 1
+    const planOrgCol = FIELD_PLAN_COLUMNS.MEMBERNAME;     // Column 1
     
     Logger.log(`Budget sheet uses column ${budgetOrgCol} for MEMBERNAME`);
     Logger.log(`Field plan sheet uses column ${planOrgCol} for MEMBERNAME`);
@@ -388,7 +388,7 @@ function testEnhancedMatching() {
     
     // Get column indices
     const budgetOrgCol = FieldBudget.COLUMNS.MEMBERNAME;
-    const planOrgCol = FieldPlan.COLUMNS.MEMBERNAME;
+    const planOrgCol = FIELD_PLAN_COLUMNS.MEMBERNAME;
     
     // Function to normalize organization names
     function normalizeOrgName(name) {
@@ -518,7 +518,7 @@ function debugMatchingIssue() {
     Logger.log(`Budget sheet rows: ${budgetData.length}`);
     Logger.log(`Field plan sheet rows: ${planData.length}`);
     Logger.log(`Budget MEMBERNAME column: ${FieldBudget.COLUMNS.MEMBERNAME}`);
-    Logger.log(`Field plan MEMBERNAME column: ${FieldPlan.COLUMNS.MEMBERNAME}`);
+    Logger.log(`Field plan MEMBERNAME column: ${FIELD_PLAN_COLUMNS.MEMBERNAME}`);
     
     // Check first 5 budget organizations
     Logger.log("\n--- BUDGET ORGANIZATIONS (first 5) ---");
@@ -550,7 +550,7 @@ function debugMatchingIssue() {
     // Check first 5 field plan organizations
     Logger.log("\n--- FIELD PLAN ORGANIZATIONS (first 5) ---");
     for (let i = 1; i < Math.min(6, planData.length); i++) {
-      const orgName = planData[i][FieldPlan.COLUMNS.MEMBERNAME];
+      const orgName = planData[i][FIELD_PLAN_COLUMNS.MEMBERNAME];
       Logger.log(`Row ${i + 1}: "${orgName}" (length: ${orgName ? orgName.length : 'null'}, type: ${typeof orgName})`);
       
       if (orgName) {
@@ -586,7 +586,7 @@ function debugMatchingIssue() {
       let normalizedMatch = false;
       
       for (let i = 1; i < planData.length; i++) {
-        const planOrg = planData[i][FieldPlan.COLUMNS.MEMBERNAME];
+        const planOrg = planData[i][FIELD_PLAN_COLUMNS.MEMBERNAME];
         if (!planOrg) continue;
         
         // Test exact match
@@ -621,7 +621,7 @@ function debugMatchingIssue() {
         // Look for partial matches
         Logger.log(`  Checking for partial matches...`);
         for (let i = 1; i < planData.length; i++) {
-          const planOrg = planData[i][FieldPlan.COLUMNS.MEMBERNAME];
+          const planOrg = planData[i][FIELD_PLAN_COLUMNS.MEMBERNAME];
           if (!planOrg) continue;
           
           if (planOrg.toLowerCase().includes(firstBudgetOrg.toLowerCase()) || 
@@ -662,7 +662,7 @@ function testEnhancedMatching() {
     // Create lookup map from field plans
     const fieldPlanLookup = new Map();
     for (let i = 1; i < planData.length; i++) {
-      const orgName = planData[i][FieldPlan.COLUMNS.MEMBERNAME];
+      const orgName = planData[i][FIELD_PLAN_COLUMNS.MEMBERNAME];
       if (orgName) {
         const normalizedName = normalizeOrgName(orgName);
         if (!fieldPlanLookup.has(normalizedName) || i > fieldPlanLookup.get(normalizedName).row) {
@@ -908,7 +908,12 @@ function testFieldPlanObject() {
     const fieldPlan = FieldPlan.fromLastRow();
     Logger.log(`Field Plan created for: ${fieldPlan.memberOrgName}`);
     Logger.log(`Submission Date: ${fieldPlan.submissionDateTime}`);
-    Logger.log(`Confidence: ${fieldPlan.fieldPlanConfidence}`);
+    Logger.log(`Confidence (Reasonable): ${fieldPlan.confidenceReasonable}`);
+    Logger.log(`Confidence (Data): ${fieldPlan.confidenceData}`);
+    Logger.log(`Confidence (Plan): ${fieldPlan.confidencePlan}`);
+    Logger.log(`Confidence (Capacity): ${fieldPlan.confidenceCapacity}`);
+    Logger.log(`Confidence (Skills): ${fieldPlan.confidenceSkills}`);
+    Logger.log(`Confidence (Goals): ${fieldPlan.confidenceGoals}`);
     Logger.log(`Has needsCoaching method: ${typeof fieldPlan.needsCoaching === 'function'}`);
     
     // Test needsCoaching method
