@@ -204,7 +204,7 @@ function testMissingBudgetAlertFlow() {
  * This tests the budget matching logic
  */
 function testFindMatchingBudget() {
-  const budgetSheet = SpreadsheetApp.getActive().getSheetByName('2025_field_budget');
+  const budgetSheet = SpreadsheetApp.getActive().getSheetByName(scriptProps.getProperty('SHEET_FIELD_BUDGET'));
   const data = budgetSheet.getDataRange().getValues();
   
   if (data.length > 1) {
