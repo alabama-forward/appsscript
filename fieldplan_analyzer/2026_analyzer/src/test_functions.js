@@ -50,7 +50,7 @@ function testMostRecentFieldPlan(testEmail) {
 
     try {
       // Get the last row number for the field plan
-      const sheet = SpreadsheetApp.getActive().getSheetByName('2025_field_plan'); //Why hard coded?
+      const sheet = SpreadsheetApp.getActive().getSheetByName(scriptProps.getProperty('SHEET_FIELD_PLAN'));
       const lastRowNumber = sheet.getLastRow();
       
       // Call the existing function to send the email
@@ -333,7 +333,7 @@ function testTacticOrganizationNames() {
   Logger.log("=== TESTING TACTIC ORGANIZATION NAMES ===");
   
   try {
-    const sheet = SpreadsheetApp.getActive().getSheetByName('2025_field_plan');
+    const sheet = SpreadsheetApp.getActive().getSheetByName(scriptProps.getProperty('SHEET_FIELD_PLAN'));
     const lastRow = sheet.getLastRow();
     
     // Test with a specific row (not the last one)

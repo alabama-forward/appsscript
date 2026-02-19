@@ -143,8 +143,8 @@ function testWeeklySummary() {
 // Function to find matching organizations (helper for tests)
 function findMatchingOrganizations() {
   // Get data from both spreadsheets
-  const budgetSheet = SpreadsheetApp.getActive().getSheetByName('2025_field_budget');
-  const planSheet = SpreadsheetApp.getActive().getSheetByName('2025_field_plan');
+  const budgetSheet = SpreadsheetApp.getActive().getSheetByName(scriptProps.getProperty('SHEET_FIELD_BUDGET'));
+  const planSheet = SpreadsheetApp.getActive().getSheetByName(scriptProps.getProperty('SHEET_FIELD_PLAN'));
 
   const budgetData = budgetSheet.getDataRange().getValues();
   const planData = planSheet.getDataRange().getValues();
