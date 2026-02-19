@@ -2,7 +2,7 @@ class FieldBudget {
 
     // Get most recent entry (last row)
     static fromLastRow() {
-      const sheetName = PropertiesService.getScriptProperties().getProperty('SHEET_FIELD_BUDGET') || '2025_field_budget';
+      const sheetName = PropertiesService.getScriptProperties().getProperty('SHEET_FIELD_BUDGET');
       const budgetSheet = SpreadsheetApp.getActive().getSheetByName(sheetName);
       const data = budgetSheet.getDataRange().getValues();
       const lastRowIndex = data.length - 1;
@@ -12,7 +12,7 @@ class FieldBudget {
   
     // Get first entry after header (row 2)
     static fromFirstRow() {
-      const sheetName = PropertiesService.getScriptProperties().getProperty('SHEET_FIELD_BUDGET') || '2025_field_budget';
+      const sheetName = PropertiesService.getScriptProperties().getProperty('SHEET_FIELD_BUDGET');
       const budgetSheet = SpreadsheetApp.getActive().getSheetByName(sheetName);
       const data = budgetSheet.getDataRange().getValues();
       // Index 1 is the first row after header
