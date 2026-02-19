@@ -130,7 +130,7 @@ function processBudget(budgetData, isTestMode = false) {
 
 // Find matching field plan for organization
 function findMatchingFieldPlan(orgName) {
-  const sheetName = scriptProps.getProperty('SHEET_FIELD_PLAN') || '2025_field_plan';
+  const sheetName = scriptProps.getProperty('SHEET_FIELD_PLAN');
   const planSheet = SpreadsheetApp.getActive().getSheetByName(sheetName);
   const data = planSheet.getDataRange().getValues();
   
@@ -153,7 +153,8 @@ function findMatchingFieldPlan(orgName) {
 // Analyze budget with field plan data
 function analyzeBudgetWithFieldPlan(budget, fieldPlanMatch) {
   const { fieldPlan } = fieldPlanMatch;
-  const planSheet = SpreadsheetApp.getActive().getSheetByName('2025_field_plan');
+  const planSheetName = scriptProps.getProperty('SHEET_FIELD_PLAN');
+  const planSheet = SpreadsheetApp.getActive().getSheetByName(planSheetName);
   const rowData = planSheet.getRange(fieldPlanMatch.rowNumber, 1, 1, planSheet.getLastColumn()).getValues()[0];
   
   const analysis = {
@@ -523,7 +524,7 @@ function processAllBudgets(isTestMode = false) {
   try {
     Logger.log(`=== PROCESSING ALL BUDGETS (${isTestMode ? 'TEST MODE' : 'PRODUCTION'}) ===`);
     
-    const sheetName = scriptProps.getProperty('SHEET_FIELD_BUDGET') || '2025_field_budget';
+    const sheetName = scriptProps.getProperty('SHEET_FIELD_BUDGET');
     const budgetSheet = SpreadsheetApp.getActive().getSheetByName(sheetName);
     const data = budgetSheet.getDataRange().getValues();
     
@@ -577,7 +578,7 @@ function analyzeSpecificOrganization(orgName, isTestMode = true) {
   Logger.log(`Manual analysis requested for ${orgName} (${isTestMode ? 'TEST MODE' : 'PRODUCTION'})`);
   
   // Find the budget for this org
-  const sheetName = scriptProps.getProperty('SHEET_FIELD_BUDGET') || '2025_field_budget';
+  const sheetName = scriptProps.getProperty('SHEET_FIELD_BUDGET');
   const budgetSheet = SpreadsheetApp.getActive().getSheetByName(sheetName);
   const data = budgetSheet.getDataRange().getValues();
   
@@ -642,8 +643,8 @@ function generateWeeklySummary(isTestMode = false) {
     
     Logger.log(`Starting generateWeeklySummary (isTestMode: ${isTestMode})`);
     
-    const budgetSheetName = scriptProps.getProperty('SHEET_FIELD_BUDGET') || '2025_field_budget';
-    const fieldPlanSheetName = scriptProps.getProperty('SHEET_FIELD_PLAN') || '2025_field_plan';
+    const budgetSheetName = scriptProps.getProperty('SHEET_FIELD_BUDGET');
+    const fieldPlanSheetName = scriptProps.getProperty('SHEET_FIELD_PLAN');
     
     // Get sheets with error checking
     const spreadsheet = SpreadsheetApp.getActive();

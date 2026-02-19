@@ -173,7 +173,8 @@ function sendFieldPlanEmail(fieldPlan, rowNumber = null) {
 
   try {
     // Get the row data for creating tactic instances
-    const sheet = SpreadsheetApp.getActive().getSheetByName('2025_field_plan'); //Why by name and not by the business logic that grabs it?
+    const sheetName = scriptProps.getProperty('SHEET_FIELD_PLAN')
+    const sheet = SpreadsheetApp.getActive().getSheetByName(sheetName); 
     let rowData;
     
     if (rowNumber) {
