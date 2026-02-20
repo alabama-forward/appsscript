@@ -21,26 +21,13 @@ const TACTIC_BUDGET_MAP = {
   'MAIL':         { category: 'mail',         budgetPrefix: 'postage' }
 };
 
-// Cost per attempt targets with standard deviations
+// Cost per attempt targets derived from TACTIC_CONFIG (field_tactics_extension_class.js)
 function getTacticTargets() {
-  return {
-  DOOR: {
-    target: parseFloat(scriptProps.getProperty('COST_TARGET_DOOR') || '1.00'),
-    stdDev: parseFloat(scriptProps.getProperty('COST_TARGET_DOOR_STDDEV') || '0.20')
-  },
-  PHONE: {
-    target: parseFloat(scriptProps.getProperty('COST_TARGET_PHONE') || '0.66'),
-    stdDev: parseFloat(scriptProps.getProperty('COST_TARGET_PHONE_STDDEV') || '0.15')
-  },
-  TEXT: {
-    target: parseFloat(scriptProps.getProperty('COST_TARGET_TEXT') || '0.02'),
-    stdDev: parseFloat(scriptProps.getProperty('COST_TARGET_TEXT_STDDEV') || '0.01')
-  },
-  OPEN: {
-    target: parseFloat(scriptProps.getProperty('COST_TARGET_OPEN') || '0.40'),
-    stdDev: parseFloat(scriptProps.getProperty('COST_TARGET_OPEN_STDDEV') || '0.10')
+  const targets = {};
+  for (const [key, config] of Object.entries(TACTIC_CONFIG)) {
+    targets[key] = { target: config.costTarget, stdDev: config.costStdDev };
   }
-  };
+  return targets;
 }
 
 // Create time-based trigger for budget analysis
