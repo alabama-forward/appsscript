@@ -1,3 +1,5 @@
+FieldBudget.COLUMNS = BUDGET_COLUMNS
+
 class FieldBudget {
 
     // Get most recent entry (last row)
@@ -58,78 +60,78 @@ class FieldBudget {
 
 
       //Contact
-      this._firstName = rowData[FieldBudget.COLUMNS.FIRSTNAME];
-      this._lastName = rowData[FieldBudget.COLUMNS.LASTNAME];
-      this._contactEmail = rowData[FieldBudget.COLUMNS.CONTACTEMAIL];
-      this._contactPhone = rowData[FieldBudget.COLUMNS.CONTACTPHONE];
-      this._memberOrgName = rowData[FieldBudget.COLUMNS.MEMBERNAME];
+      this._firstName = rowData[BUDGET_COLUMNS.FIRSTNAME];
+      this._lastName = rowData[BUDGET_COLUMNS.LASTNAME];
+      this._contactEmail = rowData[BUDGET_COLUMNS.CONTACTEMAIL];
+      this._contactPhone = rowData[BUDGET_COLUMNS.CONTACTPHONE];
+      this._memberOrgName = rowData[BUDGET_COLUMNS.MEMBERNAME];
       //Admin
-      this._adminRequested = rowData[FieldBudget.COLUMNS.ADMINREQUESTED];
-      this._adminTotal = rowData[FieldBudget.COLUMNS.ADMINTOTAL];
-      this._adminGap = rowData[FieldBudget.COLUMNS.ADMINGAP];
+      this._adminRequested = rowData[BUDGET_COLUMNS.ADMINREQUESTED];
+      this._adminTotal = rowData[BUDGET_COLUMNS.ADMINTOTAL];
+      this._adminGap = rowData[BUDGET_COLUMNS.ADMINGAP];
       //Data
-      this._dataRequested = rowData[FieldBudget.COLUMNS.DATAREQUESTED];
-      this._dataTotal = rowData[FieldBudget.COLUMNS.DATATOTAL];
-      this._dataGap = rowData[FieldBudget.COLUMNS.DATAGAP];
+      this._dataRequested = rowData[BUDGET_COLUMNS.DATAREQUESTED];
+      this._dataTotal = rowData[BUDGET_COLUMNS.DATATOTAL];
+      this._dataGap = rowData[BUDGET_COLUMNS.DATAGAP];
       //Travel
-      this._travelRequested = rowData[FieldBudget.COLUMNS.TRAVELREQUESTED];
-      this._travelTotal = rowData[FieldBudget.COLUMNS.TRAVELTOTAL];
-      this._travelGap = rowData[FieldBudget.COLUMNS.TRAVELGAP];
+      this._travelRequested = rowData[BUDGET_COLUMNS.TRAVELREQUESTED];
+      this._travelTotal = rowData[BUDGET_COLUMNS.TRAVELTOTAL];
+      this._travelGap = rowData[BUDGET_COLUMNS.TRAVELGAP];
       //Comms
-      this._commsRequested = rowData[FieldBudget.COLUMNS.COMMSREQUESTED];
-      this._commsTotal = rowData[FieldBudget.COLUMNS.COMMSTOTAL];
-      this._commsGap = rowData[FieldBudget.COLUMNS.COMMSGAP];
+      this._commsRequested = rowData[BUDGET_COLUMNS.COMMSREQUESTED];
+      this._commsTotal = rowData[BUDGET_COLUMNS.COMMSTOTAL];
+      this._commsGap = rowData[BUDGET_COLUMNS.COMMSGAP];
       //Design
-      this._designRequested = rowData[FieldBudget.COLUMNS.DESIGNREQUESTED];
-      this._designTotal = rowData[FieldBudget.COLUMNS.DESIGNTOTAL];
-      this._designGap = rowData[FieldBudget.COLUMNS.DESIGNGAP];
+      this._designRequested = rowData[BUDGET_COLUMNS.DESIGNREQUESTED];
+      this._designTotal = rowData[BUDGET_COLUMNS.DESIGNTOTAL];
+      this._designGap = rowData[BUDGET_COLUMNS.DESIGNGAP];
       //Video
-      this._videoRequested = rowData[FieldBudget.COLUMNS.VIDEOREQUESTED];
-      this._videoTotal = rowData[FieldBudget.COLUMNS.VIDEOTOTAL];
-      this._videoGap = rowData[FieldBudget.COLUMNS.VIDEOGAP];
+      this._videoRequested = rowData[BUDGET_COLUMNS.VIDEOREQUESTED];
+      this._videoTotal = rowData[BUDGET_COLUMNS.VIDEOTOTAL];
+      this._videoGap = rowData[BUDGET_COLUMNS.VIDEOGAP];
       //Print
-      this._printRequested = rowData[FieldBudget.COLUMNS.PRINTREQUESTED];
-      this._printTotal = rowData[FieldBudget.COLUMNS.PRINTTOTAL];
-      this._printGap = rowData[FieldBudget.COLUMNS.PRINTGAP];
+      this._printRequested = rowData[BUDGET_COLUMNS.PRINTREQUESTED];
+      this._printTotal = rowData[BUDGET_COLUMNS.PRINTTOTAL];
+      this._printGap = rowData[BUDGET_COLUMNS.PRINTGAP];
       //Postage
-      this._postageRequested = rowData[FieldBudget.COLUMNS.POSTAGEREQUESTED];
-      this._postageTotal = rowData[FieldBudget.COLUMNS.POSTAGETOTAL];
-      this._postageGap = rowData[FieldBudget.COLUMNS.POSTAGEGAP];
+      this._postageRequested = rowData[BUDGET_COLUMNS.POSTAGEREQUESTED];
+      this._postageTotal = rowData[BUDGET_COLUMNS.POSTAGETOTAL];
+      this._postageGap = rowData[BUDGET_COLUMNS.POSTAGEGAP];
       //Training
-      this._trainingRequested = rowData[FieldBudget.COLUMNS.TRAININGREQUESTED];
-      this._trainingTotal = rowData[FieldBudget.COLUMNS.TRAININGTOTAL];
-      this._trainingGap = rowData[FieldBudget.COLUMNS.TRAININGGAP];
+      this._trainingRequested = rowData[BUDGET_COLUMNS.TRAININGREQUESTED];
+      this._trainingTotal = rowData[BUDGET_COLUMNS.TRAININGTOTAL];
+      this._trainingGap = rowData[BUDGET_COLUMNS.TRAININGGAP];
       //Supplies
-      this._suppliesRequested = rowData[FieldBudget.COLUMNS.SUPPLIESREQUESTED];
-      this._suppliesTotal = rowData[FieldBudget.COLUMNS.SUPPLIESTOTAL];
-      this._suppliesGap = rowData[FieldBudget.COLUMNS.SUPPLIESGAP];
+      this._suppliesRequested = rowData[BUDGET_COLUMNS.SUPPLIESREQUESTED];
+      this._suppliesTotal = rowData[BUDGET_COLUMNS.SUPPLIESTOTAL];
+      this._suppliesGap = rowData[BUDGET_COLUMNS.SUPPLIESGAP];
       //Canvass
-      this._canvassRequested = rowData[FieldBudget.COLUMNS.CANVASSREQUESTED];
-      this._canvassTotal = rowData[FieldBudget.COLUMNS.CANVASSTOTAL];
-      this._canvassGap = rowData[FieldBudget.COLUMNS.CANVASSGAP];
+      this._canvassRequested = rowData[BUDGET_COLUMNS.CANVASSREQUESTED];
+      this._canvassTotal = rowData[BUDGET_COLUMNS.CANVASSTOTAL];
+      this._canvassGap = rowData[BUDGET_COLUMNS.CANVASSGAP];
       //Phone
-      this._phoneRequested = rowData[FieldBudget.COLUMNS.PHONEREQUESTED];
-      this._phoneTotal = rowData[FieldBudget.COLUMNS.PHONETOTAL];
-      this._phoneGap = rowData[FieldBudget.COLUMNS.PHONEGAP];
+      this._phoneRequested = rowData[BUDGET_COLUMNS.PHONEREQUESTED];
+      this._phoneTotal = rowData[BUDGET_COLUMNS.PHONETOTAL];
+      this._phoneGap = rowData[BUDGET_COLUMNS.PHONEGAP];
       //Text
-      this._textRequested = rowData[FieldBudget.COLUMNS.TEXTREQUESTED];
-      this._textTotal = rowData[FieldBudget.COLUMNS.TEXTTOTAL];
-      this._textGap = rowData[FieldBudget.COLUMNS.TEXTGAP];
+      this._textRequested = rowData[BUDGET_COLUMNS.TEXTREQUESTED];
+      this._textTotal = rowData[BUDGET_COLUMNS.TEXTTOTAL];
+      this._textGap = rowData[BUDGET_COLUMNS.TEXTGAP];
       //Event
-      this._eventRequested = rowData[FieldBudget.COLUMNS.EVENTREQUESTED];
-      this._eventTotal = rowData[FieldBudget.COLUMNS.EVENTTOTAL];
-      this._eventGap = rowData[FieldBudget.COLUMNS.EVENTGAP];
+      this._eventRequested = rowData[BUDGET_COLUMNS.EVENTREQUESTED];
+      this._eventTotal = rowData[BUDGET_COLUMNS.EVENTTOTAL];
+      this._eventGap = rowData[BUDGET_COLUMNS.EVENTGAP];
       //Digital
-      this._digitalRequested = rowData[FieldBudget.COLUMNS.DIGITALREQUESTED];
-      this._digitalTotal = rowData[FieldBudget.COLUMNS.DIGITALTOTAL];
-      this._digitalGap = rowData[FieldBudget.COLUMNS.DIGITALGAP];
+      this._digitalRequested = rowData[BUDGET_COLUMNS.DIGITALREQUESTED];
+      this._digitalTotal = rowData[BUDGET_COLUMNS.DIGITALTOTAL];
+      this._digitalGap = rowData[BUDGET_COLUMNS.DIGITALGAP];
       //Summary
-      this._requestedTotal = rowData[FieldBudget.COLUMNS.REQUESTEDTOTAL]
-      this._projectTotal = rowData[FieldBudget.COLUMNS.PROJECTTOTAL]
-      this._gapTotal = rowData[FieldBudget.COLUMNS.GAPTOTAL]
-      this._submitFieldPlan = rowData[FieldBudget.COLUMNS.SUBMITFIELDPLAN]
+      this._requestedTotal = rowData[BUDGET_COLUMNS.REQUESTEDTOTAL]
+      this._projectTotal = rowData[BUDGET_COLUMNS.PROJECTTOTAL]
+      this._gapTotal = rowData[BUDGET_COLUMNS.GAPTOTAL]
+      this._submitFieldPlan = rowData[BUDGET_COLUMNS.SUBMITFIELDPLAN]
       //Meta
-      this._analyzed = rowData[FieldBudget.COLUMNS.ANALYZED]
+      this._analyzed = rowData[BUDGET_COLUMNS.ANALYZED]
 }
 
     //Getters
@@ -289,7 +291,7 @@ class FieldBudget {
         const row = data[i]
 
         if (row[0]) {
-          if (row[FieldBudget.COLUMNS.ANALYZED] === true) {
+          if (row[BUDGET_COLUMNS.ANALYZED] === true) {
             analyzed++
           } else notAnalyzed++
         }
@@ -302,7 +304,7 @@ class FieldBudget {
     // Method to mark this budget as analyzed
     markAsAnalyzed(rowNumber) {
       const budgetSheet = SpreadsheetApp.getActive().getSheetByName(PropertiesService.getScriptProperties().getProperty('SHEET_FIELD_BUDGET'));
-      budgetSheet.getRange(rowNumber, FieldBudget.COLUMNS.ANALYZED + 1).setValue(true);
+      budgetSheet.getRange(rowNumber, BUDGET_COLUMNS.ANALYZED + 1).setValue(true);
       this._analyzed = true;
     }
 
@@ -314,7 +316,7 @@ class FieldBudget {
       
       for (let i = 1; i < data.length; i++) {
         const row = data[i];
-        if (row[0] && row[FieldBudget.COLUMNS.ANALYZED] !== true) {
+        if (row[0] && row[BUDGET_COLUMNS.ANALYZED] !== true) {
           unanalyzedBudgets.push({
             budget: new FieldBudget(row),
             rowNumber: i + 1 // 1-based row number
@@ -343,63 +345,4 @@ class FieldBudget {
           return `No items in ${fieldName}`;
       }
     };
-  };
-
-  FieldBudget.COLUMNS = {
-    // All caps bcause they are constants
-    FIRSTNAME: 1,
-    LASTNAME: 2,
-    CONTACTEMAIL: 3,
-    CONTACTPHONE: 4,
-    MEMBERNAME: 5,
-    ADMINREQUESTED: 6,
-    ADMINTOTAL: 7,
-    ADMINGAP: 8,
-    DATAREQUESTED: 9,
-    DATATOTAL: 10,
-    DATAGAP: 11,
-    TRAVELREQUESTED: 12,
-    TRAVELTOTAL: 13,
-    TRAVELGAP: 14,   
-    COMMSREQUESTED: 15,
-    COMMSTOTAL: 16,
-    COMMSGAP: 17,
-    DESIGNREQUESTED: 18,
-    DESIGNTOTAL: 19,
-    DESIGNGAP: 20,
-    VIDEOREQUESTED: 21,
-    VIDEOTOTAL: 22,
-    VIDEOGAP: 23,
-    PRINTREQUESTED: 24,
-    PRINTTOTAL: 25,
-    PRINTGAP: 26,
-    POSTAGEREQUESTED: 27,
-    POSTAGETOTAL: 28,
-    POSTAGEGAP: 29,
-    TRAININGREQUESTED: 30,
-    TRAININGTOTAL: 31,
-    TRAININGGAP: 32,
-    SUPPLIESREQUESTED: 33,
-    SUPPLIESTOTAL: 34,
-    SUPPLIESGAP: 35,
-    CANVASSREQUESTED: 36,
-    CANVASSTOTAL: 37,
-    CANVASSGAP: 38,
-    PHONEREQUESTED: 39,
-    PHONETOTAL: 40,
-    PHONEGAP: 41,
-    TEXTREQUESTED: 42,
-    TEXTTOTAL: 43,
-    TEXTGAP: 44,
-    EVENTREQUESTED: 45,
-    EVENTTOTAL: 46,
-    EVENTGAP: 47,
-    DIGITALREQUESTED: 48,
-    DIGITALTOTAL: 49,
-    DIGITALGAP: 50,
-    REQUESTEDTOTAL: 51,
-    PROJECTTOTAL: 52,
-    GAPTOTAL: 53,
-    SUBMITFIELDPLAN: 54,
-    ANALYZED: 55
   };
