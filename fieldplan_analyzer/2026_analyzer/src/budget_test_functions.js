@@ -143,8 +143,8 @@ function testWeeklySummary() {
 // Function to find matching organizations (helper for tests)
 function findMatchingOrganizations() {
   // Get data from both spreadsheets
-  const budgetSheet = SpreadsheetApp.getActive().getSheetByName(scriptProps.getProperty('SHEET_FIELD_BUDGET'));
-  const planSheet = SpreadsheetApp.getActive().getSheetByName(scriptProps.getProperty('SHEET_FIELD_PLAN'));
+  const budgetSheet = getSheet(scriptProps.getProperty('SHEET_FIELD_BUDGET'));
+  const planSheet = getSheet(scriptProps.getProperty('SHEET_FIELD_PLAN'));
 
   const budgetData = budgetSheet.getDataRange().getValues();
   const planData = planSheet.getDataRange().getValues();
@@ -229,8 +229,8 @@ function debugMatchingIssue() {
   
   try {
     // Get data from both spreadsheets
-    const budgetSheet = SpreadsheetApp.getActive().getSheetByName(scriptProps.getProperty('SHEET_FIELD_BUDGET'));
-    const planSheet = SpreadsheetApp.getActive().getSheetByName(scriptProps.getProperty('SHEET_FIELD_PLAN'));
+    const budgetSheet = getSheet(scriptProps.getProperty('SHEET_FIELD_BUDGET'));
+    const planSheet = getSheet(scriptProps.getProperty('SHEET_FIELD_PLAN'));
     
     const budgetData = budgetSheet.getDataRange().getValues();
     const planData = planSheet.getDataRange().getValues();
@@ -380,8 +380,8 @@ function testEnhancedMatching() {
   
   try {
     // Get data from both spreadsheets
-    const budgetSheet = SpreadsheetApp.getActive().getSheetByName(scriptProps.getProperty('SHEET_FIELD_BUDGET'));
-    const planSheet = SpreadsheetApp.getActive().getSheetByName(scriptProps.getProperty('SHEET_FIELD_PLAN'));
+    const budgetSheet = getSheet(scriptProps.getProperty('SHEET_FIELD_BUDGET'));
+    const planSheet = getSheet(scriptProps.getProperty('SHEET_FIELD_PLAN'));
     
     const budgetData = budgetSheet.getDataRange().getValues();
     const planData = planSheet.getDataRange().getValues();
@@ -509,8 +509,8 @@ function debugMatchingIssue() {
   Logger.log("=== DEBUGGING ORGANIZATION NAME MATCHING ===");
   
   try {
-    const budgetSheet = SpreadsheetApp.getActive().getSheetByName(scriptProps.getProperty('SHEET_FIELD_BUDGET'));
-    const planSheet = SpreadsheetApp.getActive().getSheetByName(scriptProps.getProperty('SHEET_FIELD_PLAN'));
+    const budgetSheet = getSheet(scriptProps.getProperty('SHEET_FIELD_BUDGET'));
+    const planSheet = getSheet(scriptProps.getProperty('SHEET_FIELD_PLAN'));
     
     const budgetData = budgetSheet.getDataRange().getValues();
     const planData = planSheet.getDataRange().getValues();
@@ -643,8 +643,8 @@ function testEnhancedMatching() {
   Logger.log("=== TESTING ENHANCED MATCHING ===");
   
   try {
-    const budgetSheet = SpreadsheetApp.getActive().getSheetByName(scriptProps.getProperty('SHEET_FIELD_BUDGET'));
-    const planSheet = SpreadsheetApp.getActive().getSheetByName(scriptProps.getProperty('SHEET_FIELD_PLAN'));
+    const budgetSheet = getSheet(scriptProps.getProperty('SHEET_FIELD_BUDGET'));
+    const planSheet = getSheet(scriptProps.getProperty('SHEET_FIELD_PLAN'));
     
     const budgetData = budgetSheet.getDataRange().getValues();
     const planData = planSheet.getDataRange().getValues();
@@ -722,7 +722,7 @@ function testAnalyzeSpecificOrg(orgName) {
   
   // First, let's debug the values for this specific org
   try {
-    const budgetSheet = SpreadsheetApp.getActive().getSheetByName(scriptProps.getProperty('SHEET_FIELD_BUDGET'));
+    const budgetSheet = getSheet(scriptProps.getProperty('SHEET_FIELD_BUDGET'));
     const data = budgetSheet.getDataRange().getValues();
     
     for (let i = 1; i < data.length; i++) {
@@ -810,7 +810,7 @@ function debugBudgetNullValues() {
     Logger.log(`- analyzed: ${firstBudget.analyzed} (type: ${typeof firstBudget.analyzed})`);
     
     // Get raw data to see what's in the columns
-    const budgetSheet = SpreadsheetApp.getActive().getSheetByName(scriptProps.getProperty('SHEET_FIELD_BUDGET'));
+    const budgetSheet = getSheet(scriptProps.getProperty('SHEET_FIELD_BUDGET'));
     const data = budgetSheet.getDataRange().getValues();
     const firstRow = data[1]; // First data row (index 1)
     
@@ -985,7 +985,7 @@ function testMissingFieldPlanNotification() {
  * This helps test the full analysis flow
  */
 function testSpecificBudgetAnalysis() {
-  const budgetSheet = SpreadsheetApp.getActive().getSheetByName(scriptProps.getProperty('SHEET_FIELD_BUDGET'));
+  const budgetSheet = getSheet(scriptProps.getProperty('SHEET_FIELD_BUDGET'));
   const data = budgetSheet.getDataRange().getValues();
   
   if (data.length > 1) {
@@ -1011,7 +1011,7 @@ function testSpecificBudgetAnalysis() {
  * Shows current state of all budgets
  */
 function viewBudgetAnalysisStatus() {
-  const budgetSheet = SpreadsheetApp.getActive().getSheetByName(scriptProps.getProperty('SHEET_FIELD_BUDGET'));
+  const budgetSheet = getSheet(scriptProps.getProperty('SHEET_FIELD_BUDGET'));
   const data = budgetSheet.getDataRange().getValues();
   
   let analyzed = 0;

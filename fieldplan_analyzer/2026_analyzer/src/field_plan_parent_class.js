@@ -3,8 +3,7 @@ class FieldPlan {
 
     // Get most recent entry (last row)
     static fromLastRow() {
-      const sheetName = PropertiesService.getScriptProperties().getProperty('SHEET_FIELD_PLAN');
-      const sheet = SpreadsheetApp.getActive().getSheetByName(sheetName);
+      const sheet = getSheet(scriptProps.getProperty('SHEET_FIELD_PLAN'));
       const data = sheet.getDataRange().getValues();
       const lastRowIndex = data.length - 1;
       const rowData = data[lastRowIndex];
@@ -13,8 +12,7 @@ class FieldPlan {
   
     // Get first entry after header (row 2)
     static fromFirstRow() {
-      const sheetName = PropertiesService.getScriptProperties().getProperty('SHEET_FIELD_PLAN');
-      const sheet = SpreadsheetApp.getActive().getSheetByName(sheetName);
+      const sheet = getSheet(scriptProps.getProperty('SHEET_FIELD_PLAN'));
       const data = sheet.getDataRange().getValues();
       // Index 1 is the first row after header
       const rowData = data[1];
@@ -23,8 +21,7 @@ class FieldPlan {
   
     // Get entry from specific row number (1-based for user friendliness)
     static fromSpecificRow(rowNumber) {
-      const sheetName = PropertiesService.getScriptProperties().getProperty('SHEET_FIELD_PLAN');
-      const sheet = SpreadsheetApp.getActive().getSheetByName(sheetName);
+      const sheet = getSheet(scriptProps.getProperty('SHEET_FIELD_PLAN'));
       const data = sheet.getDataRange().getValues();
       // Convert from 1-based to 0-based index
       const rowIndex = rowNumber - 1;

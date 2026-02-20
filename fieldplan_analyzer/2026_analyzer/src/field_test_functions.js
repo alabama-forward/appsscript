@@ -50,7 +50,7 @@ function testMostRecentFieldPlan(testEmail) {
 
     try {
       // Get the last row number for the field plan
-      const sheet = SpreadsheetApp.getActive().getSheetByName(scriptProps.getProperty('SHEET_FIELD_PLAN'));
+      const sheet = getSheet(scriptProps.getProperty('SHEET_FIELD_PLAN'));
       const lastRowNumber = sheet.getLastRow();
       
       // Call the existing function to send the email
@@ -204,9 +204,9 @@ function testMissingBudgetAlertFlow() {
  * This tests the budget matching logic
  */
 function testFindMatchingBudget() {
-  const budgetSheet = SpreadsheetApp.getActive().getSheetByName(scriptProps.getProperty('SHEET_FIELD_BUDGET'));
+  const budgetSheet = getSheet(scriptProps.getProperty('SHEET_FIELD_BUDGET'));
   const data = budgetSheet.getDataRange().getValues();
-  
+
   if (data.length > 1) {
     // Test with the first organization in the budget sheet
     const testOrgName = data[1][FieldBudget.COLUMNS.MEMBERNAME];
@@ -333,9 +333,9 @@ function testTacticOrganizationNames() {
   Logger.log("=== TESTING TACTIC ORGANIZATION NAMES ===");
   
   try {
-    const sheet = SpreadsheetApp.getActive().getSheetByName(scriptProps.getProperty('SHEET_FIELD_PLAN'));
+    const sheet = getSheet(scriptProps.getProperty('SHEET_FIELD_PLAN'));
     const lastRow = sheet.getLastRow();
-    
+
     // Test with a specific row (not the last one)
     const testRow = Math.max(2, lastRow - 1); // Use second to last row if available
     
@@ -517,7 +517,7 @@ function runColumnMappingTests() {
   // Test 4: Read actual data
   Logger.log('TEST 4: Read Real Data');
   try {
-    const sheet = SpreadsheetApp.getActive().getSheetByName('2026_field_plan');
+    const sheet = getSheet(scriptProps.getProperty('SHEET_FIELD_PLAN'));
     if (sheet && sheet.getLastRow() > 1) {
       const data = sheet.getRange(2, 1, 1, sheet.getLastColumn()).getValues()[0];
 

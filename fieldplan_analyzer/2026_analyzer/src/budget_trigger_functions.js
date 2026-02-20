@@ -119,7 +119,7 @@ function processBudget(budgetData, isTestMode = false) {
 // Find matching field plan for organization
 function findMatchingFieldPlan(orgName) {
   const sheetName = scriptProps.getProperty('SHEET_FIELD_PLAN');
-  const planSheet = SpreadsheetApp.getActive().getSheetByName(sheetName);
+  const planSheet = getSheet(sheetName);
   const data = planSheet.getDataRange().getValues();
 
   let latestMatch = null;
@@ -142,7 +142,7 @@ function findMatchingFieldPlan(orgName) {
 function analyzeBudgetWithFieldPlan(budget, fieldPlanMatch) {
   const { fieldPlan } = fieldPlanMatch;
   const planSheetName = scriptProps.getProperty('SHEET_FIELD_PLAN');
-  const planSheet = SpreadsheetApp.getActive().getSheetByName(planSheetName);
+  const planSheet = getSheet(planSheetName);
   const rowData = planSheet.getRange(fieldPlanMatch.rowNumber, 1, 1, planSheet.getLastColumn()).getValues()[0];
 
   const analysis = {
@@ -304,7 +304,7 @@ function processAllBudgets(isTestMode = false) {
     Logger.log(`=== PROCESSING ALL BUDGETS (${isTestMode ? 'TEST MODE' : 'PRODUCTION'}) ===`);
 
     const sheetName = scriptProps.getProperty('SHEET_FIELD_BUDGET');
-    const budgetSheet = SpreadsheetApp.getActive().getSheetByName(sheetName);
+    const budgetSheet = getSheet(sheetName);
     const data = budgetSheet.getDataRange().getValues();
 
     let successCount = 0;
@@ -358,7 +358,7 @@ function analyzeSpecificOrganization(orgName, isTestMode = true) {
 
   // Find the budget for this org
   const sheetName = scriptProps.getProperty('SHEET_FIELD_BUDGET');
-  const budgetSheet = SpreadsheetApp.getActive().getSheetByName(sheetName);
+  const budgetSheet = getSheet(sheetName);
   const data = budgetSheet.getDataRange().getValues();
 
   for (let i = 1; i < data.length; i++) {

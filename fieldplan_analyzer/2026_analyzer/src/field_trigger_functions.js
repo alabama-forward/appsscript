@@ -81,7 +81,7 @@ function createSpreadsheetTrigger() {
 // Helper function to get the last row number
 function getLastRow() {
   const sheetName = scriptProps.getProperty('SHEET_FIELD_PLAN');
-  const sheet = SpreadsheetApp.getActive().getSheetByName(sheetName);
+  const sheet = getSheet(sheetName);
   return sheet.getLastRow();
 }
 
@@ -89,7 +89,7 @@ function getLastRow() {
 function checkForNewRows() {
   try {
     const sheetName = scriptProps.getProperty('SHEET_FIELD_PLAN');
-    const sheet = SpreadsheetApp.getActive().getSheetByName(sheetName);
+    const sheet = getSheet(sheetName);
     const currentLastRow = sheet.getLastRow();
 
     // Get the last processed row from properties
@@ -142,7 +142,7 @@ function checkForNewRows() {
 // Find matching budget for organization
 function findMatchingBudget(orgName) {
   const budgetSheetName = scriptProps.getProperty('SHEET_FIELD_BUDGET');
-  const budgetSheet = SpreadsheetApp.getActive().getSheetByName(budgetSheetName);
+  const budgetSheet = getSheet(budgetSheetName);
   const data = budgetSheet.getDataRange().getValues();
 
   // Find any budget for this org (not necessarily unanalyzed)
@@ -202,7 +202,7 @@ function processAllFieldPlans(isTestMode = false) {
     Logger.log(`=== PROCESSING ALL FIELD PLANS (${isTestMode ? 'TEST MODE' : 'PRODUCTION'}) ===`);
 
     const sheetName = scriptProps.getProperty('SHEET_FIELD_PLAN');
-    const sheet = SpreadsheetApp.getActive().getSheetByName(sheetName);
+    const sheet = getSheet(sheetName);
     const currentLastRow = sheet.getLastRow();
 
     let successCount = 0;

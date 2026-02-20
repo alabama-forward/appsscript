@@ -730,7 +730,7 @@ function sendFieldPlanEmail(fieldPlan, rowNumber = null) {
   try {
     // Get the row data for creating tactic instances
     const sheetName = scriptProps.getProperty('SHEET_FIELD_PLAN')
-    const sheet = SpreadsheetApp.getActive().getSheetByName(sheetName);
+    const sheet = getSheet(sheetName);
     let rowData;
 
     if (rowNumber) {
@@ -868,21 +868,9 @@ function generateWeeklySummary(isTestMode = false) {
     const budgetSheetName = scriptProps.getProperty('SHEET_FIELD_BUDGET');
     const fieldPlanSheetName = scriptProps.getProperty('SHEET_FIELD_PLAN');
 
-    // Get sheets with error checking
-    const spreadsheet = SpreadsheetApp.getActive();
-    if (!spreadsheet) {
-      throw new Error('Unable to access active spreadsheet');
-    }
-
-    const budgetSheet = spreadsheet.getSheetByName(budgetSheetName);
-    if (!budgetSheet) {
-      throw new Error(`Budget sheet '${budgetSheetName}' not found`);
-    }
-
-    const fieldPlanSheet = spreadsheet.getSheetByName(fieldPlanSheetName);
-    if (!fieldPlanSheet) {
-      throw new Error(`Field plan sheet '${fieldPlanSheetName}' not found`);
-    }
+    // Get sheets via centralized helper (throws descriptive errors if missing)
+    const budgetSheet = getSheet(budgetSheetName);
+    const fieldPlanSheet = getSheet(fieldPlanSheetName);
 
     const budgetData = budgetSheet.getDataRange().getValues();
     const fieldPlanData = fieldPlanSheet.getDataRange().getValues();
