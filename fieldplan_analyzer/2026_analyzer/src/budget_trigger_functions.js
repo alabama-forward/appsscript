@@ -2,10 +2,9 @@
  * The budget spreadsheet does not have dedicate line items for every tactic.
  * This creates a centralized mapping from tactic keys, budget categories, and field prefixes
  * 
- * Three functions depend on this mapping:
+ * Two functions depend on this mapping:
  *      - analyzeTactic()
  *      - analyzeGaps()
- *      - checkIfCanIncreaseFunding()
  */
 const TACTIC_BUDGET_MAP = {
   'DOOR':         { category: 'canvass',      budgetPrefix: 'canvass' },
@@ -232,7 +231,7 @@ function generateTacticRecommendation(tacticType, costPerAttempt, target, status
   if (status === 'within') {
     return `${tacticType} funding is appropriately aligned with planned activities.`;
   } else if (status === 'below') {
-    return `${tacticType} funding is below the standard range. Consider increasing funding to better support planned activities.`;
+    return `${tacticType} funding is below the standard range for this tactic.`;
   } else {
     return `${tacticType} funding exceeds the standard range. Review if the funding request aligns with realistic program expectations.`;
   }
@@ -273,62 +272,15 @@ function analyzeGaps(budget, tactics) {
     const gap = budget[gapKey] || 0;
 
     if (gap > 0) {
-      const canIncrease = checkIfCanIncreaseFunding(category, requested, gap, tactics);
       results.push({
         category: category,
         budgetPrefix: budgetPrefix,
         requested: requested,
-        gap: gap,
-        canIncreaseFunding: canIncrease
+        gap: gap
       });
     }
   });
   return results;
-}
-
-/**
- * Check if funding can be increased wtihin cost efficiency targets.
- * 
- * For tactic-related categories, finds the matching tactic from the tactics array,
- * calculates what the new cost-per-attempt would be with increased funding,
- * and checks if it remains within the acceptable range defined in TACTIC_CONFIG.
- * 
- * @param {string} category - Budget category (e.g., 'canvass', 'phone', 'text')
- * @param {number} requested - Current funding amount requested
- * @param {number} gap - Additional funding gap amount
- * @param {Array} tactics - Array of TacticProgram instances from the field plan
- * @returns {boolean} True if increased funding stays within cost efficiency targets;
- *                    False if no efficiency measurement is possible (unmapped or missing tactic or category)
- */
-//This function may not be needed - because we have a budget cap of $32,500
-function checkIfCanIncreaseFunding(category, requested, gap, tactics) {
-  //Map budget categories to tactic keys for lookup
-  const categoryToTacticKeys = {
-    'canvass': ['DOOR', 'OPEN'],
-    'open': ['DOOR', 'OPEN'],
-    'phone': ['PHONE'],
-    'text': ['TEXT'],
-    'registration': ['REGISTRATION'],
-    'relational': ['RELATIONAL'],
-    'mail': ['MAIL']
-  };
-
-  const matchingKeys = categoryToTacticKeys[category];
-  if (!matchingKeys) {
-    return false;
-  }
-
-  const relevantTactic = tactics.find (t => matchingKeys.includes(t.tacticKey));
-
-  if (relevantTactic) {
-    const programAttempts = relevantTactic.programAttempts();
-    const newCostPerAttempt = (requested + gap) / programAttempts;
-
-    const config = TACTIC_CONFIG[relevantTactic.tacticKey];
-    return newCostPerAttempt <= (config.costTarget + config.costStdDev)
-  }
-
-  return false;
 }
 
 // Send budget analysis email
@@ -373,22 +325,17 @@ function sendBudgetAnalysisEmail(budget, fieldPlan, analysis, isTestMode = false
           <tr style="background-color: #f2f2f2;">
             <th>Tactic</th>
             <th>Gap Amount</th>
-            <th>Recommendation</th>
           </tr>
         </thead>
         <tbody>`;
-    
+
     for (const gap of analysis.gaps) {
       const tacticName = gap.category.charAt(0).toUpperCase() + gap.category.slice(1);
-      const recommendation = gap.canIncrease ? 
-        `Consider increasing by up to $${gap.gap}` :
-        `Would exceed efficiency targets`;
-      
+
       emailBody += `
           <tr>
             <td><strong>${tacticName}</strong></td>
             <td>$${gap.gap}</td>
-            <td>${recommendation}</td>
           </tr>`;
     }
     
