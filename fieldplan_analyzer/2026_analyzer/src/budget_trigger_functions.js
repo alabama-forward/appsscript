@@ -147,6 +147,8 @@ function analyzeBudgetWithFieldPlan(budget, fieldPlanMatch) {
 
   const analysis = {
     tactics: [],
+    incompleteTactics: [],
+    noTacticsAtAll: false,
     recommendations: [],
     gaps: [],
     summary: {}
@@ -154,6 +156,8 @@ function analyzeBudgetWithFieldPlan(budget, fieldPlanMatch) {
 
   // Get tactic instances from field plan
   const tactics = getTacticInstances(rowData);
+  analysis.incompleteTactics = tactics.incomplete || [];
+  analysis.noTacticsAtAll = tactics.noTacticsAtAll || false;
 
   // Analyze each tactic
   for (const tactic of tactics) {

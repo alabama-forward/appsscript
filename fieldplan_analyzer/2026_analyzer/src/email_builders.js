@@ -487,6 +487,29 @@ function buildBudgetAnalysisEmailHTML(budget, fieldPlan, analysis, colors) {
 
   content += '</td></tr>';
 
+  // Incomplete or missing tactic warnings
+  if (analysis.noTacticsAtAll) {
+    content += '<tr><td style="padding:0 30px 25px 30px;">' +
+      '<div style="background-color:#FFF3CD;border-left:4px solid ' + colors.danger + ';padding:15px;border-radius:4px;">' +
+      '<p style="margin:0;font-weight:bold;color:' + colors.danger + ';">No tactic goals were submitted with this field plan. Cost efficiency analysis cannot be performed. Follow up with the organization to complete their goals.</p>' +
+      '</div></td></tr>';
+  } else if (analysis.incompleteTactics && analysis.incompleteTactics.length > 0) {
+    content += '<tr><td style="padding:0 30px 25px 30px;">' +
+      '<div style="background-color:#FFF3CD;border-left:4px solid ' + colors.warning + ';padding:15px;border-radius:4px;">' +
+      '<p style="margin:0 0 10px 0;font-weight:bold;color:' + colors.text + ';">Incomplete Tactic Goals</p>' +
+      '<p style="margin:0 0 12px 0;font-size:14px;color:' + colors.textLight + ';">The following tactics had partial data submitted. Cost efficiency could not be calculated for these tactics because missing fields prevent projecting total attempts.</p>';
+
+    for (var k = 0; k < analysis.incompleteTactics.length; k++) {
+      var inc = analysis.incompleteTactics[k];
+      content += '<div style="background-color:' + colors.white + ';border-radius:4px;padding:10px 12px;margin-top:8px;">' +
+        '<p style="margin:0 0 4px 0;font-weight:bold;font-size:14px;color:' + colors.text + ';">' + inc.tacticName + '</p>' +
+        '<p style="margin:0;font-size:13px;color:' + colors.danger + ';">Missing: ' + inc.missingFields.join(', ') + '</p>' +
+        '</div>';
+    }
+
+    content += '</div></td></tr>';
+  }
+
   // Gap analysis table
   if (analysis.gaps && analysis.gaps.length > 0) {
     content += '<tr><td style="padding:0 30px 25px 30px;">' +
