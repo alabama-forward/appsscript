@@ -1,5 +1,72 @@
 // All email composition and HTML generation functions.
 // When email format needs to change, edit this file.
+/**
+ * Builds the complete field plan notification email HTML.
+ *
+ * Assembles all sections: header, summary, stats, contact, program details,
+ * geography, demographics, tactics, confidence, action items, and footer.
+ *
+ * @param {FieldPlan} fieldPlan - A FieldPlan instance with all 2026 fields
+ * @param {TacticProgram[]} tactics - Array of TacticProgram instances from getTacticInstances()
+ * @returns {string} Complete HTML email ready for MailApp.sendEmail({ htmlBody: ... })
+ */
+function buildFieldPlanEmailHTML(fieldPlan, tactics) {
+  tactics = tactics || [];
+
+  var colors = {
+  primary: '#363d4a',       // Alabama Forward blue
+  secondary: '#b53d1a',     // Alabama Forward rust
+  accent: '#FF6B35',        // Alert/warning color
+  text: '#363d4a',          // Main text
+  textLight: '#666666',     // Secondary text
+  background: '#F5F5F5',    // Page background
+  white: '#FFFFFF',         // Card background
+  border: '#DDDDDD',       // Border color
+  success: '#28A745',       // Success/positive
+  warning: '#FFC107',       // Warning
+  danger: '#DC3545'         // Danger/urgent
+  };
+
+  var html = '<!DOCTYPE html>' +
+    '<html lang="en"><head>' +
+    '<meta charset="UTF-8">' +
+    '<meta name="viewport" content="width=device-width, initial-scale=1.0">' +
+    '<title>Field Plan: ' + (fieldPlan.memberOrgName || 'Submission') + '</title>' +
+    '</head>' +
+    '<body style="margin:0;padding:0;font-family:Arial,sans-serif;font-size:16px;line-height:1.6;color:' + colors.text + ';background-color:' + colors.background + ';">' +
+    '<table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background-color:' + colors.background + ';">' +
+    '<tr><td style="padding:20px 0;">' +
+    '<table role="presentation" cellspacing="0" cellpadding="0" border="0" width="600" style="margin:0 auto;background-color:' + colors.white + ';border-radius:8px;max-width:600px;">' +
+    buildEmailHeader(fieldPlan, colors) +
+    buildOrgSummaryCard(fieldPlan, colors) +
+    buildQuickStatsGrid(fieldPlan, tactics, colors) +
+    buildContactSection(fieldPlan, colors) +
+    buildProgramDetailsSection(fieldPlan, colors) +
+    buildGeographicSection(fieldPlan, colors) +
+    buildDemographicsSection(fieldPlan, colors) +
+    buildTacticsSection(tactics, colors) +
+    buildConfidenceSection(fieldPlan, colors) +
+    buildActionItemsSection(fieldPlan, colors) +
+    buildEmailFooter(colors) +
+    '</table>' +
+    '</td></tr></table>' +
+    '</body></html>';
+
+  return html;
+}
+
+function buildEmailHeader(fieldPlan, colors) {
+  var trained = fieldPlan.attendedTraining &&
+    fieldPlan.attendedTraining.toString().toLowerCase().indexOf('yes') !== -1;
+  var badgeColor = trained ? colors.success : colors.warning;
+  var badgeText = trained ? 'TRAINED' : 'NEEDS TRAINING';
+
+  return '<tr><td style="background:linear-gradient(135deg,' + colors.primary + ' 0%,' + colors.secondary + ' 100%);padding:30px;text-align:center;border-radius:8px 8px 0 0;">' +
+    '<h1 style="margin:0 0 10px 0;font-size:24px;font-weight:bold;color:#FFFFFF;">New Field Plan Submission</h1>' +
+    '<p style="margin:0 0 12px 0;font-size:18px;color:rgba(255,255,255,0.95);">' + (fieldPlan.memberOrgName || 'Unknown Organization') + '</p>' +
+    '<span style="display:inline-block;background-color:' + badgeColor + ';color:#FFFFFF;padding:4px 12px;border-radius:12px;font-size:12px;font-weight:bold;">' + badgeText + '</span>' +
+    '</td></tr>';
+}
 
 /**
  * Generates HTML metrics for a single tactic instance.
