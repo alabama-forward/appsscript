@@ -72,6 +72,7 @@ function buildFieldPlanEmailHTML(fieldPlan, tactics) {
     buildQuickStatsGrid(fieldPlan, tactics, colors) +
     buildContactSection(fieldPlan, colors) +
     buildProgramDetailsSection(fieldPlan, colors) +
+    buildNarrativeSection(fieldPlan, colors) +
     buildGeographicSection(fieldPlan, colors) +
     buildDemographicsSection(fieldPlan, colors) +
     buildTacticsSection(tactics, colors) +
@@ -167,6 +168,24 @@ function buildProgramDetailsSection(fieldPlan, colors) {
     buildInfoRow('VAN Committee', formatArray(fieldPlan.vanCommittee), colors) +
     buildInfoRow('Data Sharing', fieldPlan.dataShare || 'Not specified', colors) +
     '</table></td></tr>';
+}
+
+function buildNarrativeSection(fieldPlan, colors) {
+  var narrative = fieldPlan.fieldNarrative;
+  if (!narrative) {
+    return '<tr><td style="padding:0 30px 25px 30px;">' +
+      buildSectionHeader('Field Program Narrative', colors) +
+      '<p style="color:' + colors.textLight + ';font-style:italic;">No narrative was provided.</p>' +
+      '</td></tr>';
+  }
+
+  var formatted = narrative.toString().replace(/\n/g, '<br>');
+
+  return '<tr><td style="padding:0 30px 25px 30px;">' +
+    buildSectionHeader('Field Program Narrative', colors) +
+    '<div style="background-color:' + colors.background + ';border-left:4px solid ' + colors.primary + ';padding:15px;border-radius:4px;">' +
+    '<p style="margin:0;font-size:14px;color:' + colors.text + ';line-height:1.6;">' + formatted + '</p>' +
+    '</div></td></tr>';
 }
 
 function buildGeographicSection(fieldPlan, colors) {
