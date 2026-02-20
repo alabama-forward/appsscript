@@ -703,7 +703,7 @@ function sendFieldPlanEmail(fieldPlan, rowNumber = null) {
 
   // Configuration object with recipient emails array - add your emails here
   const config = {
-    recipientEmails: (scriptProps.getProperty('EMAIL_RECIPIENTS')),
+    recipientEmails: (scriptProps.getProperty('EMAIL_RECIPIENTS') || '').split(','),
     maxRetries: 3,
     retryDelay: 1000 // milliseconds
   };
