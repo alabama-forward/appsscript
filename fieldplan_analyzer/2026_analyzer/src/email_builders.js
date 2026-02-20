@@ -823,7 +823,7 @@ function sendTargetsSummaryEmail(htmlBody) {
       subject: 'Field Wide Targets Summary',
       htmlBody: htmlBody,
       name: "Field Targets Summary Email",
-      replyTo: EMAIL_CONFIG.replyTo
+      replyTo: getEmailConfig().replyTo
     });
     Logger.log('Field Wide Targets summary email sent successfull');
   } catch (error) {
@@ -847,7 +847,7 @@ function sendMissingBudgetNotification(orgName, isTestMode = false) {
       subject: `${isTestMode ? '[TEST] ' : ''}Missing Budget: ${orgName}`,
       htmlBody: emailBody,
       name: "Field Plan Analysis System",
-      replyTo: EMAIL_CONFIG.replyTo
+      replyTo: getEmailConfig().replyTo
     });
     Logger.log(`Missing budget notification sent for ${orgName} (${isTestMode ? 'TEST MODE' : 'PRODUCTION'})`);
   } catch (error) {

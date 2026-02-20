@@ -1,5 +1,3 @@
-FieldBudget.COLUMNS = BUDGET_COLUMNS
-
 class FieldBudget {
 
     // Get most recent entry (last row)
@@ -343,3 +341,6 @@ class FieldBudget {
       }
     };
   };
+
+// Assigned after the class definition to avoid "Cannot access before initialization"
+FieldBudget.COLUMNS = BUDGET_COLUMNS;
