@@ -76,7 +76,7 @@ function buildFieldPlanEmailHTML(fieldPlan, tactics) {
     buildDemographicsSection(fieldPlan, colors) +
     buildTacticsSection(tactics, colors) +
     buildConfidenceSection(fieldPlan, colors) +
-    buildActionItemsSection(fieldPlan, colors) +
+    buildActionItemsSection(fieldPlan, tactics, colors) +
     buildEmailFooter(colors) +
     '</table>' +
     '</td></tr></table>' +
@@ -213,16 +213,23 @@ function buildDemographicsSection(fieldPlan, colors) {
  * @returns {string} HTML table row
  */
 function buildTacticsSection(tactics, colors) {
-  if (!tactics || tactics.length === 0) {
-    return '<tr><td style="padding:0 30px 25px 30px;">' +
-      buildSectionHeader('Field Tactics Analysis', colors) +
-      '<p style="color:' + colors.textLight + ';font-style:italic;">No field tactics were specified in this plan.</p>' +
-      '</td></tr>';
-  }
-
   var html = '<tr><td style="padding:0 30px 25px 30px;">' +
     buildSectionHeader('Field Tactics Analysis', colors);
 
+  // No tactic data at all — should not happen, flag loudly
+  if (!tactics || (tactics.length === 0 && (!tactics.incomplete || tactics.incomplete.length === 0))) {
+    var noTacticsWarning = tactics && tactics.noTacticsAtAll
+      ? 'This field plan was submitted with no tactic goals. This should not be possible — please follow up with the organization.'
+      : 'No field tactics were specified in this plan.';
+
+    html += '<div style="background-color:#FFF3CD;border-left:4px solid ' + colors.danger + ';padding:15px;border-radius:4px;">' +
+      '<p style="margin:0;font-weight:bold;color:' + colors.danger + ';">' + noTacticsWarning + '</p></div>';
+
+    html += '</td></tr>';
+    return html;
+  }
+
+  // Render complete tactics
   for (var i = 0; i < tactics.length; i++) {
     var tactic = tactics[i];
     var mt = (i === 0) ? '0' : '20px';
@@ -242,6 +249,23 @@ function buildTacticsSection(tactics, colors) {
       '<p style="margin:0 0 4px 0;font-size:14px;">' + tactic.attemptReasonable() + '</p>' +
       '<p style="margin:0;font-size:14px;">' + tactic.expectedContacts() + '</p>' +
       '</div></div>';
+  }
+
+  // Render incomplete tactics with a warning
+  if (tactics.incomplete && tactics.incomplete.length > 0) {
+    html += '<div style="background-color:#FFF3CD;border-left:4px solid ' + colors.warning + ';padding:15px;border-radius:4px;margin-top:20px;">' +
+      '<p style="margin:0 0 10px 0;font-weight:bold;color:' + colors.text + ';">Incomplete Tactic Goals</p>' +
+      '<p style="margin:0 0 12px 0;font-size:14px;color:' + colors.textLight + ';">The following tactics had partial data submitted. Analysis could not be completed because missing fields prevent calculating projections. Follow up with the organization to complete these goals.</p>';
+
+    for (var j = 0; j < tactics.incomplete.length; j++) {
+      var inc = tactics.incomplete[j];
+      html += '<div style="background-color:' + colors.white + ';border-radius:4px;padding:10px 12px;margin-top:8px;">' +
+        '<p style="margin:0 0 4px 0;font-weight:bold;font-size:14px;color:' + colors.text + ';">' + inc.tacticName + '</p>' +
+        '<p style="margin:0;font-size:13px;color:' + colors.danger + ';">Missing: ' + inc.missingFields.join(', ') + '</p>' +
+        '</div>';
+    }
+
+    html += '</div>';
   }
 
   html += '</td></tr>';
@@ -295,8 +319,16 @@ function buildConfidenceSection(fieldPlan, colors) {
   return html;
 }
 
-function buildActionItemsSection(fieldPlan, colors) {
+function buildActionItemsSection(fieldPlan, tactics, colors) {
   var actions = [];
+
+  // Tactic goal issues — these block approval
+  if (tactics && tactics.noTacticsAtAll) {
+    actions.push({ priority: 'high', title: 'Do Not Approve — No Tactic Goals', description: 'This field plan was submitted with zero tactic goals. This should not be possible. Reach out to the organization to complete their goals before approving.' });
+  } else if (tactics && tactics.incomplete && tactics.incomplete.length > 0) {
+    var missingNames = tactics.incomplete.map(function(t) { return t.tacticName; }).join(', ');
+    actions.push({ priority: 'high', title: 'Do Not Approve — Incomplete Tactic Goals', description: 'The following tactics have missing data and cannot be analyzed: ' + missingNames + '. Reach out to the organization to complete these goals before approving.' });
+  }
 
   if (!fieldPlan.attendedTraining || fieldPlan.attendedTraining.toString().toLowerCase().indexOf('yes') === -1) {
     actions.push({ priority: 'high', title: 'Schedule Training', description: 'Organization has not attended field planning training.' });
@@ -314,7 +346,11 @@ function buildActionItemsSection(fieldPlan, colors) {
     actions.push({ priority: 'medium', title: 'Review Coordination Rules', description: 'Someone in this organization is running for office.' });
   }
 
-  actions.push({ priority: 'low', title: 'Review and Approve', description: 'Review field plan details and approve or request revisions.' });
+  // Only show "Review and Approve" if there are no blocking tactic issues
+  if (!tactics || (!tactics.noTacticsAtAll && (!tactics.incomplete || tactics.incomplete.length === 0))) {
+    actions.push({ priority: 'low', title: 'Review and Approve', description: 'Review field plan details and approve or request revisions.' });
+  }
+
   actions.push({ priority: 'low', title: 'Follow Up', description: 'Schedule a check-in call to discuss the field plan.' });
 
   var pColors = { high: colors.danger, medium: colors.warning, low: colors.success };

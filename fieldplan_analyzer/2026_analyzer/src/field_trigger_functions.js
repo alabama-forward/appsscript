@@ -8,28 +8,80 @@
  * @param {*} rowData
  * @returns tactics and associated data
  */
+/**
+ * Creates tactic instances for all tactics that have data in the row.
+ *
+ * Each tactic row has 4 required fields: Program Length, Weekly Volunteers,
+ * Weekly Hours, and Hourly Attempts. This function categorizes each tactic:
+ *
+ *   - All 4 fields empty  → tactic not used, skipped silently
+ *   - All 4 fields filled → valid TacticProgram, added to the returned array
+ *   - Some filled, some empty → incomplete submission, tracked in .incomplete
+ *
+ * If NO tactics have any data at all, a warning is logged. This should not
+ * happen (the form requires at least one tactic) but is caught here as a
+ * safeguard.
+ *
+ * @param {Array} rowData - A single row of spreadsheet values
+ * @returns {TacticProgram[]} Array of valid tactics with two extra properties:
+ *   .incomplete — array of { tacticName, tacticKey, filledFields[], missingFields[] }
+ *   .noTacticsAtAll — boolean, true if the respondent left every tactic blank
+ */
 function getTacticInstances(rowData) {
   const tactics = [];
+  const incomplete = [];
+  let anyDataFound = false;
 
-  //Iterate through all tactic configurations
   for (const [tacticKey, config] of Object.entries(TACTIC_CONFIG)) {
     try {
-      //Check if this TACTIC_CONFIG key has corresponding key in PROGRAM_COLUMNS
       const columns = PROGRAM_COLUMNS[config.columnKey];
       if (!columns) {
         Logger.log(`Warning: No PROGRAM_COLUMNS found for ${tacticKey}`);
         continue;
       }
 
-      //Check if this tactic has any data filled in
-      if (rowData[columns.PROGRAM_LENGTH] || rowData[columns.WEEKLYVOLUNTEERS]) {
+      const fieldChecks = [
+        { name: 'Program Length',    value: rowData[columns.PROGRAMLENGTH] },
+        { name: 'Weekly Volunteers', value: rowData[columns.WEEKLYVOLUNTEERS] },
+        { name: 'Weekly Hours',      value: rowData[columns.WEEKLYHOURS] },
+        { name: 'Hourly Attempts',   value: rowData[columns.HOURLYATTEMPTS] }
+      ];
+
+      const filled = fieldChecks.filter(f => f.value && !isNaN(f.value) && Number(f.value) > 0);
+      const missing = fieldChecks.filter(f => !f.value || isNaN(f.value) || Number(f.value) <= 0);
+
+      // All empty — tactic not used
+      if (filled.length === 0) continue;
+
+      anyDataFound = true;
+
+      // All filled — valid tactic
+      if (missing.length === 0) {
         tactics.push(new TacticProgram(rowData, tacticKey));
+        continue;
       }
+
+      // Partially filled — incomplete submission
+      Logger.log(`Incomplete goals for ${config.name}: missing ${missing.map(f => f.name).join(', ')}`);
+      incomplete.push({
+        tacticName: config.name,
+        tacticKey: tacticKey,
+        filledFields: filled.map(f => f.name),
+        missingFields: missing.map(f => f.name)
+      });
+
     } catch (error) {
       Logger.log(`Error creating ${tacticKey} tactic: ${error.message}`);
     }
   }
-    return tactics;
+
+  if (!anyDataFound) {
+    Logger.log('WARNING: No tactic data found in any row. The respondent submitted a field plan with zero tactic goals.');
+  }
+
+  tactics.incomplete = incomplete;
+  tactics.noTacticsAtAll = !anyDataFound;
+  return tactics;
 }
 
 /**
