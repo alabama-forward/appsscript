@@ -1,167 +1,161 @@
 # Apps Script Field Coordination Tools
 
-This repository contains two Google Apps Script applications designed for field coordination and budget analysis. These tools demonstrate how to build sophisticated business applications using Google Sheets as databases and Apps Script for automation.
+A monorepo of Google Apps Script applications used by Alabama Forward for field organizing coordination. These tools turn Google Sheets into automated systems for precinct claiming, field plan analysis, budget tracking, and volunteer matching.
 
-## Overview
+## Architecture Overview
 
-### Field Coordination Browser
-A web-based application that transforms Google Sheets into an interactive coordination system. Users can browse, search, and claim field assignments through a user-friendly interface.
+```mermaid
+graph TD
+    subgraph "Data Sources"
+        GF[Google Forms / JotForm]
+        GS[(Google Sheets)]
+    end
 
-**Key Features:**
-- Web-based interface for easy access
-- Real-time search and filtering
-- Claim management system
-- Email notifications
-- Mobile responsive design
+    subgraph "Apps Script Applications"
+        FPA[FieldPlan Analyzer]
+        FCB[Field Coordination Browser]
+        FCS[Field Coordination Sheets]
+        FQ[Field Quiz]
+    end
 
-### FieldPlan Analyzer
-An automated analysis system that processes form submissions, analyzes budgets against field plans, and generates detailed email reports.
+    subgraph "Outputs"
+        Email[Email Reports]
+        WebApp[Web Interface]
+        MC[Mailchimp]
+    end
 
-**Key Features:**
-- Automated data processing
-- Budget vs. actual analysis
-- Cost-per-attempt calculations
-- Scheduled email reports
-- Missing data alerts
+    GF -->|form submissions| FPA
+    GS -->|field plans & budgets| FPA
+    FPA -->|HTML analysis emails| Email
 
-## Documentation
+    GS -->|precinct data| FCB
+    FCB -->|claim updates| GS
+    FCB -->|search UI| WebApp
 
-Full documentation is available at: [GitHub Pages URL]/appsscript
+    GS -->|precinct data| FCS
+    FCS -->|claim updates| GS
 
-- [For End Users](docs/end-users/) - Learn how to use the applications
-- [For Developers](docs/developers/) - Technical documentation for customization
-- [Troubleshooting](docs/troubleshooting.md) - Common issues and solutions
-- [FAQ](docs/faq.md) - Frequently asked questions
-
-## Quick Start
-
-### For End Users
-
-1. Get the web app URL from your administrator
-2. Sign in with your Google account
-3. Start using the applications immediately
-
-### For Developers
-
-1. Open Google Apps Script editor
-2. Create a new project
-3. Copy the relevant source files
-4. Configure your spreadsheet IDs and settings
-5. Deploy as web app
+    GF -->|webhook POST| FQ
+    FQ -->|responses & matches| GS
+    FQ -->|subscriber adds| MC
+```
 
 ## Project Structure
 
 ```
 appsscript/
-├── field_coordination_browser/
-│   ├── src/
-│   │   ├── Code.gs              # Server-side logic
-│   │   ├── index.html           # Main HTML interface
-│   │   ├── client-side.html     # Client JavaScript
-│   │   └── styles.html          # CSS styling
-│   └── developing/
-│       └── (development files)
+├── fieldplan_analyzer/          — Field plan & budget analysis system
+│   ├── 2025_analyzer/src/       — 2025 cycle (legacy)
+│   └── 2026_analyzer/src/       — 2026 cycle (active development)
 │
-├── fieldplan_analyzer/
-│   ├── src/
-│   │   ├── budget_class.js      # Budget data model
-│   │   ├── field_plan_parent_class.js
-│   │   ├── budget_trigger_functions.js
-│   │   └── field_trigger_functions.js
-│   └── docs/
-│       └── (documentation)
+├── field_coordination_browser/  — Web-based precinct claiming app
+│   ├── 2025v/src/               — 2025 cycle
+│   └── 2026v/src/               — 2026 cycle
 │
-└── docs/                         # GitHub Pages documentation
-    ├── _end_users/
-    ├── _developers/
-    └── (documentation files)
+├── field_coordination_sheets/   — Sheets-native precinct claiming (no web UI)
+│
+├── field_quiz/src/              — JotForm webhook → Mailchimp integration
+│
+├── docs/                        — Jekyll documentation site (GitHub Pages)
+│
+└── package.json                 — clasp dependency for deployment
 ```
 
-## Key Technologies
+## Key Components
 
-- **Google Apps Script**: Server-side JavaScript platform
-- **HTML Service**: For web app creation
-- **Google Sheets API**: Database functionality
-- **Gmail Service**: Email notifications
-- **Time-based Triggers**: Automation
+### FieldPlan Analyzer (`fieldplan_analyzer/`)
 
-## Requirements
+Processes field plan and budget form submissions, analyzes them against programmatic standards, and sends detailed HTML email reports to staff.
 
-- Google account
-- Access to Google Sheets
-- Modern web browser
-- JavaScript knowledge (for developers)
+**Class hierarchy:**
+- `FieldPlan` — base class; parses a form row into organization info, contact details, geography, and demographics
+- `FieldProgram` (extends `FieldPlan`) — adds volunteer hours, weekly attempts, and program length calculations
+- `TacticProgram` (extends `FieldProgram`) — config-driven analysis for 7 tactic types (Phone Banking, Door Canvassing, Open Canvassing, Relational Organizing, Voter Registration, Text Banking, Mailers)
+- `FieldBudget` — parses budget submissions; compares outreach vs. non-outreach spending; flags missing data stipends
+
+**Entry points:**
+- Form submission triggers — process new field plans on submit
+- `analyzeBudgets()` — time-based trigger (every 12 hours) to analyze unprocessed budgets
+- `checkForMissingFieldPlans()` — alerts when a budget exists without a matching field plan
+
+**Source files (2026):** `_globals.js`, `_column_mappings.js`, `field_plan_parent_class.js`, `field_program_extension_class.js`, `field_tactics_extension_class.js`, `budget_class.js`, `field_trigger_functions.js`, `budget_trigger_functions.js`, `email_builders.js`, `field_test_functions.js`, `budget_test_functions.js`
+
+### Field Coordination Browser (`field_coordination_browser/`)
+
+Web application that lets organizations search and claim precincts through an HTML interface served by Apps Script's HtmlService.
+
+- **server-side.js** — `onOpen()` adds a custom menu; `onEdit()` watches dropdown selections in the search sheet and calls `claimItemForOrganization()` to update the priorities sheet
+- **index.html / client-side.html** — search form (county, precinct name, precinct number) with dynamic results table
+- **styles.html** — CSS styling
+
+### Field Coordination Sheets (`field_coordination_sheets/`)
+
+A simpler, container-bound version of precinct claiming that runs entirely within a Google Sheet (no separate web UI). Uses `onEdit` triggers to detect dropdown selections and record claims.
+
+### Field Quiz (`field_quiz/`)
+
+Receives JotForm webhook submissions via `doPost()`, matches respondents with organizations based on their interests and zip code, saves results to a Google Sheet, and adds subscribers to Mailchimp via API.
+
+## Getting Started
+
+### Prerequisites
+
+- Google account with access to the relevant Google Sheets
+- [Node.js](https://nodejs.org/) (for clasp CLI)
+- [clasp](https://github.com/google/clasp) — Google Apps Script CLI
+
+### Setup
+
+```bash
+# Clone the repository
+git clone https://github.com/alabama-forward/appsscript.git
+cd appsscript
+
+# Install clasp
+npm install
+
+# Log in to clasp
+npx clasp login
+
+# Push code to a specific project (each sub-project has its own .clasp.json)
+cd fieldplan_analyzer/2026_analyzer
+npx clasp push
+```
+
+Each sub-project contains a `.clasp.json` that maps it to a specific Apps Script project. Use `clasp push` from within the sub-project directory to deploy.
+
+### Script Properties
+
+Each Apps Script project requires script properties configured in the Apps Script editor (Project Settings > Script Properties). See [`SCRIPT_PROPERTIES_CONFIGURATION.md`](SCRIPT_PROPERTIES_CONFIGURATION.md) for the full list of required keys.
+
+Key categories:
+- **Sheet names** — which tabs to read/write (e.g., `SHEET_FIELD_PLAN`, `SHEET_FIELD_BUDGET`)
+- **Email config** — recipient lists, reply-to addresses, test recipients
+- **Cost targets** — per-tactic cost benchmarks and standard deviations
+- **Trigger intervals** — how often time-based triggers run
 
 ## Configuration
 
-### Essential Settings
+All applications use `PropertiesService.getScriptProperties()` for environment-specific configuration. Column mappings are centralized in `_column_mappings.js` — when the spreadsheet structure changes, only that file needs updating.
 
-1. **Spreadsheet Setup**
-   - Create required sheets (see documentation)
-   - Set up column headers
-   - Configure permissions
+## Documentation
 
-2. **Script Properties**
-   ```javascript
-   // Store configuration securely
-   PropertiesService.getScriptProperties().setProperties({
-     'SPREADSHEET_ID': 'your-spreadsheet-id',
-     'EMAIL_RECIPIENTS': 'email1@example.com,email2@example.com',
-     'TIMEZONE': 'America/New_York'
-   });
-   ```
+Full documentation is published via GitHub Pages using Jekyll:
 
-3. **Deploy Settings**
-   - Execute as: User accessing the web app
-   - Who has access: Anyone in your organization
+- [End Users](docs/end-users/) — how to use each application
+- [Developers](docs/developers/) — technical guides and spreadsheet mappings
+- [Troubleshooting](docs/troubleshooting.md) — common issues and solutions
+- [FAQ](docs/faq.md) — frequently asked questions
 
-## Security Considerations
+Implementation guides for each analyzer version live in their respective `guides/` directories.
 
-- All data stays within your Google Workspace
-- User authentication via Google accounts
-- Configurable access permissions
-- Audit logging capabilities
-- No external dependencies
+## Development
 
-## Limitations
+**Branches:**
+- `main` — stable production code
+- `2026dev` — active development for the 2026 cycle
+- `2026prod` — production deployment for 2026
 
-Google Apps Script has quotas:
-- Execution time: 6 minutes per run
-- Email: 100/day (consumer), 1,500/day (Workspace)
-- Triggers: 20 per script
-- URL Fetch calls: 20,000/day
+**Deployment:** Use `clasp push` from the relevant sub-project directory. Each version (2025, 2026) deploys to its own Apps Script project.
 
-## Contributing
-
-To contribute to this project:
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Test thoroughly
-5. Submit a pull request
-
-Please ensure:
-- Code follows existing patterns
-- Documentation is updated
-- No hardcoded credentials
-- Proper error handling
-
-## Support
-
-- Check the [documentation](docs/)
-- Review [FAQ](docs/faq.md)
-- See [Troubleshooting](docs/troubleshooting.md)
-- Contact your administrator
-
-## License
-
-This project is provided as-is for educational and reference purposes. Customize and use according to your organization's needs.
-
-## Acknowledgments
-
-Built with Google Apps Script and designed to demonstrate the power of Google Workspace automation.
-
----
-
-**Note**: Remember to update all placeholder values (spreadsheet IDs, email addresses, etc.) with your actual configuration before deploying.
+**Testing:** Each analyzer includes test functions (e.g., `testMostRecentFieldPlan()`) that send output to `datateam@alforward.org` instead of production recipients.
