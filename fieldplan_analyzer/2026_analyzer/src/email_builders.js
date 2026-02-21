@@ -33,7 +33,7 @@ function buildEmailShell(title, subtitle, contentRows, colors) {
     '<table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background-color:' + colors.background + ';">' +
     '<tr><td style="padding:20px 0;">' +
     '<table role="presentation" cellspacing="0" cellpadding="0" border="0" width="600" style="margin:0 auto;background-color:' + colors.white + ';border:1px solid ' + colors.divider + ';border-radius:8px;max-width:600px;">' +
-    '<tr><td style="background-color:' + colors.primary + ';padding:24px;text-align:center;border-radius:8px 8px 0 0;">' +
+    '<tr><td style="background-color:' + colors.secondary + ';padding:24px;text-align:center;border-radius:8px 8px 0 0;">' +
     '<h1 style="margin:0 0 8px 0;font-size:24px;font-weight:bold;color:#FFFFFF;">' + title + '</h1>' +
     (subtitle ? '<p style="margin:0;font-size:18px;color:#FFFFFF;">' + subtitle + '</p>' : '') +
     '</td></tr>' +
@@ -94,7 +94,7 @@ function buildEmailHeader(fieldPlan, colors) {
   var badgeColor = trained ? colors.success : colors.warning;
   var badgeText = trained ? 'TRAINED' : 'NEEDS TRAINING';
 
-  return '<tr><td style="background-color:' + colors.primary + ';padding:24px;text-align:center;border-radius:8px 8px 0 0;">' +
+  return '<tr><td style="background-color:' + colors.secondary + ';padding:24px;text-align:center;border-radius:8px 8px 0 0;">' +
     '<p style="margin:0 0 8px 0;font-size:14px;color:#FFFFFF;">New Field Plan Submission</p>' +
     '<h1 style="margin:0 0 12px 0;font-size:24px;font-weight:bold;color:#FFFFFF;">' + (fieldPlan.memberOrgName || 'Unknown Organization') + '</h1>' +
     '<span style="display:inline-block;background-color:' + badgeColor + ';color:#FFFFFF;padding:4px 12px;border-radius:12px;font-size:12px;font-weight:bold;">' + badgeText + '</span>' +
@@ -403,17 +403,44 @@ function buildEmailFooter(colors) {
 
 function formatArray(arr) {
   if (!arr) return 'None specified';
+
+  // Normalize to a flat array — handles arrays, newline-separated strings, and plain strings
+  var values = [];
   if (Array.isArray(arr)) {
-    if (arr.length === 0) return 'None specified';
-    if (arr.length === 1) return arr[0];
-    var items = '';
     for (var i = 0; i < arr.length; i++) {
-      items += '<li style="margin:2px 0;">' + arr[i] + '</li>';
+      var val = arr[i].toString().trim();
+      if (val.indexOf('\n') !== -1) {
+        var parts = val.split('\n');
+        for (var j = 0; j < parts.length; j++) {
+          var p = parts[j].trim();
+          if (p) values.push(p);
+        }
+      } else if (val) {
+        values.push(val);
+      }
     }
-    return '<ul style="margin:4px 0;padding-left:20px;list-style-type:disc;">' + items + '</ul>';
+  } else {
+    var str = arr.toString().trim();
+    if (!str) return 'None specified';
+    if (str.indexOf('\n') !== -1) {
+      var parts = str.split('\n');
+      for (var k = 0; k < parts.length; k++) {
+        var p = parts[k].trim();
+        if (p) values.push(p);
+      }
+    } else {
+      return str;
+    }
   }
-  var str = arr.toString().trim();
-  return str || 'None specified';
+
+  if (values.length === 0) return 'None specified';
+  if (values.length === 1) return values[0];
+
+  var items = '';
+  for (var m = 0; m < values.length; m++) {
+    items += '<li style="margin:2px 0;">' + values[m] + '</li>';
+  }
+  return '<ul style="margin:4px 0;padding-left:20px;list-style-type:disc;">' + items + '</ul>';
 }
 
 function buildSectionHeader(title, colors) {
