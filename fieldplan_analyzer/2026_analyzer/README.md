@@ -159,7 +159,7 @@ Also: `sendMissingFieldPlanNotification()`, `sendMissingBudgetNotification()`, `
 
 ### Prerequisites
 
-- Google account with access to the [2026 Field Planning Form spreadsheet](https://docs.google.com/spreadsheets/d/1Esa8vyOSKVQ6mAyYsothr4T8ESsW61rphZFjCpd89M0)
+- Google account with access to the 2026 Field Planning Form spreadsheet
 - [clasp](https://github.com/google/clasp) CLI (`npm install` from the repo root)
 
 ### Deploy
@@ -185,9 +185,9 @@ All settings are stored as Apps Script **Script Properties** (Project Settings >
 | `SPREADSHEET_ID` | *(set in code)* | Target Google Sheet |
 | `SHEET_FIELD_PLAN` | `2026_field_plan` | Field plan tab name |
 | `SHEET_FIELD_BUDGET` | `2026_field_budget` | Budget tab name |
-| `EMAIL_RECIPIENTS` | gabri, sherri, deanna, khadidah | Production email list |
-| `EMAIL_TEST_RECIPIENTS` | datateam@alforward.org | Test mode email |
-| `EMAIL_REPLY_TO` | datateam@alforward.org | Reply-to address |
+| `EMAIL_RECIPIENTS` | *(set in script properties)* | Production email list |
+| `EMAIL_TEST_RECIPIENTS` | *(set in script properties)* | Test mode email |
+| `EMAIL_REPLY_TO` | *(set in script properties)* | Reply-to address |
 | `TRIGGER_BUDGET_ANALYSIS_HOURS` | `12` | Budget analysis interval |
 | `TRIGGER_FIELD_PLAN_CHECK_HOURS` | `12` | Field plan check interval |
 | `TRIGGER_MISSING_PLAN_THRESHOLD_HOURS` | `72` | Hours before missing-doc alert |
@@ -196,7 +196,7 @@ All settings are stored as Apps Script **Script Properties** (Project Settings >
 
 ## Testing
 
-Test functions send emails to `datateam@alforward.org` with a `[TEST]` subject prefix. They never modify the ANALYZED column.
+Test functions send emails to the configured test recipient with a `[TEST]` subject prefix. They never modify the ANALYZED column.
 
 **Field plan tests** (`field_test_functions.js`):
 - `testMostRecentFieldPlan()` — sends test email for the latest field plan

@@ -58,6 +58,7 @@ node_modules/
 # Google Apps Script
 .claspignore
 .clasp.json
+_globals.js
 
 # Any other script properties or configuration files
 **/script_properties_*.json

@@ -158,4 +158,4 @@ Implementation guides for each analyzer version live in their respective `guides
 
 **Deployment:** Use `clasp push` from the relevant sub-project directory. Each version (2025, 2026) deploys to its own Apps Script project.
 
-**Testing:** Each analyzer includes test functions (e.g., `testMostRecentFieldPlan()`) that send output to `datateam@alforward.org` instead of production recipients.
+**Testing:** Each analyzer includes test functions (e.g., `testMostRecentFieldPlan()`) that send output to a test email address instead of production recipients.
