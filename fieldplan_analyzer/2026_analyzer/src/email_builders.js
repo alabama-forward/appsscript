@@ -405,14 +405,19 @@ function formatArray(arr) {
   if (!arr) return 'None specified';
   if (Array.isArray(arr)) {
     if (arr.length === 0) return 'None specified';
-    return arr.join(', ');
+    if (arr.length === 1) return arr[0];
+    var items = '';
+    for (var i = 0; i < arr.length; i++) {
+      items += '<li style="margin:2px 0;">' + arr[i] + '</li>';
+    }
+    return '<ul style="margin:4px 0;padding-left:20px;list-style-type:disc;">' + items + '</ul>';
   }
   var str = arr.toString().trim();
   return str || 'None specified';
 }
 
 function buildSectionHeader(title, colors) {
-  return '<h2 style="margin:0 0 18px 0;font-size:12px;font-weight:bold;color:' + colors.primary + ';text-transform:uppercase;letter-spacing:0.8px;padding-bottom:10px;border-bottom:1px solid ' + colors.divider + ';">' + title + '</h2>';
+  return '<h2 style="margin:0 0 18px 0;font-size:12px;font-weight:bold;color:' + colors.secondary + ';text-transform:uppercase;letter-spacing:0.8px;padding-bottom:10px;border-bottom:1px solid ' + colors.divider + ';">' + title + '</h2>';
 }
 
 function buildInfoRow(label, value, colors) {
