@@ -2,17 +2,19 @@
 // When email format needs to change, edit this file.
 
 var EMAIL_COLORS = {
-  primary: '#363d4a',       // Alabama Forward blue
+  primary: '#363d4a',       // Alabama Forward navy
   secondary: '#b53d1a',     // Alabama Forward rust
   accent: '#FF6B35',        // Alert/warning color
-  text: '#363d4a',          // Main text
-  textLight: '#666666',     // Secondary text
-  background: '#F5F5F5',    // Page background
+  text: '#202124',          // Material primary text
+  textLight: '#5F6368',     // Material secondary text
+  background: '#FFFFFF',    // White page background
   white: '#FFFFFF',         // Card background
-  border: '#DDDDDD',       // Border color
-  success: '#28A745',       // Success/positive
-  warning: '#FFC107',       // Warning
-  danger: '#DC3545'         // Danger/urgent
+  border: '#E0E0E0',       // Material border
+  surface: '#F8F9FA',      // Card/row background
+  divider: '#DADCE0',      // Section dividers
+  success: '#1E8E3E',       // Material green
+  warning: '#F9AB00',       // Material amber
+  danger: '#D93025'         // Material red
 };
 
 function buildTestModeBanner() {
@@ -30,10 +32,10 @@ function buildEmailShell(title, subtitle, contentRows, colors) {
     '<body style="margin:0;padding:0;font-family:Arial,sans-serif;font-size:16px;line-height:1.6;color:' + colors.text + ';background-color:' + colors.background + ';">' +
     '<table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background-color:' + colors.background + ';">' +
     '<tr><td style="padding:20px 0;">' +
-    '<table role="presentation" cellspacing="0" cellpadding="0" border="0" width="600" style="margin:0 auto;background-color:' + colors.white + ';border-radius:8px;max-width:600px;">' +
-    '<tr><td style="background:linear-gradient(135deg,' + colors.primary + ' 0%,' + colors.secondary + ' 100%);padding:30px;text-align:center;border-radius:8px 8px 0 0;">' +
-    '<h1 style="margin:0 0 10px 0;font-size:24px;font-weight:bold;color:#FFFFFF;">' + title + '</h1>' +
-    (subtitle ? '<p style="margin:0;font-size:18px;color:rgba(255,255,255,0.95);">' + subtitle + '</p>' : '') +
+    '<table role="presentation" cellspacing="0" cellpadding="0" border="0" width="600" style="margin:0 auto;background-color:' + colors.white + ';border:1px solid ' + colors.divider + ';border-radius:8px;max-width:600px;">' +
+    '<tr><td style="background-color:' + colors.primary + ';padding:24px;text-align:center;border-radius:8px 8px 0 0;">' +
+    '<h1 style="margin:0 0 8px 0;font-size:24px;font-weight:bold;color:#FFFFFF;">' + title + '</h1>' +
+    (subtitle ? '<p style="margin:0;font-size:18px;color:#FFFFFF;">' + subtitle + '</p>' : '') +
     '</td></tr>' +
     contentRows +
     buildEmailFooter(colors) +
@@ -66,7 +68,7 @@ function buildFieldPlanEmailHTML(fieldPlan, tactics) {
     '<body style="margin:0;padding:0;font-family:Arial,sans-serif;font-size:16px;line-height:1.6;color:' + colors.text + ';background-color:' + colors.background + ';">' +
     '<table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background-color:' + colors.background + ';">' +
     '<tr><td style="padding:20px 0;">' +
-    '<table role="presentation" cellspacing="0" cellpadding="0" border="0" width="600" style="margin:0 auto;background-color:' + colors.white + ';border-radius:8px;max-width:600px;">' +
+    '<table role="presentation" cellspacing="0" cellpadding="0" border="0" width="600" style="margin:0 auto;background-color:' + colors.white + ';border:1px solid ' + colors.divider + ';border-radius:8px;max-width:600px;">' +
     buildEmailHeader(fieldPlan, colors) +
     buildOrgSummaryCard(fieldPlan, colors) +
     buildQuickStatsGrid(fieldPlan, tactics, colors) +
@@ -92,9 +94,9 @@ function buildEmailHeader(fieldPlan, colors) {
   var badgeColor = trained ? colors.success : colors.warning;
   var badgeText = trained ? 'TRAINED' : 'NEEDS TRAINING';
 
-  return '<tr><td style="background:linear-gradient(135deg,' + colors.primary + ' 0%,' + colors.secondary + ' 100%);padding:30px;text-align:center;border-radius:8px 8px 0 0;">' +
-    '<h1 style="margin:0 0 10px 0;font-size:24px;font-weight:bold;color:#FFFFFF;">New Field Plan Submission</h1>' +
-    '<p style="margin:0 0 12px 0;font-size:18px;color:rgba(255,255,255,0.95);">' + (fieldPlan.memberOrgName || 'Unknown Organization') + '</p>' +
+  return '<tr><td style="background-color:' + colors.primary + ';padding:24px;text-align:center;border-radius:8px 8px 0 0;">' +
+    '<h1 style="margin:0 0 8px 0;font-size:24px;font-weight:bold;color:#FFFFFF;">New Field Plan Submission</h1>' +
+    '<p style="margin:0 0 12px 0;font-size:18px;color:#FFFFFF;">' + (fieldPlan.memberOrgName || 'Unknown Organization') + '</p>' +
     '<span style="display:inline-block;background-color:' + badgeColor + ';color:#FFFFFF;padding:4px 12px;border-radius:12px;font-size:12px;font-weight:bold;">' + badgeText + '</span>' +
     '</td></tr>';
 }
@@ -111,7 +113,7 @@ function buildOrgSummaryCard(fieldPlan, colors) {
   }
 
   return '<tr><td style="padding:20px 30px;">' +
-    '<div style="background-color:' + colors.background + ';border-left:4px solid ' + colors.primary + ';padding:15px;border-radius:4px;">' +
+    '<div style="background-color:' + colors.surface + ';border-left:4px solid ' + colors.primary + ';padding:15px;border-radius:4px;">' +
     '<p style="margin:0 0 4px 0;font-size:12px;color:' + colors.textLight + ';text-transform:uppercase;font-weight:bold;">Submitted</p>' +
     '<p style="margin:0;font-size:15px;color:' + colors.text + ';">' + dateStr + '</p>' +
     '</div></td></tr>';
@@ -133,7 +135,7 @@ function buildQuickStatsGrid(fieldPlan, tactics, colors) {
     : 'N/A';
 
   function statCell(label, value, color) {
-    return '<td style="background-color:' + colors.background + ';border-radius:8px;padding:15px;text-align:center;border:2px solid ' + color + ';width:50%;">' +
+    return '<td style="background-color:' + colors.white + ';border-radius:8px;padding:15px;text-align:center;border-bottom:2px solid ' + color + ';width:50%;">' +
       '<div style="font-size:28px;font-weight:bold;color:' + color + ';margin-bottom:4px;">' + value + '</div>' +
       '<div style="font-size:11px;color:' + colors.textLight + ';text-transform:uppercase;font-weight:bold;">' + label + '</div></td>';
   }
@@ -183,7 +185,7 @@ function buildNarrativeSection(fieldPlan, colors) {
 
   return '<tr><td style="padding:0 30px 25px 30px;">' +
     buildSectionHeader('Field Program Narrative', colors) +
-    '<div style="background-color:' + colors.background + ';border-left:4px solid ' + colors.primary + ';padding:15px;border-radius:4px;">' +
+    '<div style="background-color:' + colors.surface + ';border-left:4px solid ' + colors.primary + ';padding:15px;border-radius:4px;">' +
     '<p style="margin:0;font-size:14px;color:' + colors.text + ';line-height:1.6;">' + formatted + '</p>' +
     '</div></td></tr>';
 }
@@ -241,7 +243,7 @@ function buildTacticsSection(tactics, colors) {
       ? 'This field plan was submitted with no tactic goals. This should not be possible — please follow up with the organization.'
       : 'No field tactics were specified in this plan.';
 
-    html += '<div style="background-color:#FFF3CD;border-left:4px solid ' + colors.danger + ';padding:15px;border-radius:4px;">' +
+    html += '<div style="background-color:' + colors.white + ';border-left:4px solid ' + colors.danger + ';padding:15px;border-radius:4px;">' +
       '<p style="margin:0;font-weight:bold;color:' + colors.danger + ';">' + noTacticsWarning + '</p></div>';
 
     html += '</td></tr>';
@@ -253,7 +255,7 @@ function buildTacticsSection(tactics, colors) {
     var tactic = tactics[i];
     var mt = (i === 0) ? '0' : '20px';
 
-    html += '<div style="background-color:' + colors.background + ';border-radius:8px;padding:20px;margin-top:' + mt + ';border-left:4px solid ' + colors.secondary + ';">' +
+    html += '<div style="background-color:' + colors.surface + ';border-radius:8px;padding:20px;margin-top:' + mt + ';border-top:2px solid ' + colors.secondary + ';">' +
       '<h3 style="margin:0 0 12px 0;font-size:18px;font-weight:bold;color:' + colors.text + ';">' + tactic.tacticName + '</h3>' +
       '<table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">' +
       '<tr><td style="padding:6px 0;width:50%;"><strong>Program Length:</strong> ' + tactic.programLength + ' weeks</td>' +
@@ -261,7 +263,7 @@ function buildTacticsSection(tactics, colors) {
       '<tr><td style="padding:6px 0;"><strong>Hours/Week:</strong> ' + tactic.weeklyVolunteerHours + '</td>' +
       '<td style="padding:6px 0;"><strong>Attempts/Hour:</strong> ' + tactic.hourlyAttempts + '</td></tr>' +
       '</table>' +
-      '<div style="background-color:' + colors.white + ';border-radius:4px;padding:12px;margin-top:12px;">' +
+      '<div style="background-color:' + colors.white + ';border-radius:4px;padding:12px;margin-top:12px;border-top:1px solid ' + colors.divider + ';">' +
       '<p style="margin:0 0 8px 0;font-weight:bold;color:' + colors.primary + ';">Projections</p>' +
       '<p style="margin:0 0 4px 0;font-size:14px;"><strong>Total Program Hours:</strong> ' + tactic.programVolunteerHours() + '</p>' +
       '<p style="margin:0 0 4px 0;font-size:14px;"><strong>Total Attempts:</strong> ' + tactic.programAttempts().toLocaleString() + '</p>' +
@@ -272,7 +274,7 @@ function buildTacticsSection(tactics, colors) {
 
   // Render incomplete tactics with a warning
   if (tactics.incomplete && tactics.incomplete.length > 0) {
-    html += '<div style="background-color:#FFF3CD;border-left:4px solid ' + colors.warning + ';padding:15px;border-radius:4px;margin-top:20px;">' +
+    html += '<div style="background-color:' + colors.white + ';border-left:4px solid ' + colors.warning + ';padding:15px;border-radius:4px;margin-top:20px;">' +
       '<p style="margin:0 0 10px 0;font-weight:bold;color:' + colors.text + ';">Incomplete Tactic Goals</p>' +
       '<p style="margin:0 0 12px 0;font-size:14px;color:' + colors.textLight + ';">The following tactics had partial data submitted. Analysis could not be completed because missing fields prevent calculating projections. Follow up with the organization to complete these goals.</p>';
 
@@ -310,7 +312,7 @@ function buildConfidenceSection(fieldPlan, colors) {
 
   var html = '<tr><td style="padding:0 30px 25px 30px;">' +
     buildSectionHeader('Confidence Assessment', colors) +
-    '<div style="background-color:' + (needsCoaching ? '#FFF3CD' : '#D4EDDA') + ';border-left:4px solid ' + coachingColor + ';padding:12px;border-radius:4px;margin-bottom:15px;">' +
+    '<div style="background-color:' + colors.white + ';border-left:4px solid ' + coachingColor + ';padding:12px;border-radius:4px;margin-bottom:15px;">' +
     '<p style="margin:0 0 4px 0;font-weight:bold;color:' + colors.text + ';">' + (needsCoaching ? 'Coaching Recommended' : 'Confident in Plan') + '</p>' +
     '<p style="margin:0;font-size:14px;color:' + colors.text + ';">' + fieldPlan.needsCoaching() + '</p></div>';
 
@@ -331,7 +333,7 @@ function buildConfidenceSection(fieldPlan, colors) {
   }
 
   // Average score display
-  html += '<div style="text-align:center;margin-top:15px;padding:18px;background-color:' + colors.background + ';border-radius:8px;">' +
+  html += '<div style="text-align:center;margin-top:15px;padding:18px;">' +
     '<p style="margin:0 0 5px 0;font-size:12px;color:' + colors.textLight + ';text-transform:uppercase;font-weight:bold;">Average Confidence Score</p>' +
     '<p style="margin:0;font-size:36px;font-weight:bold;color:' + coachingColor + ';">' + avgScore + '/10</p></div>' +
     '</td></tr>';
@@ -378,10 +380,10 @@ function buildActionItemsSection(fieldPlan, tactics, colors) {
 
   for (var i = 0; i < actions.length; i++) {
     var a = actions[i];
-    var mt = i === 0 ? '0' : '12px';
+    var mt = i === 0 ? '0' : '16px';
     var pc = pColors[a.priority] || colors.textLight;
 
-    html += '<div style="background-color:' + colors.background + ';border-left:4px solid ' + pc + ';padding:12px 15px;border-radius:4px;margin-top:' + mt + ';">' +
+    html += '<div style="background-color:' + colors.white + ';border-left:2px solid ' + pc + ';padding:12px 15px;border-radius:4px;margin-top:' + mt + ';">' +
       '<p style="margin:0 0 4px 0;font-weight:bold;color:' + colors.text + ';font-size:15px;">' + a.title +
       ' <span style="display:inline-block;background-color:' + pc + ';color:#FFFFFF;padding:2px 8px;border-radius:10px;font-size:11px;margin-left:6px;text-transform:uppercase;font-weight:bold;">' + a.priority + '</span></p>' +
       '<p style="margin:0;font-size:13px;color:' + colors.textLight + ';">' + a.description + '</p></div>';
@@ -392,7 +394,7 @@ function buildActionItemsSection(fieldPlan, tactics, colors) {
 }
 
 function buildEmailFooter(colors) {
-  return '<tr><td style="background-color:' + colors.background + ';padding:25px 30px;text-align:center;border-radius:0 0 8px 8px;border-top:1px solid ' + colors.border + ';">' +
+  return '<tr><td style="background-color:' + colors.white + ';padding:25px 30px;text-align:center;border-radius:0 0 8px 8px;border-top:1px solid ' + colors.divider + ';">' +
     '<p style="margin:0 0 8px 0;font-size:14px;color:' + colors.textLight + ';font-weight:bold;">Alabama Forward Field Planning System</p>' +
     '<p style="margin:0 0 12px 0;font-size:12px;color:' + colors.textLight + ';">This email was automatically generated when a new field plan was submitted.</p>' +
     '<p style="margin:0;font-size:12px;"><a href="mailto:datateam@alforward.org" style="color:' + colors.primary + ';text-decoration:none;font-weight:bold;">Contact Data Team</a></p>' +
@@ -410,16 +412,16 @@ function formatArray(arr) {
 }
 
 function buildSectionHeader(title, colors) {
-  return '<h2 style="margin:0 0 18px 0;font-size:18px;font-weight:bold;color:' + colors.text + ';padding-bottom:10px;border-bottom:2px solid ' + colors.primary + ';">' + title + '</h2>';
+  return '<h2 style="margin:0 0 18px 0;font-size:12px;font-weight:bold;color:' + colors.textLight + ';text-transform:uppercase;letter-spacing:0.8px;padding-bottom:10px;border-bottom:1px solid ' + colors.divider + ';">' + title + '</h2>';
 }
 
 function buildInfoRow(label, value, colors) {
-  return '<tr><td style="padding:10px 0;border-bottom:1px solid ' + colors.border + ';">' +
+  return '<tr><td style="padding:12px 0;border-bottom:1px solid ' + colors.divider + ';">' +
     '<table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%"><tr>' +
     '<td style="vertical-align:top;width:40%;padding-right:10px;">' +
     '<strong style="font-size:13px;color:' + colors.textLight + ';">' + label + '</strong></td>' +
     '<td style="vertical-align:top;width:60%;">' +
-    '<span style="font-size:14px;color:' + colors.text + ';line-height:1.4;">' + (value || 'Not specified') + '</span></td>' +
+    '<span style="font-size:14px;color:' + colors.text + ';line-height:1.5;">' + (value || 'Not specified') + '</span></td>' +
     '</tr></table></td></tr>';
 }
 
@@ -428,7 +430,7 @@ function buildAlertEmailHTML(title, orgName, bodyLines, borderColor, colors) {
   borderColor = borderColor || colors.warning;
 
   var alertContent = '<tr><td style="padding:25px 30px;">' +
-    '<div style="background-color:' + colors.background + ';border-left:4px solid ' + borderColor + ';padding:20px;border-radius:4px;">' +
+    '<div style="background-color:' + colors.surface + ';border-left:4px solid ' + borderColor + ';padding:20px;border-radius:4px;">' +
     '<p style="margin:0 0 8px 0;font-size:16px;font-weight:bold;color:' + colors.text + ';">' + (orgName || 'Unknown Organization') + '</p>';
 
   for (var i = 0; i < bodyLines.length; i++) {
@@ -437,7 +439,7 @@ function buildAlertEmailHTML(title, orgName, bodyLines, borderColor, colors) {
 
   alertContent += '</div></td></tr>' +
     '<tr><td style="padding:0 30px 25px 30px;">' +
-    '<div style="background-color:' + colors.background + ';border-radius:8px;padding:15px 20px;text-align:center;">' +
+    '<div style="background-color:' + colors.surface + ';border-radius:8px;padding:15px 20px;text-align:center;">' +
     '<p style="margin:0;font-size:14px;color:' + colors.text + ';">Please follow up with the organization.</p>' +
     '</div></td></tr>';
 
@@ -471,7 +473,7 @@ function buildBudgetAnalysisEmailHTML(budget, fieldPlan, analysis, colors) {
     var badgeColor = statusColors[tactic.status] || colors.textLight;
     var statusLabel = tactic.status === 'within' ? 'WITHIN TARGET' : tactic.status === 'below' ? 'BELOW TARGET' : 'ABOVE TARGET';
 
-    content += '<div style="background-color:' + colors.background + ';border-radius:8px;padding:20px;margin-top:' + mt + ';border-left:4px solid ' + badgeColor + ';">' +
+    content += '<div style="background-color:' + colors.surface + ';border-radius:8px;padding:20px;margin-top:' + mt + ';border-top:2px solid ' + badgeColor + ';">' +
       '<h3 style="margin:0 0 12px 0;font-size:18px;font-weight:bold;color:' + colors.text + ';">' + tactic.tacticName +
       ' <span style="display:inline-block;background-color:' + badgeColor + ';color:#FFFFFF;padding:2px 10px;border-radius:10px;font-size:11px;font-weight:bold;margin-left:8px;text-transform:uppercase;">' + statusLabel + '</span></h3>' +
       '<table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">' +
@@ -480,7 +482,7 @@ function buildBudgetAnalysisEmailHTML(budget, fieldPlan, analysis, colors) {
       '<tr><td style="padding:6px 0;"><strong>Cost/Attempt:</strong> $' + (parseFloat(tactic.costPerAttempt) || 0).toFixed(2) + '</td>' +
       '<td style="padding:6px 0;"><strong>Target:</strong> $' + (parseFloat(tactic.lowerBound) || 0).toFixed(2) + ' - $' + (parseFloat(tactic.upperBound) || 0).toFixed(2) + '</td></tr>' +
       '</table>' +
-      '<div style="background-color:' + colors.white + ';border-radius:4px;padding:12px;margin-top:12px;">' +
+      '<div style="background-color:' + colors.white + ';border-radius:4px;padding:12px;margin-top:12px;border-top:1px solid ' + colors.divider + ';">' +
       '<p style="margin:0;font-size:14px;color:' + colors.text + ';"><strong>Recommendation:</strong> ' + tactic.recommendation + '</p>' +
       '</div></div>';
   }
@@ -490,12 +492,12 @@ function buildBudgetAnalysisEmailHTML(budget, fieldPlan, analysis, colors) {
   // Incomplete or missing tactic warnings
   if (analysis.noTacticsAtAll) {
     content += '<tr><td style="padding:0 30px 25px 30px;">' +
-      '<div style="background-color:#FFF3CD;border-left:4px solid ' + colors.danger + ';padding:15px;border-radius:4px;">' +
+      '<div style="background-color:' + colors.white + ';border-left:4px solid ' + colors.danger + ';padding:15px;border-radius:4px;">' +
       '<p style="margin:0;font-weight:bold;color:' + colors.danger + ';">No tactic goals were submitted with this field plan. Cost efficiency analysis cannot be performed. Follow up with the organization to complete their goals.</p>' +
       '</div></td></tr>';
   } else if (analysis.incompleteTactics && analysis.incompleteTactics.length > 0) {
     content += '<tr><td style="padding:0 30px 25px 30px;">' +
-      '<div style="background-color:#FFF3CD;border-left:4px solid ' + colors.warning + ';padding:15px;border-radius:4px;">' +
+      '<div style="background-color:' + colors.white + ';border-left:4px solid ' + colors.warning + ';padding:15px;border-radius:4px;">' +
       '<p style="margin:0 0 10px 0;font-weight:bold;color:' + colors.text + ';">Incomplete Tactic Goals</p>' +
       '<p style="margin:0 0 12px 0;font-size:14px;color:' + colors.textLight + ';">The following tactics had partial data submitted. Cost efficiency could not be calculated for these tactics because missing fields prevent projecting total attempts.</p>';
 
@@ -514,19 +516,19 @@ function buildBudgetAnalysisEmailHTML(budget, fieldPlan, analysis, colors) {
   if (analysis.gaps && analysis.gaps.length > 0) {
     content += '<tr><td style="padding:0 30px 25px 30px;">' +
       buildSectionHeader('Funding Gap Analysis', colors) +
-      '<table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="border:1px solid ' + colors.border + ';border-radius:4px;overflow:hidden;">' +
-      '<tr style="background-color:' + colors.primary + ';">' +
-      '<td style="padding:10px 15px;color:#FFFFFF;font-size:13px;font-weight:bold;">Tactic</td>' +
-      '<td style="padding:10px 15px;color:#FFFFFF;font-size:13px;font-weight:bold;text-align:right;">Gap Amount</td></tr>';
+      '<table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="border:1px solid ' + colors.divider + ';border-radius:4px;overflow:hidden;">' +
+      '<tr style="background-color:' + colors.surface + ';">' +
+      '<td style="padding:10px 15px;color:' + colors.text + ';font-size:13px;font-weight:bold;">Tactic</td>' +
+      '<td style="padding:10px 15px;color:' + colors.text + ';font-size:13px;font-weight:bold;text-align:right;">Gap Amount</td></tr>';
 
     for (var j = 0; j < analysis.gaps.length; j++) {
       var gap = analysis.gaps[j];
       var tacticName = gap.category.charAt(0).toUpperCase() + gap.category.slice(1);
-      var rowBg = (j % 2 === 0) ? colors.white : colors.background;
+      var rowBg = (j % 2 === 0) ? colors.white : colors.surface;
 
       content += '<tr style="background-color:' + rowBg + ';">' +
-        '<td style="padding:10px 15px;font-size:14px;font-weight:bold;color:' + colors.text + ';border-top:1px solid ' + colors.border + ';">' + tacticName + '</td>' +
-        '<td style="padding:10px 15px;font-size:14px;color:' + colors.text + ';text-align:right;border-top:1px solid ' + colors.border + ';">$' + gap.gap + '</td></tr>';
+        '<td style="padding:10px 15px;font-size:14px;font-weight:bold;color:' + colors.text + ';border-top:1px solid ' + colors.divider + ';">' + tacticName + '</td>' +
+        '<td style="padding:10px 15px;font-size:14px;color:' + colors.text + ';text-align:right;border-top:1px solid ' + colors.divider + ';">$' + gap.gap + '</td></tr>';
     }
 
     content += '</table></td></tr>';
@@ -535,7 +537,7 @@ function buildBudgetAnalysisEmailHTML(budget, fieldPlan, analysis, colors) {
   // Field plan connection
   var dateStr = fieldPlan.submissionDateTime || 'Unknown date';
   content += '<tr><td style="padding:0 30px 25px 30px;">' +
-    '<div style="background-color:' + colors.background + ';border-left:4px solid ' + colors.primary + ';padding:15px;border-radius:4px;">' +
+    '<div style="background-color:' + colors.surface + ';border-left:4px solid ' + colors.primary + ';padding:15px;border-radius:4px;">' +
     '<p style="margin:0 0 4px 0;font-size:12px;color:' + colors.textLight + ';text-transform:uppercase;font-weight:bold;">Field Plan Connection</p>' +
     '<p style="margin:0;font-size:15px;color:' + colors.text + ';">This analysis is based on the field plan submitted on ' + dateStr + '</p>' +
     '</div></td></tr>';
@@ -548,7 +550,7 @@ function buildWeeklySummaryEmailHTML(data, colors) {
   var dateStr = new Date().toLocaleDateString();
 
   function statCell(label, value, color) {
-    return '<td style="background-color:' + colors.background + ';border-radius:8px;padding:15px;text-align:center;border:2px solid ' + color + ';width:33%;">' +
+    return '<td style="background-color:' + colors.white + ';border-radius:8px;padding:15px;text-align:center;border-bottom:2px solid ' + color + ';width:33%;">' +
       '<div style="font-size:28px;font-weight:bold;color:' + color + ';margin-bottom:4px;">' + value + '</div>' +
       '<div style="font-size:11px;color:' + colors.textLight + ';text-transform:uppercase;font-weight:bold;">' + label + '</div></td>';
   }
@@ -596,16 +598,16 @@ function buildWeeklySummaryEmailHTML(data, colors) {
   if (activeTactics.length > 0) {
     content += '<tr><td style="padding:20px 30px 0 30px;">' +
       buildSectionHeader('Tactic Distribution', colors) +
-      '<table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="border:1px solid ' + colors.border + ';border-radius:4px;overflow:hidden;">' +
-      '<tr style="background-color:' + colors.primary + ';">' +
-      '<td style="padding:10px 15px;color:#FFFFFF;font-size:13px;font-weight:bold;">Tactic</td>' +
-      '<td style="padding:10px 15px;color:#FFFFFF;font-size:13px;font-weight:bold;text-align:right;">Programs</td></tr>';
+      '<table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="border:1px solid ' + colors.divider + ';border-radius:4px;overflow:hidden;">' +
+      '<tr style="background-color:' + colors.surface + ';">' +
+      '<td style="padding:10px 15px;color:' + colors.text + ';font-size:13px;font-weight:bold;">Tactic</td>' +
+      '<td style="padding:10px 15px;color:' + colors.text + ';font-size:13px;font-weight:bold;text-align:right;">Programs</td></tr>';
 
     for (var t = 0; t < activeTactics.length; t++) {
-      var rowBg = (t % 2 === 0) ? colors.white : colors.background;
+      var rowBg = (t % 2 === 0) ? colors.white : colors.surface;
       content += '<tr style="background-color:' + rowBg + ';">' +
-        '<td style="padding:10px 15px;font-size:14px;color:' + colors.text + ';border-top:1px solid ' + colors.border + ';">' + activeTactics[t].name + '</td>' +
-        '<td style="padding:10px 15px;font-size:14px;color:' + colors.text + ';text-align:right;border-top:1px solid ' + colors.border + ';">' + activeTactics[t].count + '</td></tr>';
+        '<td style="padding:10px 15px;font-size:14px;color:' + colors.text + ';border-top:1px solid ' + colors.divider + ';">' + activeTactics[t].name + '</td>' +
+        '<td style="padding:10px 15px;font-size:14px;color:' + colors.text + ';text-align:right;border-top:1px solid ' + colors.divider + ';">' + activeTactics[t].count + '</td></tr>';
     }
 
     content += '</table></td></tr>';
@@ -615,11 +617,11 @@ function buildWeeklySummaryEmailHTML(data, colors) {
   if (data.sortedCounties && data.sortedCounties.length > 0) {
     content += '<tr><td style="padding:20px 30px 0 30px;">' +
       buildSectionHeader('Geographic Coverage', colors) +
-      '<div style="background-color:' + colors.background + ';border-radius:8px;padding:15px;">';
+      '<div style="background-color:' + colors.surface + ';border-radius:8px;padding:15px;">';
 
     for (var c = 0; c < data.sortedCounties.length; c++) {
       var county = data.sortedCounties[c];
-      content += '<span style="display:inline-block;background-color:' + colors.white + ';border:1px solid ' + colors.border + ';border-radius:20px;padding:4px 12px;margin:4px;font-size:13px;color:' + colors.text + ';">' +
+      content += '<span style="display:inline-block;background-color:' + colors.white + ';border:1px solid ' + colors.divider + ';border-radius:20px;padding:4px 12px;margin:4px;font-size:13px;color:' + colors.text + ';">' +
         county[0] + ' <strong style="color:' + colors.primary + ';">(' + county[1] + ')</strong></span>';
     }
 
@@ -638,7 +640,7 @@ function buildWeeklySummaryEmailHTML(data, colors) {
       content += '<p style="margin:0 0 8px 0;font-size:14px;font-weight:bold;color:' + colors.text + ';">Field Plans Missing Budgets (&gt;72 hours)</p>';
       for (var m = 0; m < data.fieldPlansMissingBudgetsList.length; m++) {
         var item = data.fieldPlansMissingBudgetsList[m];
-        content += '<div style="background-color:' + colors.background + ';border-left:4px solid ' + colors.warning + ';padding:10px 15px;border-radius:4px;margin-bottom:8px;">' +
+        content += '<div style="background-color:' + colors.white + ';border-left:2px solid ' + colors.warning + ';padding:10px 15px;border-radius:4px;margin-bottom:8px;">' +
           '<p style="margin:0;font-size:14px;color:' + colors.text + ';"><strong>' + item.org + '</strong> — submitted ' + item.days + ' days ago</p></div>';
       }
     }
@@ -647,7 +649,7 @@ function buildWeeklySummaryEmailHTML(data, colors) {
       content += '<p style="margin:15px 0 8px 0;font-size:14px;font-weight:bold;color:' + colors.text + ';">Budgets Missing Field Plans (&gt;72 hours)</p>';
       for (var n = 0; n < data.budgetsMissingPlansList.length; n++) {
         var bItem = data.budgetsMissingPlansList[n];
-        content += '<div style="background-color:' + colors.background + ';border-left:4px solid ' + colors.warning + ';padding:10px 15px;border-radius:4px;margin-bottom:8px;">' +
+        content += '<div style="background-color:' + colors.white + ';border-left:2px solid ' + colors.warning + ';padding:10px 15px;border-radius:4px;margin-bottom:8px;">' +
           '<p style="margin:0;font-size:14px;color:' + colors.text + ';"><strong>' + bItem.org + '</strong> — submitted ' + bItem.days + ' days ago</p></div>';
       }
     }
@@ -671,18 +673,18 @@ function buildWeeklySummaryEmailHTML(data, colors) {
 
 function buildFieldTargetsTable(fieldPlans) {
   let html = `
-    <h2>Field Wide Targets</h2>
-    <table border="1" cellpadding="5" cellspacing="0" style="border-collapse: collapse;">
+    <h2 style="font-size:12px;font-weight:bold;color:#5F6368;text-transform:uppercase;letter-spacing:0.8px;padding-bottom:10px;border-bottom:1px solid #DADCE0;">Field Wide Targets</h2>
+    <table border="0" cellpadding="5" cellspacing="0" style="border-collapse: collapse; border:1px solid #DADCE0; border-radius:4px; width:100%;">
       <thead>
-        <tr style="background-color: #f0f0f0;">
-          <th>Organization</th>
-          <th>Counties</th>
-          <th>Cities</th>
-          <th>Special Areas</th>
-          <th>Demographics</th>
-          <th>Precincts</th>
-          <th>Running for Office</th>
-          <th>Can Teach</th>
+        <tr style="background-color: #F8F9FA;">
+          <th style="padding:10px 15px;font-size:13px;font-weight:bold;color:#202124;border-bottom:1px solid #DADCE0;">Organization</th>
+          <th style="padding:10px 15px;font-size:13px;font-weight:bold;color:#202124;border-bottom:1px solid #DADCE0;">Counties</th>
+          <th style="padding:10px 15px;font-size:13px;font-weight:bold;color:#202124;border-bottom:1px solid #DADCE0;">Cities</th>
+          <th style="padding:10px 15px;font-size:13px;font-weight:bold;color:#202124;border-bottom:1px solid #DADCE0;">Special Areas</th>
+          <th style="padding:10px 15px;font-size:13px;font-weight:bold;color:#202124;border-bottom:1px solid #DADCE0;">Demographics</th>
+          <th style="padding:10px 15px;font-size:13px;font-weight:bold;color:#202124;border-bottom:1px solid #DADCE0;">Precincts</th>
+          <th style="padding:10px 15px;font-size:13px;font-weight:bold;color:#202124;border-bottom:1px solid #DADCE0;">Running for Office</th>
+          <th style="padding:10px 15px;font-size:13px;font-weight:bold;color:#202124;border-bottom:1px solid #DADCE0;">Can Teach</th>
         </tr>
       </thead>
       <tbody>
