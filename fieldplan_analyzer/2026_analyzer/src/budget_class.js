@@ -264,7 +264,10 @@ class FieldBudget {
         `$${this.projectTotal}` :
         'unspecified';
 
-      return `$${requestedAmount} requested · $${displayGap} gap${gapNote} · ${projectCost} total project cost`
+      return '<ul style="margin:4px 0;padding-left:20px;list-style-type:disc;">' +
+        '<li style="margin:2px 0;">$' + requestedAmount + ' requested</li>' +
+        '<li style="margin:2px 0;">$' + displayGap + ' gap' + gapNote + '</li>' +
+        '<li style="margin:2px 0;">' + projectCost + ' total project cost</li></ul>'
     }
 
 
