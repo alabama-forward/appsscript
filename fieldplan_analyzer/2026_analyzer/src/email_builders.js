@@ -95,8 +95,8 @@ function buildEmailHeader(fieldPlan, colors) {
   var badgeText = trained ? 'TRAINED' : 'NEEDS TRAINING';
 
   return '<tr><td style="background-color:' + colors.primary + ';padding:24px;text-align:center;border-radius:8px 8px 0 0;">' +
-    '<h1 style="margin:0 0 8px 0;font-size:24px;font-weight:bold;color:#FFFFFF;">New Field Plan Submission</h1>' +
-    '<p style="margin:0 0 12px 0;font-size:18px;color:#FFFFFF;">' + (fieldPlan.memberOrgName || 'Unknown Organization') + '</p>' +
+    '<p style="margin:0 0 8px 0;font-size:14px;color:#FFFFFF;">New Field Plan Submission</p>' +
+    '<h1 style="margin:0 0 12px 0;font-size:24px;font-weight:bold;color:#FFFFFF;">' + (fieldPlan.memberOrgName || 'Unknown Organization') + '</h1>' +
     '<span style="display:inline-block;background-color:' + badgeColor + ';color:#FFFFFF;padding:4px 12px;border-radius:12px;font-size:12px;font-weight:bold;">' + badgeText + '</span>' +
     '</td></tr>';
 }
@@ -135,7 +135,7 @@ function buildQuickStatsGrid(fieldPlan, tactics, colors) {
     : 'N/A';
 
   function statCell(label, value, color) {
-    return '<td style="background-color:' + colors.white + ';border-radius:8px;padding:15px;text-align:center;border-bottom:2px solid ' + color + ';width:50%;">' +
+    return '<td style="background-color:' + colors.white + ';border-radius:8px;padding:15px;text-align:center;border:1px solid ' + colors.divider + ';border-bottom:2px solid ' + color + ';width:50%;">' +
       '<div style="font-size:28px;font-weight:bold;color:' + color + ';margin-bottom:4px;">' + value + '</div>' +
       '<div style="font-size:11px;color:' + colors.textLight + ';text-transform:uppercase;font-weight:bold;">' + label + '</div></td>';
   }
@@ -383,7 +383,7 @@ function buildActionItemsSection(fieldPlan, tactics, colors) {
     var mt = i === 0 ? '0' : '16px';
     var pc = pColors[a.priority] || colors.textLight;
 
-    html += '<div style="background-color:' + colors.white + ';border-left:2px solid ' + pc + ';padding:12px 15px;border-radius:4px;margin-top:' + mt + ';">' +
+    html += '<div style="background-color:' + colors.white + ';border-left:4px solid ' + pc + ';padding:12px 15px;border-radius:4px;margin-top:' + mt + ';">' +
       '<p style="margin:0 0 4px 0;font-weight:bold;color:' + colors.text + ';font-size:15px;">' + a.title +
       ' <span style="display:inline-block;background-color:' + pc + ';color:#FFFFFF;padding:2px 8px;border-radius:10px;font-size:11px;margin-left:6px;text-transform:uppercase;font-weight:bold;">' + a.priority + '</span></p>' +
       '<p style="margin:0;font-size:13px;color:' + colors.textLight + ';">' + a.description + '</p></div>';
@@ -412,7 +412,7 @@ function formatArray(arr) {
 }
 
 function buildSectionHeader(title, colors) {
-  return '<h2 style="margin:0 0 18px 0;font-size:12px;font-weight:bold;color:' + colors.textLight + ';text-transform:uppercase;letter-spacing:0.8px;padding-bottom:10px;border-bottom:1px solid ' + colors.divider + ';">' + title + '</h2>';
+  return '<h2 style="margin:0 0 18px 0;font-size:12px;font-weight:bold;color:' + colors.primary + ';text-transform:uppercase;letter-spacing:0.8px;padding-bottom:10px;border-bottom:1px solid ' + colors.divider + ';">' + title + '</h2>';
 }
 
 function buildInfoRow(label, value, colors) {
@@ -550,7 +550,7 @@ function buildWeeklySummaryEmailHTML(data, colors) {
   var dateStr = new Date().toLocaleDateString();
 
   function statCell(label, value, color) {
-    return '<td style="background-color:' + colors.white + ';border-radius:8px;padding:15px;text-align:center;border-bottom:2px solid ' + color + ';width:33%;">' +
+    return '<td style="background-color:' + colors.white + ';border-radius:8px;padding:15px;text-align:center;border:1px solid ' + colors.divider + ';border-bottom:2px solid ' + color + ';width:33%;">' +
       '<div style="font-size:28px;font-weight:bold;color:' + color + ';margin-bottom:4px;">' + value + '</div>' +
       '<div style="font-size:11px;color:' + colors.textLight + ';text-transform:uppercase;font-weight:bold;">' + label + '</div></td>';
   }
