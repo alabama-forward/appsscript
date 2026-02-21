@@ -122,10 +122,17 @@ function buildOrgSummaryCard(fieldPlan, colors) {
 function buildQuickStatsGrid(fieldPlan, tactics, colors) {
   var totalCounties = (fieldPlan.fieldCounties && Array.isArray(fieldPlan.fieldCounties)) ? fieldPlan.fieldCounties.length : 0;
   var totalTactics = tactics.length;
-  var totalDemos = 0;
-  if (fieldPlan.demoRace && Array.isArray(fieldPlan.demoRace)) totalDemos += fieldPlan.demoRace.length;
-  if (fieldPlan.demoAge && Array.isArray(fieldPlan.demoAge)) totalDemos += fieldPlan.demoAge.length;
-  if (fieldPlan.demoGender && Array.isArray(fieldPlan.demoGender)) totalDemos += fieldPlan.demoGender.length;
+  var totalReachLow = 0;
+  var totalReachHigh = 0;
+  for (var t = 0; t < tactics.length; t++) {
+    var attempts = tactics[t].programAttempts();
+    var range = tactics[t]._contactRange;
+    if (attempts && range && range.length === 2) {
+      totalReachLow += Math.round(attempts * range[0]);
+      totalReachHigh += Math.round(attempts * range[1]);
+    }
+  }
+  var reachDisplay = (totalReachLow > 0) ? totalReachLow.toLocaleString() + ' - ' + totalReachHigh.toLocaleString() : 'N/A';
 
   var confScores = [fieldPlan.confidenceReasonable, fieldPlan.confidenceData, fieldPlan.confidencePlan,
     fieldPlan.confidenceCapacity, fieldPlan.confidenceSkills, fieldPlan.confidenceGoals]
@@ -145,7 +152,7 @@ function buildQuickStatsGrid(fieldPlan, tactics, colors) {
     '<table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">' +
     '<tr>' + statCell('Counties', totalCounties, colors.primary) + '<td style="width:10px;"></td>' + statCell('Tactics', totalTactics, colors.secondary) + '</tr>' +
     '<tr><td colspan="3" style="height:10px;"></td></tr>' +
-    '<tr>' + statCell('Demographics', totalDemos, colors.accent) + '<td style="width:10px;"></td>' + statCell('Confidence', avgConf, colors.primary) + '</tr>' +
+    '<tr>' + statCell('Est. Reach', reachDisplay, colors.accent) + '<td style="width:10px;"></td>' + statCell('Confidence', avgConf, colors.primary) + '</tr>' +
     '</table></td></tr>';
 }
 
