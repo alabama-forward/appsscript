@@ -42,17 +42,17 @@ class FieldPlan {
       Logger.log(rowData[FIELD_PLAN_COLUMNS.FIELDTACTICS]);
   
       // Helper function to normalize the data if they are in lists
+      // JotForm uses newlines to separate multi-select values.
+      // Do NOT split on commas — option names can contain commas
+      // (e.g. "Prisons, Jails, or Detention Centers").
       const normalizeField = (value) => {
-        // If empty, return empty array
         if (!value) return [];
-        // If already array, return as is
         if (Array.isArray(value)) return value;
-        // If string with commas, split into array
-        if (typeof value === 'string' && value.includes(',')) {
-          return value.split(',').map(item => item.trim());
+        var str = value.toString();
+        if (str.includes('\n')) {
+          return str.split('\n').map(item => item.trim()).filter(item => item);
         }
-        // Single value - return as single-item array
-        return [value];
+        return [str.trim()];
       };
       
       //Meta
