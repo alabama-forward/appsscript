@@ -34,8 +34,8 @@ function buildEmailShell(title, subtitle, contentRows, colors) {
     '<tr><td style="padding:20px 0;">' +
     '<table role="presentation" cellspacing="0" cellpadding="0" border="0" width="600" style="margin:0 auto;background-color:' + colors.white + ';border:1px solid ' + colors.divider + ';border-radius:8px;max-width:600px;">' +
     '<tr><td style="background-color:' + colors.secondary + ';padding:24px;text-align:center;border-radius:8px 8px 0 0;">' +
-    '<h1 style="margin:0 0 8px 0;font-size:24px;font-weight:bold;color:#FFFFFF;">' + title + '</h1>' +
-    (subtitle ? '<p style="margin:0;font-size:18px;color:#FFFFFF;">' + subtitle + '</p>' : '') +
+    '<p style="margin:0 0 8px 0;font-size:14px;color:#FFFFFF;">' + title + '</p>' +
+    (subtitle ? '<h1 style="margin:0;font-size:24px;font-weight:bold;color:#FFFFFF;">' + subtitle + '</h1>' : '') +
     '</td></tr>' +
     contentRows +
     buildEmailFooter(colors) +
