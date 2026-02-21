@@ -209,7 +209,7 @@ class FieldBudget {
     sumNotOutreach() {
       let notOutreachTotal = (this.adminRequested
         + this.dataRequested
-        + this.travelRequested 
+        + this.travelRequested
         + this.commsRequested
         + this.designRequested
         + this.videoRequested
@@ -221,8 +221,7 @@ class FieldBudget {
 
       let notOutreachProportion = Math.round((notOutreachTotal / this.requestedTotal)*100)
 
-      return `${this.memberOrgName} is requesting $${notOutreachTotal} in resources for indirect costs.
-      That represents ${notOutreachProportion}% of their total funding request.`
+      return `$${notOutreachTotal} (${notOutreachProportion}% of request)`
     };
 
     sumOutreach() {
@@ -235,18 +234,15 @@ class FieldBudget {
 
       let outreachProportion = Math.round((outreachTotal / this.requestedTotal)*100)
 
-      return `${this.memberOrgName} is requesting $${outreachTotal} in resources for outreach costs.
-      That represents ${outreachProportion}% of their total funding request.`
+      return `$${outreachTotal} (${outreachProportion}% of request)`
     };
 
     needDataStipend() {
       let hourlyRate = 20
       if (this.dataRequested){
-        return `${this.memberOrgName} is requesting $${this.dataRequested} in data funding.
-        This represents ${this.dataRequested / hourlyRate} hours of labor that can be offset
-        by a data stipend.`
+        return `$${this.dataRequested} — ${this.dataRequested / hourlyRate} hours eligible for stipend`
       } else {
-        return `${this.memberOrgName} did not request data funding.`
+        return `None requested`
       }
     };
 
@@ -254,22 +250,21 @@ class FieldBudget {
       const requestedAmount = this.requestedTotal || 0;
       const rawGap = this.gapTotal || 0;
       const displayGap = Math.abs(rawGap);
-      
+
       // If gap equals requested amount, program is entirely funded by this request
       if (displayGap === requestedAmount && requestedAmount > 0) {
-        return `This program will be entirely funded by this request. Reach out to ask if they will be seeking additional funds for this program or if they will only run their program with support from Alabama Forward.`;
+        return `$${requestedAmount} — entirely funded by this request`;
       }
-      
+
       // Standard summary for programs with funding requests or gaps
-      const gapNote = rawGap < 0 ? ' (gap was originally negative, converted to positive for analysis)' : '';
-      
+      const gapNote = rawGap < 0 ? ' (negative gap)' : '';
+
       // Handle null/undefined project total
-      const projectCost = this.projectTotal !== null && this.projectTotal !== undefined ? 
-        `$${this.projectTotal}` : 
-        'an unspecified amount';
-      
-      return `${this.memberOrgName} requested $${requestedAmount} and described a funding gap of
-      $${displayGap}${gapNote}. Their project costs ${projectCost} to run.`
+      const projectCost = this.projectTotal !== null && this.projectTotal !== undefined ?
+        `$${this.projectTotal}` :
+        'unspecified';
+
+      return `$${requestedAmount} requested · $${displayGap} gap${gapNote} · ${projectCost} total project cost`
     }
 
 
