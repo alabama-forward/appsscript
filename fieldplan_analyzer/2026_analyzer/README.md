@@ -210,12 +210,3 @@ Test functions send emails to the configured test recipient with a `[TEST]` subj
 - `analyzeSpecificOrganization(orgName, isTestMode)` — analyze one org on demand
 - `reprocessAllAnalyses(isTestMode)` — rerun all field plans and budgets
 
-## Guides
-
-- [Implementation Guide](guides/implementation_guide_corrected.md) — full build walkthrough
-- [2025 to 2026 Updates](guides/2025_to_2026_updates.md) — what changed between cycles
-- [Column Mapping Guide](guides/column_mapping_guide.md) — spreadsheet structure reference
-- [Email Design Guide](guides/email_design_guide.md) — email template patterns
-- [Clasp Deployment Guide](guides/clasp_deployment_guide.md) — deploying and versioning with clasp
-- [Local Testing Guide](guides/local_testing_guide.md) — running tests locally with service accounts
-- [TypeScript Migration Guide](guides/typescript_migration_guide.md) — future migration plan
