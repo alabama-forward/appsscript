@@ -91,6 +91,10 @@ function onOpen() {
       .addItem('Debug Matching Issue', 'debugMatchingIssue')
       .addItem('Test Enhanced Matching', 'testEnhancedMatching')
       .addItem('Run All Budget Tests', 'runAllBudgetTests'))
+    .addSeparator()
+    .addSubMenu(ui.createMenu('Reprocess Setup')
+      .addItem('Create Reprocess Trigger', 'createReprocessTrigger')
+      .addItem('Setup Reprocess Columns', 'setupReprocessColumns'))
     .addToUi();
 }
 
@@ -534,4 +538,88 @@ function runColumnMappingTests() {
   }
 
   Logger.log('=== TESTS COMPLETE ===');
+}
+
+/**
+ * Creates the installable onEdit trigger for the reprocess checkboxes.
+ *
+ * Run this ONCE from the Apps Script editor. It creates an installable
+ * onEdit trigger that calls onSpreadsheetEdit(e) whenever any cell is edited.
+ * The function checks if the trigger already exists to avoid duplicates.
+ *
+ * Why installable (not simple)?
+ * Simple onEdit triggers run in a restricted scope — they cannot call
+ * MailApp, UrlFetchApp, or other services that require authorization.
+ * Since reprocessing sends emails, we need an installable trigger.
+ */
+function createReprocessTrigger() {
+  const triggers = ScriptApp.getProjectTriggers();
+  const exists = triggers.some(function(t) {
+    return t.getHandlerFunction() === 'onSpreadsheetEdit';
+  });
+
+  if (exists) {
+    Logger.log('Reprocess trigger already exists — no action taken');
+    return;
+  }
+
+  ScriptApp.newTrigger('onSpreadsheetEdit')
+    .forSpreadsheet(getSpreadsheet())
+    .onEdit()
+    .create();
+  Logger.log('Reprocess trigger created successfully');
+}
+
+/**
+ * Adds "Reprocess" checkbox columns to both the field plan and budget sheets.
+ *
+ * Run this ONCE from the Apps Script editor (or from the menu).
+ * It adds:
+ *   - A "Reprocess" header in the correct column on each sheet
+ *   - Checkbox data validation (TRUE/FALSE) for all data rows
+ *
+ * Safe to run multiple times — it overwrites the header and re-applies validation.
+ */
+function setupReprocessColumns() {
+  // --- Field Plan Sheet ---
+  const fieldPlanSheetName = scriptProps.getProperty('SHEET_FIELD_PLAN');
+  const fieldPlanSheet = getSheet(fieldPlanSheetName);
+  const fpCol = FIELD_PLAN_COLUMNS.REPROCESS + 1; // Convert 0-indexed to 1-indexed
+  const fpLastRow = fieldPlanSheet.getLastRow();
+
+  // Set header
+  fieldPlanSheet.getRange(1, fpCol).setValue('Reprocess');
+
+  // Add checkbox validation to all data rows
+  if (fpLastRow > 1) {
+    const fpRange = fieldPlanSheet.getRange(2, fpCol, fpLastRow - 1, 1);
+    const fpValidation = SpreadsheetApp.newDataValidation()
+      .requireCheckbox()
+      .build();
+    fpRange.setDataValidation(fpValidation);
+    fpRange.setValue(false); // Initialize all as unchecked
+  }
+
+  Logger.log('Field plan Reprocess column set up in column ' + fpCol + ' (' + fpLastRow + ' rows)');
+
+  // --- Budget Sheet ---
+  const budgetSheetName = scriptProps.getProperty('SHEET_FIELD_BUDGET');
+  const budgetSheet = getSheet(budgetSheetName);
+  const budgetCol = BUDGET_COLUMNS.REPROCESS + 1;
+  const budgetLastRow = budgetSheet.getLastRow();
+
+  // Set header
+  budgetSheet.getRange(1, budgetCol).setValue('Reprocess');
+
+  // Add checkbox validation to all data rows
+  if (budgetLastRow > 1) {
+    const budgetRange = budgetSheet.getRange(2, budgetCol, budgetLastRow - 1, 1);
+    const budgetValidation = SpreadsheetApp.newDataValidation()
+      .requireCheckbox()
+      .build();
+    budgetRange.setDataValidation(budgetValidation);
+    budgetRange.setValue(false);
+  }
+
+  Logger.log('Budget Reprocess column set up in column ' + budgetCol + ' (' + budgetLastRow + ' rows)');
 }
