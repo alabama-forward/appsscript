@@ -8,7 +8,7 @@
  * 
  * Last Updated: 2025-12-26
  * Form Version: 2026-Jan
- * Total columns: 73 (Columns 0-72)
+ * Total columns: 75 (Columns 0-75)
  */
 
 //===============================
@@ -69,7 +69,9 @@ const FIELD_PLAN_COLUMNS = {
     CONFIDENCEGOALS: 70,
     //Submission metadata
     SUBMISSIONURL: 71,
-    SUBMISSIONID: 72
+    SUBMISSIONID: 72,
+    //Query builder column will be added at 73
+    REPROCESS: 74
     
 }
 
@@ -135,10 +137,9 @@ PROJECTTOTAL: 51,
 GAPTOTAL: 52,
 SUBMITFIELDPLAN: 53,
 SUBMISSIONID: 54,
-// ANALYZED is not a form column — it is a metadata column added by the
-// code (markAsAnalyzed) to track which budgets have been processed.
-// It occupies the first column after the form data.
-ANALYZED: 55
+// ANALYZED is a metadata column added by the code (markAsAnalyzed)
+ANALYZED: 55,
+REPROCESS: 56
 };
 
 //===============================
