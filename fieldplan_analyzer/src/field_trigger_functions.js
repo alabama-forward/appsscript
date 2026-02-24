@@ -353,6 +353,66 @@ function onBudgetSubmission(budget) {
  * @param {Spreadsheet} e.source - The spreadsheet
  */
 function onSpreadsheetEdit(e) {
-  const sheet = e.range.getSheet()
-  const sheetName =
+  const sheet = e.range.getSheet();
+  const sheetName = sheet.getName();
+  const row = e.range.getRow();
+  const col = e.range.getColumn();
+
+  const fieldPlanSheetName = scriptProps.getProperty('SHEET_FIELD_PLAN');
+  const budgetSheetName = scriptProps.getProperty('SHEET_FIELD_BUDGET');
+
+  //col is 1-indexed in Sheets, REPROCESS is 0-indexed, so add 1
+  if (sheetName === fieldPlanSheetName && col === FIELD_PLAN_COLUMNS.REPROCESS + 1 && e.value === 'TRUE' && row > 1) {
+    reprocessFieldPlanRow(row);
+    e.range.setValue(false);
+  }
+
+  // Budget reprocess
+  if (sheetName === budgetSheetName && col === BUDGET_COLUMNS.REPROCESS + 1 && e.value === 'TRUE' && row > 1) {
+    reprocessBudgetRow(row);
+    e.range.setValue(false);
+  }
+}
+
+/**
+ * Reprocesses a single field plan row by row number
+ * 
+ * This does the same work as checkForNewRows() for a single row
+ * 
+ * @param {number} rowNumber - The 1-indexed spreadsheet row number
+ */
+function reprocessFieldPlanRow(rowNumber) {
+  try {
+    const fieldPlan = FieldPlan.fromSpecificRow(rowNumber);
+    Logger.log('Reprocessing field plan row ' + rowNumber + ': ' + fieldPlan.memberOrgName);
+    sendFieldPlanEmail(fieldPlan, rowNumber);
+    onFieldPlanSubmission(fieldPlan);
+    Logger.log('Reprocess complete for field plan row ' + rowNumber);
+  } catch (error) {
+    Logger.log('Error reprocessing field plan row ' + rowNumber + ': ' + error.message);
+  }
+}
+
+/**
+ * Reprocesses a single budget row by row number.
+ *
+ * This does the same work as analyzeBudgets() for a single row:
+ * 1. Reads the row data from the budget sheet
+ * 2. Creates a FieldBudget object
+ * 3. Calls processBudget() to run the cost analysis and send the email
+ *
+ * @param {number} rowNumber - The 1-indexed spreadsheet row number
+ */
+function reprocessBudgetRow(rowNumber) {
+  try {
+    const budgetSheet = getSheet(scriptProps.getProperty('SHEET_FIELD_BUDGET'));
+    const data = budgetSheet.getDataRange().getValues();
+    const budget = new FieldBudget(data[rowNumber - 1]);
+    const budgetData = { budget: budget, rowNumber: rowNumber };
+    Logger.log('Reprocessing budget row ' + rowNumber + ': ' + budget.memberOrgName);
+    processBudget(budgetData, false);
+    Logger.log('Reprocess complete for budget row ' + rowNumber);
+  } catch (error) {
+    Logger.log('Error reprocessing budget row ' + rowNumber + ': ' + error.message);
+  }
 }
