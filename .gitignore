@@ -68,7 +68,6 @@ _globals.js
 
 # Files
 field_quiz/references
-fieldplan_analyzer/2026_analyzer/guides
-fieldplan_analyzer/2025_analyzer/guides
-fieldplan_analyzer/2026_analyzer/examples
-fieldplan_analyzer/2026_analyzer/developing
+fieldplan_analyzer/guides
+fieldplan_analyzer/examples
+fieldplan_analyzer/developing

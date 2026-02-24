@@ -45,8 +45,7 @@ graph TD
 ```
 appsscript/
 ├── fieldplan_analyzer/          — Field plan & budget analysis system
-│   ├── 2025_analyzer/src/       — 2025 cycle (legacy)
-│   └── 2026_analyzer/src/       — 2026 cycle (active development)
+│   └── src/                     — 2026 cycle (active development)
 │
 ├── field_coordination_browser/  — Web-based precinct claiming app
 │   ├── 2025v/src/               — 2025 cycle
@@ -78,7 +77,7 @@ Processes field plan and budget form submissions, analyzes them against programm
 - `analyzeBudgets()` — time-based trigger (every 12 hours) to analyze unprocessed budgets
 - `checkForMissingFieldPlans()` — alerts when a budget exists without a matching field plan
 
-**Source files (2026):** `_globals.js`, `_column_mappings.js`, `field_plan_parent_class.js`, `field_program_extension_class.js`, `field_tactics_extension_class.js`, `budget_class.js`, `field_trigger_functions.js`, `budget_trigger_functions.js`, `email_builders.js`, `field_test_functions.js`, `budget_test_functions.js`
+**Source files:** `_globals.js`, `_column_mappings.js`, `field_plan_parent_class.js`, `field_program_extension_class.js`, `field_tactics_extension_class.js`, `budget_class.js`, `field_trigger_functions.js`, `budget_trigger_functions.js`, `email_builders.js`, `field_test_functions.js`, `budget_test_functions.js`
 
 ### Field Coordination Browser (`field_coordination_browser/`)
 
@@ -118,7 +117,7 @@ npm install
 npx clasp login
 
 # Push code to a specific project (each sub-project has its own .clasp.json)
-cd fieldplan_analyzer/2026_analyzer
+cd fieldplan_analyzer
 npx clasp push
 ```
 

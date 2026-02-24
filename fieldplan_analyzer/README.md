@@ -47,7 +47,7 @@ graph TD
 ## Project Structure
 
 ```
-2026_analyzer/
+fieldplan_analyzer/
 ├── src/
 │   ├── _globals.js                       — Script properties, getSpreadsheet(), getSheet()
 │   ├── _column_mappings.js               — All column indices + validation utilities
@@ -165,7 +165,7 @@ Also: `sendMissingFieldPlanNotification()`, `sendMissingBudgetNotification()`, `
 ### Deploy
 
 ```bash
-cd fieldplan_analyzer/2026_analyzer
+cd fieldplan_analyzer
 npx clasp push
 ```
 
