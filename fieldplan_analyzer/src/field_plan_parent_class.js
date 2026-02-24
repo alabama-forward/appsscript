@@ -48,7 +48,7 @@ class FieldPlan {
       const normalizeField = (value) => {
         if (!value) return [];
         if (Array.isArray(value)) return value;
-        var str = value.toString();
+        const str = value.toString();
         if (str.includes('\n')) {
           return str.split('\n').map(item => item.trim()).filter(item => item);
         }

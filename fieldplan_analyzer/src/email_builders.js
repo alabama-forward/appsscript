@@ -1,7 +1,7 @@
 // All email composition and HTML generation functions.
 // When email format needs to change, edit this file.
 
-var EMAIL_COLORS = {
+const EMAIL_COLORS = {
   primary: '#363d4a',       // Alabama Forward navy
   secondary: '#b53d1a',     // Alabama Forward rust
   accent: '#FF6B35',        // Alert/warning color
@@ -57,9 +57,9 @@ function buildEmailShell(title, subtitle, contentRows, colors) {
 function buildFieldPlanEmailHTML(fieldPlan, tactics) {
   tactics = tactics || [];
 
-  var colors = EMAIL_COLORS;
+  const colors = EMAIL_COLORS;
 
-  var html = '<!DOCTYPE html>' +
+  const html = '<!DOCTYPE html>' +
     '<html lang="en"><head>' +
     '<meta charset="UTF-8">' +
     '<meta name="viewport" content="width=device-width, initial-scale=1.0">' +
@@ -89,10 +89,10 @@ function buildFieldPlanEmailHTML(fieldPlan, tactics) {
 }
 
 function buildEmailHeader(fieldPlan, colors) {
-  var trained = fieldPlan.attendedTraining &&
+  const trained = fieldPlan.attendedTraining &&
     fieldPlan.attendedTraining.toString().toLowerCase().indexOf('yes') !== -1;
-  var badgeColor = trained ? colors.success : colors.warning;
-  var badgeText = trained ? 'TRAINED' : 'NEEDS TRAINING';
+  const badgeColor = trained ? colors.success : colors.warning;
+  const badgeText = trained ? 'TRAINED' : 'NEEDS TRAINING';
 
   return '<tr><td style="background-color:' + colors.secondary + ';padding:24px;text-align:center;border-radius:8px 8px 0 0;">' +
     '<p style="margin:0 0 8px 0;font-size:14px;color:#FFFFFF;">New Field Plan Submission</p>' +
@@ -102,7 +102,7 @@ function buildEmailHeader(fieldPlan, colors) {
 }
 
 function buildOrgSummaryCard(fieldPlan, colors) {
-  var dateStr = 'Not available';
+  let dateStr = 'Not available';
   if (fieldPlan.submissionDateTime) {
     try {
       dateStr = new Date(fieldPlan.submissionDateTime).toLocaleString('en-US', {
@@ -120,24 +120,24 @@ function buildOrgSummaryCard(fieldPlan, colors) {
 }
 
 function buildQuickStatsGrid(fieldPlan, tactics, colors) {
-  var totalCounties = (fieldPlan.fieldCounties && Array.isArray(fieldPlan.fieldCounties)) ? fieldPlan.fieldCounties.length : 0;
-  var totalTactics = tactics.length;
-  var totalReachLow = 0;
-  var totalReachHigh = 0;
-  for (var t = 0; t < tactics.length; t++) {
-    var attempts = tactics[t].programAttempts();
-    var range = tactics[t]._contactRange;
+  const totalCounties = (fieldPlan.fieldCounties && Array.isArray(fieldPlan.fieldCounties)) ? fieldPlan.fieldCounties.length : 0;
+  const totalTactics = tactics.length;
+  let totalReachLow = 0;
+  let totalReachHigh = 0;
+  for (let t = 0; t < tactics.length; t++) {
+    const attempts = tactics[t].programAttempts();
+    const range = tactics[t]._contactRange;
     if (attempts && range && range.length === 2) {
       totalReachLow += Math.round(attempts * range[0]);
       totalReachHigh += Math.round(attempts * range[1]);
     }
   }
-  var reachDisplay = (totalReachLow > 0) ? totalReachLow.toLocaleString() + ' - ' + totalReachHigh.toLocaleString() : 'N/A';
+  const reachDisplay = (totalReachLow > 0) ? totalReachLow.toLocaleString() + ' - ' + totalReachHigh.toLocaleString() : 'N/A';
 
-  var confScores = [fieldPlan.confidenceReasonable, fieldPlan.confidenceData, fieldPlan.confidencePlan,
+  const confScores = [fieldPlan.confidenceReasonable, fieldPlan.confidenceData, fieldPlan.confidencePlan,
     fieldPlan.confidenceCapacity, fieldPlan.confidenceSkills, fieldPlan.confidenceGoals]
     .filter(function(s) { return s && !isNaN(s); });
-  var avgConf = confScores.length > 0
+  const avgConf = confScores.length > 0
     ? (confScores.reduce(function(a, b) { return a + Number(b); }, 0) / confScores.length).toFixed(1)
     : 'N/A';
 
@@ -180,7 +180,7 @@ function buildProgramDetailsSection(fieldPlan, colors) {
 }
 
 function buildNarrativeSection(fieldPlan, colors) {
-  var narrative = fieldPlan.fieldNarrative;
+  const narrative = fieldPlan.fieldNarrative;
   if (!narrative) {
     return '<tr><td style="padding:0 30px 25px 30px;">' +
       buildSectionHeader('Field Program Narrative', colors) +
@@ -188,7 +188,7 @@ function buildNarrativeSection(fieldPlan, colors) {
       '</td></tr>';
   }
 
-  var formatted = narrative.toString().replace(/\n/g, '<br>');
+  const formatted = narrative.toString().replace(/\n/g, '<br>');
 
   return '<tr><td style="padding:0 30px 25px 30px;">' +
     buildSectionHeader('Field Program Narrative', colors) +
@@ -211,7 +211,7 @@ function buildGeographicSection(fieldPlan, colors) {
 }
 
 function buildDemographicsSection(fieldPlan, colors) {
-  var rows = buildInfoRow('Race/Ethnicity', formatArray(fieldPlan.demoRace), colors) +
+  let rows = buildInfoRow('Race/Ethnicity', formatArray(fieldPlan.demoRace), colors) +
     buildInfoRow('Age Groups', formatArray(fieldPlan.demoAge), colors) +
     buildInfoRow('Gender/Sexuality', formatArray(fieldPlan.demoGender), colors) +
     buildInfoRow('Affinity Groups', formatArray(fieldPlan.demoAffinity), colors);
@@ -241,12 +241,12 @@ function buildDemographicsSection(fieldPlan, colors) {
  * @returns {string} HTML table row
  */
 function buildTacticsSection(tactics, colors) {
-  var html = '<tr><td style="padding:0 30px 25px 30px;">' +
+  let html = '<tr><td style="padding:0 30px 25px 30px;">' +
     buildSectionHeader('Field Tactics Analysis', colors);
 
   // No tactic data at all — should not happen, flag loudly
   if (!tactics || (tactics.length === 0 && (!tactics.incomplete || tactics.incomplete.length === 0))) {
-    var noTacticsWarning = tactics && tactics.noTacticsAtAll
+    const noTacticsWarning = tactics && tactics.noTacticsAtAll
       ? 'This field plan was submitted with no tactic goals. This should not be possible — please follow up with the organization.'
       : 'No field tactics were specified in this plan.';
 
@@ -258,9 +258,9 @@ function buildTacticsSection(tactics, colors) {
   }
 
   // Render complete tactics
-  for (var i = 0; i < tactics.length; i++) {
-    var tactic = tactics[i];
-    var mt = (i === 0) ? '0' : '20px';
+  for (let i = 0; i < tactics.length; i++) {
+    const tactic = tactics[i];
+    const mt = (i === 0) ? '0' : '20px';
 
     html += '<div style="background-color:' + colors.surface + ';border-radius:8px;padding:20px;margin-top:' + mt + ';border-top:2px solid ' + colors.secondary + ';">' +
       '<h3 style="margin:0 0 12px 0;font-size:18px;font-weight:bold;color:' + colors.text + ';">' + tactic.tacticName + '</h3>' +
@@ -285,8 +285,8 @@ function buildTacticsSection(tactics, colors) {
       '<p style="margin:0 0 10px 0;font-weight:bold;color:' + colors.text + ';">Incomplete Tactic Goals</p>' +
       '<p style="margin:0 0 12px 0;font-size:14px;color:' + colors.textLight + ';">The following tactics had partial data submitted. Analysis could not be completed because missing fields prevent calculating projections. Follow up with the organization to complete these goals.</p>';
 
-    for (var j = 0; j < tactics.incomplete.length; j++) {
-      var inc = tactics.incomplete[j];
+    for (let j = 0; j < tactics.incomplete.length; j++) {
+      const inc = tactics.incomplete[j];
       html += '<div style="background-color:' + colors.white + ';border-radius:4px;padding:10px 12px;margin-top:8px;">' +
         '<p style="margin:0 0 4px 0;font-weight:bold;font-size:14px;color:' + colors.text + ';">' + inc.tacticName + '</p>' +
         '<p style="margin:0;font-size:13px;color:' + colors.danger + ';">Missing: ' + inc.missingFields.join(', ') + '</p>' +
@@ -301,7 +301,7 @@ function buildTacticsSection(tactics, colors) {
 }
 
 function buildConfidenceSection(fieldPlan, colors) {
-  var scores = [
+  const scores = [
     { label: 'Meets Expectations', value: fieldPlan.confidenceReasonable },
     { label: 'Data & Technology', value: fieldPlan.confidenceData },
     { label: 'Plan Quality', value: fieldPlan.confidencePlan },
@@ -310,24 +310,24 @@ function buildConfidenceSection(fieldPlan, colors) {
     { label: 'Meeting Goals', value: fieldPlan.confidenceGoals }
   ];
 
-  var validScores = scores.filter(function(s) { return s.value && !isNaN(s.value); });
-  var avgScore = validScores.length > 0
+  const validScores = scores.filter(function(s) { return s.value && !isNaN(s.value); });
+  const avgScore = validScores.length > 0
     ? (validScores.reduce(function(sum, s) { return sum + Number(s.value); }, 0) / validScores.length).toFixed(1)
     : 0;
-  var needsCoaching = avgScore < 6;
-  var coachingColor = needsCoaching ? colors.danger : colors.success;
+  const needsCoaching = avgScore < 6;
+  const coachingColor = needsCoaching ? colors.danger : colors.success;
 
-  var html = '<tr><td style="padding:0 30px 25px 30px;">' +
+  let html = '<tr><td style="padding:0 30px 25px 30px;">' +
     buildSectionHeader('Confidence Assessment', colors) +
     '<div style="background-color:' + colors.white + ';border-left:4px solid ' + coachingColor + ';padding:12px;border-radius:4px;margin-bottom:15px;">' +
     '<p style="margin:0 0 4px 0;font-weight:bold;color:' + colors.text + ';">' + (needsCoaching ? 'Coaching Recommended' : 'Confident in Plan') + '</p>' +
     '<p style="margin:0;font-size:14px;color:' + colors.text + ';">' + fieldPlan.needsCoaching() + '</p></div>';
 
   // Progress bars for each score
-  for (var i = 0; i < scores.length; i++) {
-    var score = Number(scores[i].value) || 0;
-    var pct = (score / 10) * 100;
-    var barColor = score >= 8 ? colors.success : score >= 6 ? colors.warning : colors.danger;
+  for (let i = 0; i < scores.length; i++) {
+    const score = Number(scores[i].value) || 0;
+    const pct = (score / 10) * 100;
+    const barColor = score >= 8 ? colors.success : score >= 6 ? colors.warning : colors.danger;
 
     html += '<table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin-bottom:12px;">' +
       '<tr><td style="font-size:13px;font-weight:bold;color:' + colors.text + ';padding-bottom:4px;">' + scores[i].label + '</td>' +
@@ -348,13 +348,13 @@ function buildConfidenceSection(fieldPlan, colors) {
 }
 
 function buildActionItemsSection(fieldPlan, tactics, colors) {
-  var actions = [];
+  const actions = [];
 
   // Tactic goal issues — these block approval
   if (tactics && tactics.noTacticsAtAll) {
     actions.push({ priority: 'high', title: 'Do Not Approve — No Tactic Goals', description: 'This field plan was submitted with zero tactic goals. This should not be possible. Reach out to the organization to complete their goals before approving.' });
   } else if (tactics && tactics.incomplete && tactics.incomplete.length > 0) {
-    var missingNames = tactics.incomplete.map(function(t) { return t.tacticName; }).join(', ');
+    const missingNames = tactics.incomplete.map(function(t) { return t.tacticName; }).join(', ');
     actions.push({ priority: 'high', title: 'Do Not Approve — Incomplete Tactic Goals', description: 'The following tactics have missing data and cannot be analyzed: ' + missingNames + '. Reach out to the organization to complete these goals before approving.' });
   }
 
@@ -362,11 +362,11 @@ function buildActionItemsSection(fieldPlan, tactics, colors) {
     actions.push({ priority: 'high', title: 'Schedule Training', description: 'Organization has not attended field planning training.' });
   }
 
-  var confScores = [fieldPlan.confidenceReasonable, fieldPlan.confidenceData, fieldPlan.confidencePlan,
+  const confScores = [fieldPlan.confidenceReasonable, fieldPlan.confidenceData, fieldPlan.confidencePlan,
     fieldPlan.confidenceCapacity, fieldPlan.confidenceSkills, fieldPlan.confidenceGoals]
     .filter(function(s) { return s && !isNaN(s); });
   if (confScores.length > 0) {
-    var avg = confScores.reduce(function(a, b) { return a + Number(b); }, 0) / confScores.length;
+    const avg = confScores.reduce(function(a, b) { return a + Number(b); }, 0) / confScores.length;
     if (avg < 6) actions.push({ priority: 'high', title: 'Provide Coaching', description: 'Low confidence scores (avg ' + avg.toFixed(1) + '/10) indicate coaching need.' });
   }
 
@@ -381,14 +381,14 @@ function buildActionItemsSection(fieldPlan, tactics, colors) {
 
   actions.push({ priority: 'low', title: 'Follow Up', description: 'Schedule a check-in call to discuss the field plan.' });
 
-  var pColors = { high: colors.danger, medium: colors.warning, low: colors.success };
+  const pColors = { high: colors.danger, medium: colors.warning, low: colors.success };
 
-  var html = '<tr><td style="padding:0 30px 25px 30px;">' + buildSectionHeader('Action Items', colors);
+  let html = '<tr><td style="padding:0 30px 25px 30px;">' + buildSectionHeader('Action Items', colors);
 
-  for (var i = 0; i < actions.length; i++) {
-    var a = actions[i];
-    var mt = i === 0 ? '0' : '16px';
-    var pc = pColors[a.priority] || colors.textLight;
+  for (let i = 0; i < actions.length; i++) {
+    const a = actions[i];
+    const mt = i === 0 ? '0' : '16px';
+    const pc = pColors[a.priority] || colors.textLight;
 
     html += '<div style="background-color:' + colors.white + ';border-left:4px solid ' + pc + ';padding:12px 15px;border-radius:4px;margin-top:' + mt + ';">' +
       '<p style="margin:0 0 4px 0;font-weight:bold;color:' + colors.text + ';font-size:15px;">' + a.title +
@@ -412,14 +412,14 @@ function formatArray(arr) {
   if (!arr) return 'None specified';
 
   // Normalize to a flat array — handles arrays, newline-separated strings, and plain strings
-  var values = [];
+  const values = [];
   if (Array.isArray(arr)) {
-    for (var i = 0; i < arr.length; i++) {
-      var val = arr[i].toString().trim();
+    for (let i = 0; i < arr.length; i++) {
+      const val = arr[i].toString().trim();
       if (val.indexOf('\n') !== -1) {
-        var parts = val.split('\n');
-        for (var j = 0; j < parts.length; j++) {
-          var p = parts[j].trim();
+        const parts = val.split('\n');
+        for (let j = 0; j < parts.length; j++) {
+          const p = parts[j].trim();
           if (p) values.push(p);
         }
       } else if (val) {
@@ -427,12 +427,12 @@ function formatArray(arr) {
       }
     }
   } else {
-    var str = arr.toString().trim();
+    const str = arr.toString().trim();
     if (!str) return 'None specified';
     if (str.indexOf('\n') !== -1) {
-      var parts = str.split('\n');
-      for (var k = 0; k < parts.length; k++) {
-        var p = parts[k].trim();
+      const parts = str.split('\n');
+      for (let k = 0; k < parts.length; k++) {
+        const p = parts[k].trim();
         if (p) values.push(p);
       }
     } else {
@@ -443,8 +443,8 @@ function formatArray(arr) {
   if (values.length === 0) return 'None specified';
   if (values.length === 1) return values[0];
 
-  var items = '';
-  for (var m = 0; m < values.length; m++) {
+  let items = '';
+  for (let m = 0; m < values.length; m++) {
     items += '<li style="margin:2px 0;">' + values[m] + '</li>';
   }
   return '<ul style="margin:4px 0;padding-left:20px;list-style-type:disc;">' + items + '</ul>';
@@ -468,11 +468,11 @@ function buildAlertEmailHTML(title, orgName, bodyLines, borderColor, colors) {
   colors = colors || EMAIL_COLORS;
   borderColor = borderColor || colors.warning;
 
-  var alertContent = '<tr><td style="padding:25px 30px;">' +
+  let alertContent = '<tr><td style="padding:25px 30px;">' +
     '<div style="background-color:' + colors.surface + ';border-left:4px solid ' + borderColor + ';padding:20px;border-radius:4px;">' +
     '<p style="margin:0 0 8px 0;font-size:16px;font-weight:bold;color:' + colors.text + ';">' + (orgName || 'Unknown Organization') + '</p>';
 
-  for (var i = 0; i < bodyLines.length; i++) {
+  for (let i = 0; i < bodyLines.length; i++) {
     alertContent += '<p style="margin:8px 0 0 0;font-size:14px;color:' + colors.textLight + ';line-height:1.5;">' + bodyLines[i] + '</p>';
   }
 
@@ -487,13 +487,13 @@ function buildAlertEmailHTML(title, orgName, bodyLines, borderColor, colors) {
 
 function buildBudgetAnalysisEmailHTML(budget, fieldPlan, analysis, colors) {
   colors = colors || EMAIL_COLORS;
-  var orgName = budget.memberOrgName || 'Unknown Organization';
+  const orgName = budget.memberOrgName || 'Unknown Organization';
 
   // Status badge colors
-  var statusColors = { within: colors.success, below: colors.warning, above: colors.danger };
+  const statusColors = { within: colors.success, below: colors.warning, above: colors.danger };
 
   // Summary section
-  var content = '<tr><td style="padding:25px 30px;">' +
+  let content = '<tr><td style="padding:25px 30px;">' +
     buildSectionHeader('Request Summary', colors) +
     '<table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">' +
     buildInfoRow('Total Request', analysis.summary.requestSummary, colors) +
@@ -506,11 +506,11 @@ function buildBudgetAnalysisEmailHTML(budget, fieldPlan, analysis, colors) {
   content += '<tr><td style="padding:0 30px 25px 30px;">' +
     buildSectionHeader('Tactic Cost Analysis', colors);
 
-  for (var i = 0; i < analysis.tactics.length; i++) {
-    var tactic = analysis.tactics[i];
-    var mt = (i === 0) ? '0' : '20px';
-    var badgeColor = statusColors[tactic.status] || colors.textLight;
-    var statusLabel = tactic.status === 'within' ? 'WITHIN TARGET' : tactic.status === 'below' ? 'BELOW TARGET' : 'ABOVE TARGET';
+  for (let i = 0; i < analysis.tactics.length; i++) {
+    const tactic = analysis.tactics[i];
+    const mt = (i === 0) ? '0' : '20px';
+    const badgeColor = statusColors[tactic.status] || colors.textLight;
+    const statusLabel = tactic.status === 'within' ? 'WITHIN TARGET' : tactic.status === 'below' ? 'BELOW TARGET' : 'ABOVE TARGET';
 
     content += '<div style="background-color:' + colors.surface + ';border-radius:8px;padding:20px;margin-top:' + mt + ';border-top:2px solid ' + badgeColor + ';">' +
       '<h3 style="margin:0 0 12px 0;font-size:18px;font-weight:bold;color:' + colors.text + ';">' + tactic.tacticName +
@@ -540,8 +540,8 @@ function buildBudgetAnalysisEmailHTML(budget, fieldPlan, analysis, colors) {
       '<p style="margin:0 0 10px 0;font-weight:bold;color:' + colors.text + ';">Incomplete Tactic Goals</p>' +
       '<p style="margin:0 0 12px 0;font-size:14px;color:' + colors.textLight + ';">The following tactics had partial data submitted. Cost efficiency could not be calculated for these tactics because missing fields prevent projecting total attempts.</p>';
 
-    for (var k = 0; k < analysis.incompleteTactics.length; k++) {
-      var inc = analysis.incompleteTactics[k];
+    for (let k = 0; k < analysis.incompleteTactics.length; k++) {
+      const inc = analysis.incompleteTactics[k];
       content += '<div style="background-color:' + colors.white + ';border-radius:4px;padding:10px 12px;margin-top:8px;">' +
         '<p style="margin:0 0 4px 0;font-weight:bold;font-size:14px;color:' + colors.text + ';">' + inc.tacticName + '</p>' +
         '<p style="margin:0;font-size:13px;color:' + colors.danger + ';">Missing: ' + inc.missingFields.join(', ') + '</p>' +
@@ -560,10 +560,10 @@ function buildBudgetAnalysisEmailHTML(budget, fieldPlan, analysis, colors) {
       '<td style="padding:10px 15px;color:' + colors.text + ';font-size:13px;font-weight:bold;">Tactic</td>' +
       '<td style="padding:10px 15px;color:' + colors.text + ';font-size:13px;font-weight:bold;text-align:right;">Gap Amount</td></tr>';
 
-    for (var j = 0; j < analysis.gaps.length; j++) {
-      var gap = analysis.gaps[j];
-      var tacticName = gap.category.charAt(0).toUpperCase() + gap.category.slice(1);
-      var rowBg = (j % 2 === 0) ? colors.white : colors.surface;
+    for (let j = 0; j < analysis.gaps.length; j++) {
+      const gap = analysis.gaps[j];
+      const tacticName = gap.category.charAt(0).toUpperCase() + gap.category.slice(1);
+      const rowBg = (j % 2 === 0) ? colors.white : colors.surface;
 
       content += '<tr style="background-color:' + rowBg + ';">' +
         '<td style="padding:10px 15px;font-size:14px;font-weight:bold;color:' + colors.text + ';border-top:1px solid ' + colors.divider + ';">' + tacticName + '</td>' +
@@ -574,7 +574,7 @@ function buildBudgetAnalysisEmailHTML(budget, fieldPlan, analysis, colors) {
   }
 
   // Field plan connection
-  var dateStr = fieldPlan.submissionDateTime || 'Unknown date';
+  const dateStr = fieldPlan.submissionDateTime || 'Unknown date';
   content += '<tr><td style="padding:0 30px 25px 30px;">' +
     '<div style="background-color:' + colors.surface + ';border-left:4px solid ' + colors.primary + ';padding:15px;border-radius:4px;">' +
     '<p style="margin:0 0 4px 0;font-size:12px;color:' + colors.textLight + ';text-transform:uppercase;font-weight:bold;">Field Plan Connection</p>' +
@@ -586,7 +586,7 @@ function buildBudgetAnalysisEmailHTML(budget, fieldPlan, analysis, colors) {
 
 function buildWeeklySummaryEmailHTML(data, colors) {
   colors = colors || EMAIL_COLORS;
-  var dateStr = new Date().toLocaleDateString();
+  const dateStr = new Date().toLocaleDateString();
 
   function statCell(label, value, color) {
     return '<td style="background-color:' + colors.white + ';border-radius:8px;padding:15px;text-align:center;border:1px solid ' + colors.divider + ';border-bottom:2px solid ' + color + ';width:33%;">' +
@@ -595,7 +595,7 @@ function buildWeeklySummaryEmailHTML(data, colors) {
   }
 
   // Field plan activity stats
-  var content = '<tr><td style="padding:25px 30px 0 30px;">' +
+  let content = '<tr><td style="padding:25px 30px 0 30px;">' +
     buildSectionHeader('Field Plan Activity', colors) +
     '<table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%"><tr>' +
     statCell('New This Week', data.fieldPlansThisWeek, colors.primary) +
@@ -626,9 +626,9 @@ function buildWeeklySummaryEmailHTML(data, colors) {
     '</table></td></tr>';
 
   // Tactic distribution table
-  var activeTactics = [];
-  var tacticKeys = Object.keys(data.tacticCounts);
-  for (var i = 0; i < tacticKeys.length; i++) {
+  const activeTactics = [];
+  const tacticKeys = Object.keys(data.tacticCounts);
+  for (let i = 0; i < tacticKeys.length; i++) {
     if (data.tacticCounts[tacticKeys[i]] > 0) {
       activeTactics.push({ name: tacticKeys[i], count: data.tacticCounts[tacticKeys[i]] });
     }
@@ -642,8 +642,8 @@ function buildWeeklySummaryEmailHTML(data, colors) {
       '<td style="padding:10px 15px;color:' + colors.text + ';font-size:13px;font-weight:bold;">Tactic</td>' +
       '<td style="padding:10px 15px;color:' + colors.text + ';font-size:13px;font-weight:bold;text-align:right;">Programs</td></tr>';
 
-    for (var t = 0; t < activeTactics.length; t++) {
-      var rowBg = (t % 2 === 0) ? colors.white : colors.surface;
+    for (let t = 0; t < activeTactics.length; t++) {
+      const rowBg = (t % 2 === 0) ? colors.white : colors.surface;
       content += '<tr style="background-color:' + rowBg + ';">' +
         '<td style="padding:10px 15px;font-size:14px;color:' + colors.text + ';border-top:1px solid ' + colors.divider + ';">' + activeTactics[t].name + '</td>' +
         '<td style="padding:10px 15px;font-size:14px;color:' + colors.text + ';text-align:right;border-top:1px solid ' + colors.divider + ';">' + activeTactics[t].count + '</td></tr>';
@@ -658,8 +658,8 @@ function buildWeeklySummaryEmailHTML(data, colors) {
       buildSectionHeader('Geographic Coverage', colors) +
       '<div style="background-color:' + colors.surface + ';border-radius:8px;padding:15px;">';
 
-    for (var c = 0; c < data.sortedCounties.length; c++) {
-      var county = data.sortedCounties[c];
+    for (let c = 0; c < data.sortedCounties.length; c++) {
+      const county = data.sortedCounties[c];
       content += '<span style="display:inline-block;background-color:' + colors.white + ';border:1px solid ' + colors.divider + ';border-radius:20px;padding:4px 12px;margin:4px;font-size:13px;color:' + colors.text + ';">' +
         county[0] + ' <strong style="color:' + colors.primary + ';">(' + county[1] + ')</strong></span>';
     }
@@ -668,7 +668,7 @@ function buildWeeklySummaryEmailHTML(data, colors) {
   }
 
   // Organizations needing follow-up
-  var hasFollowUp = (data.fieldPlansMissingBudgetsList && data.fieldPlansMissingBudgetsList.length > 0) ||
+  const hasFollowUp = (data.fieldPlansMissingBudgetsList && data.fieldPlansMissingBudgetsList.length > 0) ||
     (data.budgetsMissingPlansList && data.budgetsMissingPlansList.length > 0);
 
   if (hasFollowUp) {
@@ -677,8 +677,8 @@ function buildWeeklySummaryEmailHTML(data, colors) {
 
     if (data.fieldPlansMissingBudgetsList && data.fieldPlansMissingBudgetsList.length > 0) {
       content += '<p style="margin:0 0 8px 0;font-size:14px;font-weight:bold;color:' + colors.text + ';">Field Plans Missing Budgets (&gt;72 hours)</p>';
-      for (var m = 0; m < data.fieldPlansMissingBudgetsList.length; m++) {
-        var item = data.fieldPlansMissingBudgetsList[m];
+      for (let m = 0; m < data.fieldPlansMissingBudgetsList.length; m++) {
+        const item = data.fieldPlansMissingBudgetsList[m];
         content += '<div style="background-color:' + colors.white + ';border-left:2px solid ' + colors.warning + ';padding:10px 15px;border-radius:4px;margin-bottom:8px;">' +
           '<p style="margin:0;font-size:14px;color:' + colors.text + ';"><strong>' + item.org + '</strong> — submitted ' + item.days + ' days ago</p></div>';
       }
@@ -686,8 +686,8 @@ function buildWeeklySummaryEmailHTML(data, colors) {
 
     if (data.budgetsMissingPlansList && data.budgetsMissingPlansList.length > 0) {
       content += '<p style="margin:15px 0 8px 0;font-size:14px;font-weight:bold;color:' + colors.text + ';">Budgets Missing Field Plans (&gt;72 hours)</p>';
-      for (var n = 0; n < data.budgetsMissingPlansList.length; n++) {
-        var bItem = data.budgetsMissingPlansList[n];
+      for (let n = 0; n < data.budgetsMissingPlansList.length; n++) {
+        const bItem = data.budgetsMissingPlansList[n];
         content += '<div style="background-color:' + colors.white + ';border-left:2px solid ' + colors.warning + ';padding:10px 15px;border-radius:4px;margin-bottom:8px;">' +
           '<p style="margin:0;font-size:14px;color:' + colors.text + ';"><strong>' + bItem.org + '</strong> — submitted ' + bItem.days + ' days ago</p></div>';
       }

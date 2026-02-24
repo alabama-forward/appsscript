@@ -336,3 +336,23 @@ function onBudgetSubmission(budget) {
     Logger.log(`Removed missing budget tracking for ${budget.memberOrgName}`);
   }
 }
+
+/**
+ * Installable onEdit trigger handler for reprocessing rows.
+ * 
+ * When a user checks the "Reprocess" checkbox on a field plan or budget,
+ * this function detects the edit, calls the appropriate reprocess function,
+ * and unchecks when done.
+ * 
+ * Set up the trigger by running createReprocessTrigger() once.
+ * This must be an installable trigger because of the MailApp authorization
+ * 
+ * @param {Object} e - The onEdit event object from Google Sheets
+ * @param {Range} e.range - The edited cell
+ * @param {String} e.value - The new value of the edited cell
+ * @param {Spreadsheet} e.source - The spreadsheet
+ */
+function onSpreadsheetEdit(e) {
+  const sheet = e.range.getSheet()
+  const sheetName =
+}
