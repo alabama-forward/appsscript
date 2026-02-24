@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-02-24
+### Added
+- REPROCESS columns to field plan and budget column mappings
+- Reprocess trigger handler (`onSpreadsheetEdit`) to detect checkbox edits
+- `reprocessFieldPlanRow()` and `reprocessBudgetRow()` row reprocessors
+- `createReprocessTrigger()` and `setupReprocessColumns()` setup helpers
+- Reprocess Setup submenu to the custom Apps Script menu
+- Changelog to establish v1 of this project
+
+### Changed
+- Flatten fieldplan_analyzer directory structure
+- Replace all `var` with `const`/`let` in source files
+
 ## [1.0.0] - 2026-02-24
 
 Initial versioned release, consolidating all work to date.
