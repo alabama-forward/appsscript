@@ -139,6 +139,11 @@ class FieldPlan {
     get shareOrg() { return this._shareOrg || null; }
     get programTools() { return this._programTools || null; }
     get programDates() { return this._programDates || null; }
+    get programDays() {
+      if (!this._programDates) return null;
+      const match = this._programDates.toString().match(/Difference:\s*(\d+)\s*days/i);
+      return match ? Number(match[1]) : null;
+    }
     get programTypes() { return this._programTypes || null; }
     //Geo & Tactics
     get fieldTactics() { return this._fieldTactics || null; }

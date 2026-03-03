@@ -623,3 +623,9 @@ function setupReprocessColumns() {
 
   Logger.log('Budget Reprocess column set up in column ' + budgetCol + ' (' + budgetLastRow + ' rows)');
 }
+
+function testProgramDays() {
+  const fp = FieldPlan.fromLastRow();
+  Logger.log(`programDates: ${fp.programDates}`);
+  Logger.log(`programDays: ${fp.programDays}`);
+}
