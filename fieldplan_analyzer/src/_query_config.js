@@ -36,6 +36,7 @@ function getQueryConfig(){
         saPrivateKey: props.getProperty('SA_PRIVATE_KEY'),
         sheetQueryQueue: props.getProperty('SHEET_QUERY_QUEUE'),
         sheetVanIdLookup: props.getProperty('SHEET_VAN_ID_LOOKUP'),
+        sheetCountyPrecinct: props.getProperty('SHEET_COUNTY_PRECINCT'),
         districtTable: 'catalist_AL.District',
         personTable: 'catalist_AL.Person',
         modelsTable: 'catalist_AL.Models',
