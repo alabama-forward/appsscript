@@ -267,15 +267,7 @@ function processAllFieldPlans(isTestMode = false) {
         Logger.log(`Processing row ${rowNumber}: ${fieldPlan.memberOrgName}`);
 
         // Send email with field plan details
-        if (isTestMode) {
-          // In test mode, modify the sendFieldPlanEmail to use test recipients
-          const originalRecipients = scriptProps.getProperty('TEST_RECIPIENTS');
-          scriptProps.setProperty('TEST_RECIPIENTS');
-          sendFieldPlanEmail(fieldPlan, rowNumber);
-          scriptProps.setProperty('TEST_RECIPIENTS', originalRecipients);
-        } else {
-          sendFieldPlanEmail(fieldPlan, rowNumber);
-        }
+        sendFieldPlanEmail(fieldPlan, rowNumber);
 
         successCount++;
 
