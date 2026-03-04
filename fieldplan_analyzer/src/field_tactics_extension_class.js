@@ -177,3 +177,131 @@ class TacticProgram extends FieldProgram {
     return null;
   }
 }
+
+/**
+ * Runs the below validation checks across tactics and returns structured flags.
+ *
+ * Checks performed:
+ *   1. Weeks vs Days — tactic programLength*7 vs fieldPlan.programDays
+ *   2. Identical/Similar Inputs — 2+ tactics sharing 3 or 4 of their 4 input values
+ *   3. Volunteer Hours — any tactic expecting > 6 hrs/week per individual volunteer
+ *   4. Weekly Attempts — surfaces per-tactic and total weekly attempts (informational)
+ *
+ * @param {FieldPlan} fieldPlan - The field plan instance
+ * @param {TacticProgram[]} tactics - Array of complete tactic instances
+ * @returns {Object} { flags: Array, aggregates: Object }
+ */
+function analyzeTacticFlags(fieldPlan, tactics) {
+  const flags = [];
+  if (!tactics || tactics.length === 0) return { flags: flags, aggregates: {} };
+
+  const programDays = fieldPlan.programDays;
+
+  // --- Check 1: Weeks vs Days Alignment ---
+  tactics.forEach(tactic => {
+    const check = tactic.weeksVsDaysCheck(programDays);
+    if (check) {
+      flags.push({
+        priority: 'high',
+        type: 'weeks_vs_days',
+        title: `Do Not Approve — ${check.tacticName}: Weeks vs Days Mismatch`,
+        description: `${check.tacticName} is set to ${check.tacticWeeks} weeks (${check.tacticDays} days), ` +
+          `but the program dates span ${check.programDays} days — a ${check.difference}-day difference. ` +
+          `The organization may have entered the wrong program length for this tactic.`,
+        tacticName: check.tacticName
+      });
+    }
+  });
+
+  // --- Check 2: Identical / Similar Tactic Inputs ---
+  // Compare every pair of tactics on their 4 input values
+  const inputKeys = ['programLength', 'weeklyVolunteers', 'weeklyVolunteerHours', 'hourlyAttempts'];
+
+  for (let i = 0; i < tactics.length; i++) {
+    for (let j = i + 1; j < tactics.length; j++) {
+      const a = tactics[i];
+      const b = tactics[j];
+
+      const matches = inputKeys.filter(key => a[key] === b[key]);
+
+      if (matches.length === 4) {
+        flags.push({
+          priority: 'medium',
+          type: 'identical_inputs',
+          title: `Review — Identical Inputs: ${a.tacticName} & ${b.tacticName}`,
+          description: `${a.tacticName} and ${b.tacticName} have identical values for all 4 tactic inputs ` +
+            `(${a.programLength} weeks, ${a.weeklyVolunteers} volunteers, ${a.weeklyVolunteerHours} hrs/wk, ` +
+            `${a.hourlyAttempts} attempts/hr). Verify the organization set realistic goals for each tactic individually.`,
+          tactics: [a.tacticName, b.tacticName]
+        });
+      } else if (matches.length === 3) {
+        const diffKey = inputKeys.find(key => a[key] !== b[key]);
+        const labels = {
+          programLength: 'Program Length',
+          weeklyVolunteers: 'Weekly Volunteers',
+          weeklyVolunteerHours: 'Hours/Week',
+          hourlyAttempts: 'Attempts/Hour'
+        };
+
+        flags.push({
+          priority: 'medium',
+          type: 'similar_inputs',
+          title: `Review — Near-Identical Inputs: ${a.tacticName} & ${b.tacticName}`,
+          description: `${a.tacticName} and ${b.tacticName} share 3 of 4 input values. ` +
+            `Only ${labels[diffKey]} differs (${a[diffKey]} vs ${b[diffKey]}). ` +
+            `Verify the organization set realistic goals for each tactic individually.`,
+          tactics: [a.tacticName, b.tacticName]
+        });
+      }
+    }
+  }
+
+  // --- Check 3: Volunteer Hours Reasonableness ---
+  // VOLUNTEER_HOURS_THRESHOLD is defined in field_tactics_extension_class.js
+
+  const VOLUNTEER_HOURS_CONFIRM = VOLUNTEER_HOURS_THRESHOLD + 4;
+
+  tactics.forEach(tactic => {
+    if (tactic.weeklyVolunteerHours > VOLUNTEER_HOURS_CONFIRM) {
+      flags.push({
+        priority: 'high',
+        type: 'volunteer_hours',
+        title: `Confirm — ${tactic.tacticName}: Excessive Volunteer Hours`,
+        description: `${tactic.tacticName} expects each volunteer to work ${tactic.weeklyVolunteerHours} hours/week ` +
+          `(threshold: ${VOLUNTEER_HOURS_THRESHOLD}). This may indicate the org entered total hours instead of per-volunteer hours.`,
+        tacticName: tactic.tacticName,
+        hoursPerVolunteer: tactic.weeklyVolunteerHours
+      });
+    } else if (tactic.weeklyVolunteerHours > VOLUNTEER_HOURS_THRESHOLD) {
+      flags.push({
+        priority: 'medium',
+        type: 'volunteer_hours',
+        title: `Review — ${tactic.tacticName}: High Volunteer Hours`,
+        description: `${tactic.tacticName} expects each volunteer to work ${tactic.weeklyVolunteerHours} hours/week ` +
+          `(recommended max: ${VOLUNTEER_HOURS_THRESHOLD}). Verify this is per-volunteer and not total hours.`,
+        tacticName: tactic.tacticName,
+        hoursPerVolunteer: tactic.weeklyVolunteerHours
+      });
+    }
+  });
+
+  // --- Aggregates (Check 3 continued + Check 4) ---
+  const totalWeeklyVolunteers = tactics.reduce((sum, t) => sum + t.weeklyVolunteers, 0);
+  const totalWeeklyVolunteerHours = tactics.reduce((sum, t) => sum + t.weekVolunteerHours(), 0);
+  const totalProgramVolunteerHours = tactics.reduce((sum, t) => sum + t.programVolunteerHours(), 0);
+  const totalWeeklyAttempts = tactics.reduce((sum, t) => sum + t.weeklyAttempts(), 0);
+  const totalProgramAttempts = tactics.reduce((sum, t) => sum + t.programAttempts(), 0);
+  const fteEquivalent = (totalWeeklyVolunteerHours / 40).toFixed(1);
+
+  const aggregates = {
+    totalWeeklyVolunteers: totalWeeklyVolunteers,
+    totalWeeklyVolunteerHours: totalWeeklyVolunteerHours,
+    totalProgramVolunteerHours: totalProgramVolunteerHours,
+    totalWeeklyAttempts: totalWeeklyAttempts,
+    totalProgramAttempts: totalProgramAttempts,
+    fteEquivalent: fteEquivalent
+  };
+
+  return { flags: flags, aggregates: aggregates };
+}
+
