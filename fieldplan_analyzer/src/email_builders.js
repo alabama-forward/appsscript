@@ -1001,9 +1001,11 @@ function sendFieldPlanEmail(fieldPlan, rowNumber = null, isTestMode = false) {
     const emailBody = buildFieldPlanEmailHTML(fieldPlan, tactics);
 
     // Send the email
+    const recipientList = validEmails.join(',');
+    Logger.log(`Sending field plan email to: ${recipientList}`);
     MailApp.sendEmail({
-      to: validEmails.join(','),
-      subject: 'New Field Plan: ' + (fieldPlan.memberOrgName || 'Unknown Organization'),
+      to: recipientList,
+      subject: (isTestMode ? '[TEST] ' : '') + 'New Field Plan: ' + (fieldPlan.memberOrgName || 'Unknown Organization'),
       htmlBody: emailBody,
       name: 'Alabama Forward Field Planning',
       replyTo: scriptProps.getProperty('EMAIL_REPLY_TO') || 'datateam@alforward.org'
