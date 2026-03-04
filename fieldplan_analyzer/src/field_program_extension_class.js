@@ -96,18 +96,21 @@
      * @param {string} tacticName - Displau name (e.g. "Phone Banking")
      * @returns {string} Formatted message
      */
-    attemptReasonableMessage(threshold, tacticName) {
+    attemptReasonableMessage(threshold, tacticName, context) {
       const range = this.reasonableRange();
+      const volWarning = (context && context.volunteerHoursFlagged)
+        ? ` (Note: volunteer hours of ${context.volunteerHours} hrs/week exceed the recommended maximum, so this projection may be unreliable.)`
+        : '';
 
       if (range <= threshold) {
-        return `${this._memberOrgName} has a reasonable hourly attempt for ${tacticName} 
-          where each volunteer is only expected to attempt to contact ${range} people per hour`;
+        return `${this._memberOrgName} has a reasonable hourly attempt for ${tacticName}
+          where each volunteer is only expected to attempt to contact ${range} people per hour` + volWarning;
       } else if (range > threshold && range <= threshold + 10) {
-        return `${this._memberOrgName} is at risk of expecting too many ${tacticName} 
-          attempts for each volunteer. They expect ${range} attempts per hour per volunteer.`;
+        return `${this._memberOrgName} is at risk of expecting too many ${tacticName}
+          attempts for each volunteer. They expect ${range} attempts per hour per volunteer.` + volWarning;
       } else {
-        return `${this._memberOrgName} is expecting an unreasonable number of ${tacticName} 
-          attempts per hour for their volunteers. They expect ${range} contacts each hour per volunteer.`;
+        return `${this._memberOrgName} is expecting an unreasonable number of ${tacticName}
+          attempts per hour for their volunteers. They expect ${range} contacts each hour per volunteer.` + volWarning;
       }
     }
 
@@ -119,12 +122,15 @@
      * @param {string} tacticName - Display name
      * @returns {string} Formatted message
      */
-    expectedContactsMessage(contactRange, tacticName) {
+    expectedContactsMessage(contactRange, tacticName, context) {
       const lowerContacts = Math.round(this.programAttempts() * contactRange[0]);
       const upperContacts = Math.round(this.programAttempts() * contactRange[1]);
+      const volWarning = (context && context.volunteerHoursFlagged)
+        ? ` (Note: volunteer hours of ${context.volunteerHours} hrs/week exceed the recommended maximum, so this projection may be unreliable.)`
+        : '';
 
       return `${this._memberOrgName} intends to successfully reach between ${lowerContacts}
         and ${upperContacts} people through ${tacticName} during the course of their
-        ${this._programLength} week program`
+        ${this._programLength} week program` + volWarning;
     }
   };

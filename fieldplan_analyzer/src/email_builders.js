@@ -297,11 +297,28 @@ function buildTacticsSection(fieldPlan, tactics, colors) {
       tacticFlags.push('Excessive volunteer hours: ' + tactic.weeklyVolunteerHours + ' hrs/week per volunteer (max recommended: ' + VOLUNTEER_HOURS_THRESHOLD + ')');
     }
 
+    // Per-tactic badge
+    let badgeText, badgeColor;
+    if (wvdCheck) {
+      badgeText = 'REJECT';
+      badgeColor = colors.danger;
+    } else if (tactic.weeklyVolunteerHours > VOLUNTEER_HOURS_THRESHOLD + 4) {
+      badgeText = 'NEEDS EDITS';
+      badgeColor = colors.danger;
+    } else if (tactic.weeklyVolunteerHours > VOLUNTEER_HOURS_THRESHOLD) {
+      badgeText = 'REVIEW';
+      badgeColor = colors.warning;
+    } else {
+      badgeText = 'APPROVE';
+      badgeColor = colors.success;
+    }
+
     // Determine border color: red if flags, default secondary otherwise
     const borderColor = tacticFlags.length > 0 ? colors.danger : colors.secondary;
 
     html += '<div style="background-color:' + colors.surface + ';border-radius:8px;padding:20px;margin-top:' + mt + ';border-top:2px solid ' + borderColor + ';">' +
-      '<h3 style="margin:0 0 12px 0;font-size:18px;font-weight:bold;color:' + colors.text + ';">' + tactic.tacticName + '</h3>' +
+      '<h3 style="margin:0 0 12px 0;font-size:18px;font-weight:bold;color:' + colors.text + ';">' + tactic.tacticName +
+      ' <span style="display:inline-block;background-color:' + badgeColor + ';color:#FFFFFF;padding:2px 10px;border-radius:10px;font-size:11px;font-weight:bold;margin-left:8px;text-transform:uppercase;">' + badgeText + '</span></h3>' +
       '<table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">' +
       '<tr><td style="padding:6px 0;width:50%;"><strong>Program Length:</strong> ' + tactic.programLength + ' weeks</td>' +
       '<td style="padding:6px 0;"><strong>Weekly Volunteers:</strong> ' + tactic.weeklyVolunteers + '</td></tr>' +
@@ -328,8 +345,16 @@ function buildTacticsSection(fieldPlan, tactics, colors) {
 
     // Projections + weekly attempts
     html += '<div style="background-color:' + colors.white + ';border-radius:4px;padding:12px;margin-top:12px;border-top:1px solid ' + colors.divider + ';">' +
-      '<p style="margin:0 0 8px 0;font-weight:bold;color:' + colors.primary + ';">Projections</p>' +
-      '<p style="margin:0 0 4px 0;font-size:14px;"><strong>Weekly Attempts:</strong> ' + tactic.weeklyAttempts().toLocaleString() + '</p>' +
+      '<p style="margin:0 0 8px 0;font-weight:bold;color:' + colors.primary + ';">Projections</p>';
+
+    // Projection warning banner when volunteer hours are flagged
+    if (tactic.weeklyVolunteerHours > VOLUNTEER_HOURS_THRESHOLD) {
+      html += '<div style="background-color:#FFF8E1;border-left:4px solid ' + colors.warning + ';padding:8px 12px;margin-bottom:10px;border-radius:4px;">' +
+        '<p style="margin:0;font-size:13px;font-weight:bold;color:' + colors.warning + ';">' +
+        '\u26A0 These projections are based on ' + tactic.weeklyVolunteerHours + ' volunteer hours/week, which exceeds the ' + VOLUNTEER_HOURS_THRESHOLD + ' hr/week threshold. Actual results may differ significantly.</p></div>';
+    }
+
+    html += '<p style="margin:0 0 4px 0;font-size:14px;"><strong>Weekly Attempts:</strong> ' + tactic.weeklyAttempts().toLocaleString() + '</p>' +
       '<p style="margin:0 0 4px 0;font-size:14px;"><strong>Total Attempts:</strong> ' + tactic.programAttempts().toLocaleString() + '</p>' +
       '<p style="margin:0 0 4px 0;font-size:14px;">' + tactic.attemptReasonable() + '</p>' +
       '<p style="margin:0;font-size:14px;">' + tactic.expectedContacts() + '</p>' +
@@ -415,13 +440,45 @@ function buildActionItemsSection(fieldPlan, tactics, colors) {
     actions.push({ priority: 'high', title: 'Do Not Approve — Incomplete Tactic Goals', description: 'The following tactics have missing data and cannot be analyzed: ' + missingNames + '. Reach out to the organization to complete these goals before approving.' });
   }
 
-  // Validation check flags — from analyzeTacticFlags() in field_tactics_extension_class.js
+  // Validation check flags — grouped by type from analyzeTacticFlags()
   const analysis = analyzeTacticFlags(fieldPlan, tactics || []);
-  analysis.flags.forEach(function(flag) {
+
+  const FLAG_GROUP_TITLES = {
+    weeks_vs_days: 'Weeks vs Days Mismatch',
+    identical_inputs: 'Identical Tactic Inputs',
+    similar_inputs: 'Near-Identical Tactic Inputs',
+    volunteer_hours: 'Volunteer Hours Concern'
+  };
+
+  const groupedFlags = analysis.flags.reduce(function(groups, flag) {
+    if (!groups[flag.type]) {
+      groups[flag.type] = { flags: [], highestPriority: flag.priority };
+    }
+    groups[flag.type].flags.push(flag);
+    // Track highest priority in group (high > medium > low)
+    if (flag.priority === 'high') {
+      groups[flag.type].highestPriority = 'high';
+    }
+    return groups;
+  }, {});
+
+  Object.keys(groupedFlags).forEach(function(type) {
+    const group = groupedFlags[type];
+    const groupTitle = FLAG_GROUP_TITLES[type] || type;
+    let description;
+
+    if (group.flags.length === 1) {
+      description = group.flags[0].description;
+    } else {
+      description = '<ul style="margin:4px 0;padding-left:20px;">' +
+        group.flags.map(function(f) { return '<li style="margin:2px 0;">' + f.description + '</li>'; }).join('') +
+        '</ul>';
+    }
+
     actions.push({
-      priority: flag.priority,
-      title: flag.title,
-      description: flag.description
+      priority: group.highestPriority,
+      title: groupTitle,
+      description: description
     });
   });
 

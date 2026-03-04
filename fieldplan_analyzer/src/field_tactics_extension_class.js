@@ -103,7 +103,11 @@ class TacticProgram extends FieldProgram {
    * @returns attemptReasonableMessage result
    */
   attemptReasonable() {
-    return this.attemptReasonableMessage(this._reasonableThreshold, this._name);
+    const context = {
+      volunteerHoursFlagged: this._weeklyHours > VOLUNTEER_HOURS_THRESHOLD,
+      volunteerHours: this._weeklyHours
+    };
+    return this.attemptReasonableMessage(this._reasonableThreshold, this._name, context);
   }
 
   /**
@@ -111,7 +115,11 @@ class TacticProgram extends FieldProgram {
    * @returns the results of expectedContactsMessage
    */
   expectedContacts() {
-    return this.expectedContactsMessage(this._contactRange, this._name);
+    const context = {
+      volunteerHoursFlagged: this._weeklyHours > VOLUNTEER_HOURS_THRESHOLD,
+      volunteerHours: this._weeklyHours
+    };
+    return this.expectedContactsMessage(this._contactRange, this._name, context);
   }
 
   //Getters simplified
