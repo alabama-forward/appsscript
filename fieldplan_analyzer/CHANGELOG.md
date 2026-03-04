@@ -7,6 +7,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-03-04
+### Added
+- BigQuery query builder configuration module and county precinct config
+- Query resolver functions for BigQuery integration
+- `programDays` getter and test helper for date-based validation
+- Weeks-vs-days alignment check on `TacticProgram`
+- `analyzeTacticFlags` cross-tactic validation function (weeks vs days, identical/similar inputs, volunteer hours, weekly attempts)
+- Validation flags rendered in tactic sections and action items
+- Flag-aware stats and aggregate metrics in Quick Overview grid
+- Context-aware projection messages with volunteer hours warnings
+- Per-tactic APPROVE/REVIEW/NEEDS EDITS/REJECT badges
+- Grouped action items by check type with bullet lists for multi-tactic flags
+
+### Changed
+- Simplify `testWeeksVsDaysCheck` to read columns directly
+- Reorder email sections: action items and tactics before informational sections
+- Make Estimated Reach a full-width card with flag-aware coloring; remove FTE Equivalent
+- Move recommendation and follow-up to top of action items; escalate follow-up when flagged
+- Restructure `buildActionItemsSection` to build actions top-down in display order
+- Route `sendFieldPlanEmail` through `getEmailRecipients` for consistent test/production routing
+- Add `VOLUNTEER_HOURS_THRESHOLD` constant
+- Add external request OAuth scope for BigQuery integration
+
+### Fixed
+- Remove broken `setProperty` call in `processAllFieldPlans` that crashed on every row
+- Add `[TEST]` subject prefix and recipient logging to `sendFieldPlanEmail`
+
 ## [1.1.0] - 2026-02-24
 ### Added
 - REPROCESS columns to field plan and budget column mappings
