@@ -72,14 +72,14 @@ function buildFieldPlanEmailHTML(fieldPlan, tactics) {
     buildEmailHeader(fieldPlan, colors) +
     buildOrgSummaryCard(fieldPlan, colors) +
     buildQuickStatsGrid(fieldPlan, tactics, colors) +
+    buildActionItemsSection(fieldPlan, tactics, colors) +
+    buildTacticsSection(fieldPlan, tactics, colors) +
     buildContactSection(fieldPlan, colors) +
+    buildConfidenceSection(fieldPlan, colors) +
     buildProgramDetailsSection(fieldPlan, colors) +
     buildNarrativeSection(fieldPlan, colors) +
     buildGeographicSection(fieldPlan, colors) +
     buildDemographicsSection(fieldPlan, colors) +
-    buildTacticsSection(fieldPlan, tactics, colors) +
-    buildConfidenceSection(fieldPlan, colors) +
-    buildActionItemsSection(fieldPlan, tactics, colors) +
     buildEmailFooter(colors) +
     '</table>' +
     '</td></tr></table>' +
@@ -145,7 +145,6 @@ function buildQuickStatsGrid(fieldPlan, tactics, colors) {
   const analysis = analyzeTacticFlags(fieldPlan, tactics);
   const agg = analysis.aggregates;
   const weeklyAttemptsDisplay = agg.totalWeeklyAttempts ? agg.totalWeeklyAttempts.toLocaleString() : 'N/A';
-  const fteDisplay = agg.fteEquivalent || 'N/A';
   const weeklyVolHoursDisplay = agg.totalWeeklyVolunteerHours ? agg.totalWeeklyVolunteerHours.toLocaleString() : 'N/A';
 
   // Determine stat cell colors based on flags — flagged stats use the flag's
@@ -160,6 +159,13 @@ function buildQuickStatsGrid(fieldPlan, tactics, colors) {
   const volunteerHoursColor = flagColorForType('volunteer_hours');
   const weeksVsDaysColor = flagColorForType('weeks_vs_days');
 
+  // Est. Reach depends on both volunteer hours and weeks/days — use the worst color
+  const reachColor = (weeksVsDaysColor === colors.danger || volunteerHoursColor === colors.danger)
+    ? colors.danger
+    : (weeksVsDaysColor === colors.warning || volunteerHoursColor === colors.warning)
+      ? colors.warning
+      : colors.success;
+
   function statCell(label, value, color) {
     return '<td style="background-color:' + colors.white + ';border-radius:8px;padding:15px;text-align:center;border:1px solid ' + colors.divider + ';border-bottom:2px solid ' + color + ';width:50%;">' +
       '<div style="font-size:28px;font-weight:bold;color:' + color + ';margin-bottom:4px;">' + value + '</div>' +
@@ -169,13 +175,15 @@ function buildQuickStatsGrid(fieldPlan, tactics, colors) {
   return '<tr><td style="padding:0 30px 25px 30px;">' +
     buildSectionHeader('Quick Overview', colors) +
     '<table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">' +
+    '<tr><td colspan="3" style="background-color:' + colors.white + ';border-radius:8px;padding:15px;text-align:center;border:1px solid ' + colors.divider + ';border-bottom:2px solid ' + reachColor + ';">' +
+    '<div style="font-size:28px;font-weight:bold;color:' + reachColor + ';margin-bottom:4px;">' + reachDisplay + '</div>' +
+    '<div style="font-size:11px;color:' + colors.textLight + ';text-transform:uppercase;font-weight:bold;">Estimated Reach</div></td></tr>' +
+    '<tr><td colspan="3" style="height:10px;"></td></tr>' +
     '<tr>' + statCell('Counties', totalCounties, colors.success) + '<td style="width:10px;"></td>' + statCell('Tactics', totalTactics, colors.success) + '</tr>' +
     '<tr><td colspan="3" style="height:10px;"></td></tr>' +
-    '<tr>' + statCell('Est. Reach', reachDisplay, colors.success) + '<td style="width:10px;"></td>' + statCell('Confidence', avgConf, colors.success) + '</tr>' +
+    '<tr>' + statCell('Confidence', avgConf, colors.success) + '<td style="width:10px;"></td>' + statCell('Volunteers', agg.totalWeeklyVolunteers || 'N/A', volunteerHoursColor) + '</tr>' +
     '<tr><td colspan="3" style="height:10px;"></td></tr>' +
     '<tr>' + statCell('Weekly Attempts', weeklyAttemptsDisplay, weeksVsDaysColor) + '<td style="width:10px;"></td>' + statCell('Weekly Vol. Hours', weeklyVolHoursDisplay, volunteerHoursColor) + '</tr>' +
-    '<tr><td colspan="3" style="height:10px;"></td></tr>' +
-    '<tr>' + statCell('FTE Equivalent', fteDisplay, volunteerHoursColor) + '<td style="width:10px;"></td>' + statCell('Volunteers', agg.totalWeeklyVolunteers || 'N/A', volunteerHoursColor) + '</tr>' +
     '</table></td></tr>';
 }
 
@@ -430,9 +438,28 @@ function buildConfidenceSection(fieldPlan, colors) {
 }
 
 function buildActionItemsSection(fieldPlan, tactics, colors) {
+  // --- Analyze flags first so severity is known before building the list ---
+  const analysis = analyzeTacticFlags(fieldPlan, tactics || []);
+  const hasHighPriorityFlags = analysis.flags.some(function(flag) { return flag.priority === 'high'; });
+  const hasMediumPriorityFlags = analysis.flags.some(function(flag) { return flag.priority === 'medium'; });
+  const hasBlockingTacticIssues = tactics && (tactics.noTacticsAtAll || (tactics.incomplete && tactics.incomplete.length > 0));
+  const hasAnyFlags = hasBlockingTacticIssues || hasHighPriorityFlags || hasMediumPriorityFlags;
+
+  // --- Build actions top-down in display order ---
   const actions = [];
 
-  // Tactic goal issues — these block approval
+  // 1. Approval recommendation and follow-up — always first
+  if (hasBlockingTacticIssues || hasHighPriorityFlags) {
+    actions.push({ priority: 'high', title: 'Significant Concerns', description: 'This field plan has issues that should be resolved before approval. Review the flagged items below and follow up with the organization.' });
+  } else if (hasMediumPriorityFlags) {
+    actions.push({ priority: 'medium', title: 'Some Concerns', description: 'This field plan has items that warrant review. Verify the flagged items below before approving.' });
+  } else {
+    actions.push({ priority: 'low', title: 'Review and Approve', description: 'Review field plan details and approve or request revisions.' });
+  }
+
+  actions.push({ priority: hasAnyFlags ? 'high' : 'low', title: 'Follow Up', description: 'Schedule a check-in call to discuss the field plan.' });
+
+  // 2. Tactic goal issues — these block approval
   if (tactics && tactics.noTacticsAtAll) {
     actions.push({ priority: 'high', title: 'Do Not Approve — No Tactic Goals', description: 'This field plan was submitted with zero tactic goals. This should not be possible. Reach out to the organization to complete their goals before approving.' });
   } else if (tactics && tactics.incomplete && tactics.incomplete.length > 0) {
@@ -440,9 +467,7 @@ function buildActionItemsSection(fieldPlan, tactics, colors) {
     actions.push({ priority: 'high', title: 'Do Not Approve — Incomplete Tactic Goals', description: 'The following tactics have missing data and cannot be analyzed: ' + missingNames + '. Reach out to the organization to complete these goals before approving.' });
   }
 
-  // Validation check flags — grouped by type from analyzeTacticFlags()
-  const analysis = analyzeTacticFlags(fieldPlan, tactics || []);
-
+  // 3. Validation check flags — grouped by type
   const FLAG_GROUP_TITLES = {
     weeks_vs_days: 'Weeks vs Days Mismatch',
     identical_inputs: 'Identical Tactic Inputs',
@@ -455,7 +480,6 @@ function buildActionItemsSection(fieldPlan, tactics, colors) {
       groups[flag.type] = { flags: [], highestPriority: flag.priority };
     }
     groups[flag.type].flags.push(flag);
-    // Track highest priority in group (high > medium > low)
     if (flag.priority === 'high') {
       groups[flag.type].highestPriority = 'high';
     }
@@ -465,23 +489,16 @@ function buildActionItemsSection(fieldPlan, tactics, colors) {
   Object.keys(groupedFlags).forEach(function(type) {
     const group = groupedFlags[type];
     const groupTitle = FLAG_GROUP_TITLES[type] || type;
-    let description;
-
-    if (group.flags.length === 1) {
-      description = group.flags[0].description;
-    } else {
-      description = '<ul style="margin:4px 0;padding-left:20px;">' +
+    const description = (group.flags.length === 1)
+      ? group.flags[0].description
+      : '<ul style="margin:4px 0;padding-left:20px;">' +
         group.flags.map(function(f) { return '<li style="margin:2px 0;">' + f.description + '</li>'; }).join('') +
         '</ul>';
-    }
 
-    actions.push({
-      priority: group.highestPriority,
-      title: groupTitle,
-      description: description
-    });
+    actions.push({ priority: group.highestPriority, title: groupTitle, description: description });
   });
 
+  // 4. Training, coaching, and coordination items
   if (!fieldPlan.attendedTraining || fieldPlan.attendedTraining.toString().toLowerCase().indexOf('yes') === -1) {
     actions.push({ priority: 'high', title: 'Schedule Training', description: 'Organization has not attended field planning training.' });
   }
@@ -497,21 +514,6 @@ function buildActionItemsSection(fieldPlan, tactics, colors) {
   if (fieldPlan.runningForOffice && fieldPlan.runningForOffice.toString().toLowerCase().indexOf('yes') !== -1) {
     actions.push({ priority: 'medium', title: 'Review Coordination Rules', description: 'Someone in this organization is running for office.' });
   }
-
-  // Approval recommendation — three tiers based on flag severity
-  const hasHighPriorityFlags = analysis.flags.some(function(flag) { return flag.priority === 'high'; });
-  const hasMediumPriorityFlags = analysis.flags.some(function(flag) { return flag.priority === 'medium'; });
-  const hasBlockingTacticIssues = tactics && (tactics.noTacticsAtAll || (tactics.incomplete && tactics.incomplete.length > 0));
-
-  if (hasBlockingTacticIssues || hasHighPriorityFlags) {
-    actions.push({ priority: 'high', title: 'Significant Concerns', description: 'This field plan has issues that should be resolved before approval. Review the flagged items above and follow up with the organization.' });
-  } else if (hasMediumPriorityFlags) {
-    actions.push({ priority: 'medium', title: 'Some Concerns', description: 'This field plan has items that warrant review. Verify the flagged items above before approving.' });
-  } else {
-    actions.push({ priority: 'low', title: 'Review and Approve', description: 'Review field plan details and approve or request revisions.' });
-  }
-
-  actions.push({ priority: 'low', title: 'Follow Up', description: 'Schedule a check-in call to discuss the field plan.' });
   
   const pColors = { high: colors.danger, medium: colors.warning, low: colors.success };
 
