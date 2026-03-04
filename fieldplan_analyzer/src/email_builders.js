@@ -141,6 +141,25 @@ function buildQuickStatsGrid(fieldPlan, tactics, colors) {
     ? (confScores.reduce(function(a, b) { return a + Number(b); }, 0) / confScores.length).toFixed(1)
     : 'N/A';
 
+  // Compute validation aggregates for the summary
+  const analysis = analyzeTacticFlags(fieldPlan, tactics);
+  const agg = analysis.aggregates;
+  const weeklyAttemptsDisplay = agg.totalWeeklyAttempts ? agg.totalWeeklyAttempts.toLocaleString() : 'N/A';
+  const fteDisplay = agg.fteEquivalent || 'N/A';
+  const weeklyVolHoursDisplay = agg.totalWeeklyVolunteerHours ? agg.totalWeeklyVolunteerHours.toLocaleString() : 'N/A';
+
+  // Determine stat cell colors based on flags — flagged stats use the flag's
+  // unflagged stats default to success (approval green)
+  const flagPriorityColors = { high: colors.danger, medium: colors.warning };
+
+  function flagColorForType(type) {
+    const flag = analysis.flags.find(function(f) { return f.type === type; });
+    return flag ? (flagPriorityColors[flag.priority] || colors.success) : colors.success;
+  }
+
+  const volunteerHoursColor = flagColorForType('volunteer_hours');
+  const weeksVsDaysColor = flagColorForType('weeks_vs_days');
+
   function statCell(label, value, color) {
     return '<td style="background-color:' + colors.white + ';border-radius:8px;padding:15px;text-align:center;border:1px solid ' + colors.divider + ';border-bottom:2px solid ' + color + ';width:50%;">' +
       '<div style="font-size:28px;font-weight:bold;color:' + color + ';margin-bottom:4px;">' + value + '</div>' +
@@ -150,9 +169,13 @@ function buildQuickStatsGrid(fieldPlan, tactics, colors) {
   return '<tr><td style="padding:0 30px 25px 30px;">' +
     buildSectionHeader('Quick Overview', colors) +
     '<table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">' +
-    '<tr>' + statCell('Counties', totalCounties, colors.primary) + '<td style="width:10px;"></td>' + statCell('Tactics', totalTactics, colors.secondary) + '</tr>' +
+    '<tr>' + statCell('Counties', totalCounties, colors.success) + '<td style="width:10px;"></td>' + statCell('Tactics', totalTactics, colors.success) + '</tr>' +
     '<tr><td colspan="3" style="height:10px;"></td></tr>' +
-    '<tr>' + statCell('Est. Reach', reachDisplay, colors.accent) + '<td style="width:10px;"></td>' + statCell('Confidence', avgConf, colors.primary) + '</tr>' +
+    '<tr>' + statCell('Est. Reach', reachDisplay, colors.success) + '<td style="width:10px;"></td>' + statCell('Confidence', avgConf, colors.success) + '</tr>' +
+    '<tr><td colspan="3" style="height:10px;"></td></tr>' +
+    '<tr>' + statCell('Weekly Attempts', weeklyAttemptsDisplay, weeksVsDaysColor) + '<td style="width:10px;"></td>' + statCell('Weekly Vol. Hours', weeklyVolHoursDisplay, volunteerHoursColor) + '</tr>' +
+    '<tr><td colspan="3" style="height:10px;"></td></tr>' +
+    '<tr>' + statCell('FTE Equivalent', fteDisplay, volunteerHoursColor) + '<td style="width:10px;"></td>' + statCell('Volunteers', agg.totalWeeklyVolunteers || 'N/A', volunteerHoursColor) + '</tr>' +
     '</table></td></tr>';
 }
 
