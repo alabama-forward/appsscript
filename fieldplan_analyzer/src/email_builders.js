@@ -948,36 +948,17 @@ function formatDemographics(fieldPlan) {
 
 }
 
-function sendFieldPlanEmail(fieldPlan, rowNumber = null) {
+function sendFieldPlanEmail(fieldPlan, rowNumber = null, isTestMode = false) {
   if (!fieldPlan) {
     Logger.log('Error: fieldPlan object is undefined');
     return;
   }
 
-  // Configuration object with recipient emails array - add your emails here
-  const config = {
-    recipientEmails: (scriptProps.getProperty('EMAIL_RECIPIENTS') || '').split(','),
-    maxRetries: 3,
-    retryDelay: 1000 // milliseconds
-  };
-
-  // Email validation
-  const validateEmail = (email) => {
-    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return re.test(String(email).toLowerCase());
-  };
-
-  // Validate all email addresses
-  const validEmails = config.recipientEmails.filter(email => validateEmail(email));
+  const validEmails = getEmailRecipients(isTestMode);
 
   if (validEmails.length === 0) {
     Logger.log("No valid recipient email addresses found");
     return;
-  }
-
-  // Log any invalid emails that were removed
-  if (validEmails.length < config.recipientEmails.length) {
-    Logger.log(`${config.recipientEmails.length - validEmails.length} invalid email(s) were removed`);
   }
 
   try {

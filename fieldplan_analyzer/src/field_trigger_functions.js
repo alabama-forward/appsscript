@@ -267,7 +267,7 @@ function processAllFieldPlans(isTestMode = false) {
         Logger.log(`Processing row ${rowNumber}: ${fieldPlan.memberOrgName}`);
 
         // Send email with field plan details
-        sendFieldPlanEmail(fieldPlan, rowNumber);
+        sendFieldPlanEmail(fieldPlan, rowNumber, isTestMode);
 
         successCount++;
 
