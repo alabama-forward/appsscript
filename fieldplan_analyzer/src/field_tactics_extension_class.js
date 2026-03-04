@@ -72,6 +72,8 @@ const TACTIC_CONFIG = {
   }
 };
 
+const VOLUNTEER_HOURS_THRESHOLD = 6;
+
 /**
  * Unified tactic class that works for ALL tactic types
  * Configuration is passed via tacticKey parameter
