@@ -142,6 +142,36 @@ class TacticProgram extends FieldProgram {
       lowerBound: lowerBound,
       upperBound: upperBound,
       status: status
-    };
+    }
+  }
+
+    /**
+     * Checks whether this tactic's programLength (weeks) aligns with
+     * the overall program duration (days)
+     * 
+     * A mismatch > 14 days suggests the org entered weeks that don't
+     * match their state program dates and produces a "Do Not Approve" flag
+     * 
+     * @param {number|null} programDays - Total program days from FieldPlan.programDays
+     * @returns {Object|null} Flag object if mismatch detected, null if aligned or unparseable
+     */
+  weeksVsDaysCheck(programDays) {
+    if (!programDays || !this._programLength) return null;
+
+    const tacticDays = this._programLength * 7;
+    const difference = Math.abs(tacticDays - programDays);
+
+    if (difference > 14) {
+      return {
+        type: 'weeks_vs_days',
+        tacticName: this._name,
+        tacticWeeks: this._programLength,
+        tacticDays: tacticDays,
+        programDays: programDays,
+        difference: difference
+      };
+    }
+
+    return null;
   }
 }

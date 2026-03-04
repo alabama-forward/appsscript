@@ -629,3 +629,15 @@ function testProgramDays() {
   Logger.log(`programDates: ${fp.programDates}`);
   Logger.log(`programDays: ${fp.programDays}`);
 }
+
+function testWeeksVsDaysCheck() {
+  const fp = FieldPlan.fromLastRow();
+  const sheet = getSheet(scriptProps.getProperty('SHEET_FIELD_PLAN'));
+  const rowData = sheet.getRange(sheet.getLastRow(), 1, 1, sheet.getLastColumn()).getValues()[0];
+  const tactics = getTacticInstances(rowData);
+
+  tactics.forEach(t => {
+    const check = t.weeksVsDaysCheck(fp.programDays);
+    Logger.log(`${t.tacticName}: ${check ? `MISMATCH — ${check.difference} days off` : 'Aligned'}`);
+  });
+}
