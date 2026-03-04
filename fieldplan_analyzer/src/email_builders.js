@@ -77,7 +77,7 @@ function buildFieldPlanEmailHTML(fieldPlan, tactics) {
     buildNarrativeSection(fieldPlan, colors) +
     buildGeographicSection(fieldPlan, colors) +
     buildDemographicsSection(fieldPlan, colors) +
-    buildTacticsSection(tactics, colors) +
+    buildTacticsSection(fieldPlan, tactics, colors) +
     buildConfidenceSection(fieldPlan, colors) +
     buildActionItemsSection(fieldPlan, tactics, colors) +
     buildEmailFooter(colors) +
@@ -263,7 +263,7 @@ function buildDemographicsSection(fieldPlan, colors) {
  * @param {Object} colors
  * @returns {string} HTML table row
  */
-function buildTacticsSection(tactics, colors) {
+function buildTacticsSection(fieldPlan, tactics, colors) {
   let html = '<tr><td style="padding:0 30px 25px 30px;">' +
     buildSectionHeader('Field Tactics Analysis', colors);
 
@@ -280,22 +280,56 @@ function buildTacticsSection(tactics, colors) {
     return html;
   }
 
-  // Render complete tactics
+  // Render complete tactics with per-tactic validation flags
+  const programDays = fieldPlan ? fieldPlan.programDays : null;
+
   for (let i = 0; i < tactics.length; i++) {
     const tactic = tactics[i];
     const mt = (i === 0) ? '0' : '20px';
 
-    html += '<div style="background-color:' + colors.surface + ';border-radius:8px;padding:20px;margin-top:' + mt + ';border-top:2px solid ' + colors.secondary + ';">' +
+    // Collect per-tactic flags
+    const tacticFlags = [];
+    const wvdCheck = tactic.weeksVsDaysCheck(programDays);
+    if (wvdCheck) {
+      tacticFlags.push('Weeks vs Days mismatch: ' + wvdCheck.tacticWeeks + ' weeks (' + wvdCheck.tacticDays + ' days) vs ' + wvdCheck.programDays + ' program days (' + wvdCheck.difference + '-day difference)');
+    }
+    if (tactic.weeklyVolunteerHours > VOLUNTEER_HOURS_THRESHOLD) {
+      tacticFlags.push('Excessive volunteer hours: ' + tactic.weeklyVolunteerHours + ' hrs/week per volunteer (max recommended: ' + VOLUNTEER_HOURS_THRESHOLD + ')');
+    }
+
+    // Determine border color: red if flags, default secondary otherwise
+    const borderColor = tacticFlags.length > 0 ? colors.danger : colors.secondary;
+
+    html += '<div style="background-color:' + colors.surface + ';border-radius:8px;padding:20px;margin-top:' + mt + ';border-top:2px solid ' + borderColor + ';">' +
       '<h3 style="margin:0 0 12px 0;font-size:18px;font-weight:bold;color:' + colors.text + ';">' + tactic.tacticName + '</h3>' +
       '<table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">' +
       '<tr><td style="padding:6px 0;width:50%;"><strong>Program Length:</strong> ' + tactic.programLength + ' weeks</td>' +
       '<td style="padding:6px 0;"><strong>Weekly Volunteers:</strong> ' + tactic.weeklyVolunteers + '</td></tr>' +
-      '<tr><td style="padding:6px 0;"><strong>Hours/Week:</strong> ' + tactic.weeklyVolunteerHours + '</td>' +
+      '<tr><td style="padding:6px 0;"><strong>Hours/Week (per volunteer):</strong> ' + tactic.weeklyVolunteerHours + '</td>' +
       '<td style="padding:6px 0;"><strong>Attempts/Hour:</strong> ' + tactic.hourlyAttempts + '</td></tr>' +
-      '</table>' +
-      '<div style="background-color:' + colors.white + ';border-radius:4px;padding:12px;margin-top:12px;border-top:1px solid ' + colors.divider + ';">' +
+      '</table>';
+
+    // Per-tactic flags (if any)
+    if (tacticFlags.length > 0) {
+      html += '<div style="background-color:' + colors.white + ';border-left:4px solid ' + colors.danger + ';padding:10px 12px;margin-top:12px;border-radius:4px;">';
+      for (let f = 0; f < tacticFlags.length; f++) {
+        html += '<p style="margin:' + (f === 0 ? '0' : '6px 0 0 0') + ';font-size:13px;color:' + colors.danger + ';font-weight:bold;">' + tacticFlags[f] + '</p>';
+      }
+      html += '</div>';
+    }
+
+    // Volunteer hours breakdown
+    html += '<div style="background-color:' + colors.white + ';border-radius:4px;padding:12px;margin-top:12px;border-top:1px solid ' + colors.divider + ';">' +
+      '<p style="margin:0 0 8px 0;font-weight:bold;color:' + colors.primary + ';">Volunteer Hours</p>' +
+      '<p style="margin:0 0 4px 0;font-size:14px;"><strong>Per Volunteer:</strong> ' + tactic.weeklyVolunteerHours + ' hrs/week</p>' +
+      '<p style="margin:0 0 4px 0;font-size:14px;"><strong>Total Weekly:</strong> ' + tactic.weekVolunteerHours() + ' hrs/week (' + tactic.weeklyVolunteers + ' volunteers × ' + tactic.weeklyVolunteerHours + ' hrs)</p>' +
+      '<p style="margin:0;font-size:14px;"><strong>Entire Program:</strong> ' + tactic.programVolunteerHours().toLocaleString() + ' hrs (' + tactic.programLength + ' weeks)</p>' +
+      '</div>';
+
+    // Projections + weekly attempts
+    html += '<div style="background-color:' + colors.white + ';border-radius:4px;padding:12px;margin-top:12px;border-top:1px solid ' + colors.divider + ';">' +
       '<p style="margin:0 0 8px 0;font-weight:bold;color:' + colors.primary + ';">Projections</p>' +
-      '<p style="margin:0 0 4px 0;font-size:14px;"><strong>Total Program Hours:</strong> ' + tactic.programVolunteerHours() + '</p>' +
+      '<p style="margin:0 0 4px 0;font-size:14px;"><strong>Weekly Attempts:</strong> ' + tactic.weeklyAttempts().toLocaleString() + '</p>' +
       '<p style="margin:0 0 4px 0;font-size:14px;"><strong>Total Attempts:</strong> ' + tactic.programAttempts().toLocaleString() + '</p>' +
       '<p style="margin:0 0 4px 0;font-size:14px;">' + tactic.attemptReasonable() + '</p>' +
       '<p style="margin:0;font-size:14px;">' + tactic.expectedContacts() + '</p>' +
@@ -381,6 +415,16 @@ function buildActionItemsSection(fieldPlan, tactics, colors) {
     actions.push({ priority: 'high', title: 'Do Not Approve — Incomplete Tactic Goals', description: 'The following tactics have missing data and cannot be analyzed: ' + missingNames + '. Reach out to the organization to complete these goals before approving.' });
   }
 
+  // Validation check flags — from analyzeTacticFlags() in field_tactics_extension_class.js
+  const analysis = analyzeTacticFlags(fieldPlan, tactics || []);
+  analysis.flags.forEach(function(flag) {
+    actions.push({
+      priority: flag.priority,
+      title: flag.title,
+      description: flag.description
+    });
+  });
+
   if (!fieldPlan.attendedTraining || fieldPlan.attendedTraining.toString().toLowerCase().indexOf('yes') === -1) {
     actions.push({ priority: 'high', title: 'Schedule Training', description: 'Organization has not attended field planning training.' });
   }
@@ -397,13 +441,21 @@ function buildActionItemsSection(fieldPlan, tactics, colors) {
     actions.push({ priority: 'medium', title: 'Review Coordination Rules', description: 'Someone in this organization is running for office.' });
   }
 
-  // Only show "Review and Approve" if there are no blocking tactic issues
-  if (!tactics || (!tactics.noTacticsAtAll && (!tactics.incomplete || tactics.incomplete.length === 0))) {
+  // Approval recommendation — three tiers based on flag severity
+  const hasHighPriorityFlags = analysis.flags.some(function(flag) { return flag.priority === 'high'; });
+  const hasMediumPriorityFlags = analysis.flags.some(function(flag) { return flag.priority === 'medium'; });
+  const hasBlockingTacticIssues = tactics && (tactics.noTacticsAtAll || (tactics.incomplete && tactics.incomplete.length > 0));
+
+  if (hasBlockingTacticIssues || hasHighPriorityFlags) {
+    actions.push({ priority: 'high', title: 'Significant Concerns', description: 'This field plan has issues that should be resolved before approval. Review the flagged items above and follow up with the organization.' });
+  } else if (hasMediumPriorityFlags) {
+    actions.push({ priority: 'medium', title: 'Some Concerns', description: 'This field plan has items that warrant review. Verify the flagged items above before approving.' });
+  } else {
     actions.push({ priority: 'low', title: 'Review and Approve', description: 'Review field plan details and approve or request revisions.' });
   }
 
   actions.push({ priority: 'low', title: 'Follow Up', description: 'Schedule a check-in call to discuss the field plan.' });
-
+  
   const pColors = { high: colors.danger, medium: colors.warning, low: colors.success };
 
   let html = '<tr><td style="padding:0 30px 25px 30px;">' + buildSectionHeader('Action Items', colors);
