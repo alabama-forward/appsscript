@@ -634,10 +634,17 @@ function testWeeksVsDaysCheck() {
   const fp = FieldPlan.fromLastRow();
   const sheet = getSheet(scriptProps.getProperty('SHEET_FIELD_PLAN'));
   const rowData = sheet.getRange(sheet.getLastRow(), 1, 1, sheet.getLastColumn()).getValues()[0];
-  const tactics = getTacticInstances(rowData);
+  const programDays = fp.programDays;
 
-  tactics.forEach(t => {
-    const check = t.weeksVsDaysCheck(fp.programDays);
-    Logger.log(`${t.tacticName}: ${check ? `MISMATCH — ${check.difference} days off` : 'Aligned'}`);
+  Logger.log(`Program days: ${programDays}`);
+
+  Object.entries(TACTIC_CONFIG).forEach(([key, config]) => {
+    const weeks = rowData[PROGRAM_COLUMNS[config.columnKey].PROGRAMLENGTH];
+    if (!weeks) return;
+
+    const tacticDays = weeks * 7;
+    const difference = Math.abs(tacticDays - programDays);
+    const status = difference > 14 ? 'MISMATCH' : 'Aligned';
+    Logger.log(`${config.name}: ${weeks} weeks (${tacticDays} days) — ${status} (${difference}-day difference)`);
   });
 }
