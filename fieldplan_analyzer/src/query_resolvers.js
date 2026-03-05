@@ -235,6 +235,63 @@ function resolvePrecinctCode(fieldPlanPrecinct, countyName) {
     return { valid: false, precinctCode: padded, rawValue: rawValue, matchType: 'not_found'};
 }
 
-    
+/**
+ * Maps an array of field plan race selections to Catalist race values.
+ *
+ * Uses the RACE_MAP constant from _query_config.js. Any form value not
+ * found in RACE_MAP is excluded from the Catalist filter and tracked in
+ * the `unmapped` array.
+ *
+ * IMPORTANT: Do NOT map unmapped values to 'unknown'. In Catalist,
+ * 'unknown' is a real race value meaning "no race data available for
+ * this voter," not a catch-all for unrecognized form inputs.
+ *
+ * If the input array is empty or null, returns hasFilter: false, which
+ * signals the SQL builder to omit the race filter entirely.
+ * 
+ * @param {string[]} demoRaceArray - Array of race selections. Values are normalized
+ *      by the FieldPlan constructor first.
+ * @returns {Object} Result object with:
+ *      - hasFilter {boolean}: Whether any values were mapped ('true' triggers WHERE clause inclusion)
+ *      - catalistValues {string[]}: Set array of Catalist race values
+ *      - unmappedComment {string}: SQL comment listing unmapped values or empty string
+ *  * @example
+ *   mapRaceDemographics(['Black / African American', 'Multiracial'])
+ *   // {
+ *   //   hasFilter: true,
+ *   //   catalistValues: ['black'],
+ *   //   unmapped: ['Multiracial'],
+ *   //   unmappedComment: -- Unmapped race selections: Multiracial 
+ */
+function mapRaceDemographics(demoRaceArray) {
+    if (!demoRaceArray || !Array.isArray(demoRaceArray) || demoRaceArray.length === 0) {
+        Logger.log('mapRaceDemographics: no race selections provided, omitting race filter');
+        return { hasFilter: false, catalistValues: [], unmapped: [] };
+    }
+
+    // Map form values to Catalist values, tracking unmapped entries
+    const mapped = demoRaceArray.map(v => {
+        const formValue = v.toString().trim();
+        const catalistValue = RACE_MAP[formValue] || null;
+        return { formValue, catalistValue, isMapped: !!catalistValue };
+    });
+
+    const unmapped = mapped.filter(m => !m.isMapped).map(m => m.formValue);
+    const catalistValues = [...new Set(
+        mapped.filter(m => m.isMapped).map(m => m.catalistValue)
+    )];
+
+    unmapped.forEach(v => {
+        Logger.log(`mapRaceDemographics: unmapped race "${v}" — excluded from filter (not mapped to "unknown")`);
+    });
+
+    // Build SQL comment so query reviewers can see what the org selected
+    const unmappedComment = unmapped.length > 0
+        ? `-- Unmapped race selections: ${unmapped.join(', ')}`
+        : '';
+
+    Logger.log(`mapRaceDemographics: ${demoRaceArray.length} selections -> ${catalistValues.length} Catalist values: ${catalistValues.join(', ')}`);
+    return { hasFilter: catalistValues.length > 0, catalistValues: catalistValues, unmapped: unmapped, unmappedComment: unmappedComment };
+}
 
 
