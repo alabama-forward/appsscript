@@ -155,42 +155,14 @@ class TacticProgram extends FieldProgram {
     }
   }
 
-    /**
-     * Checks whether this tactic's programLength (weeks) aligns with
-     * the overall program duration (days)
-     * 
-     * A mismatch > 14 days suggests the org entered weeks that don't
-     * match their state program dates and produces a "Do Not Approve" flag
-     * 
-     * @param {number|null} programDays - Total program days from FieldPlan.programDays
-     * @returns {Object|null} Flag object if mismatch detected, null if aligned or unparseable
-     */
-  weeksVsDaysCheck(programDays) {
-    if (!programDays || !this._programLength) return null;
-
-    const tacticDays = this._programLength * 7;
-    const difference = Math.abs(tacticDays - programDays);
-
-    if (difference > 14) {
-      return {
-        type: 'weeks_vs_days',
-        tacticName: this._name,
-        tacticWeeks: this._programLength,
-        tacticDays: tacticDays,
-        programDays: programDays,
-        difference: difference
-      };
-    }
-
-    return null;
-  }
 }
+
 
 /**
  * Runs the below validation checks across tactics and returns structured flags.
  *
  * Checks performed:
- *   1. Weeks vs Days — tactic programLength*7 vs fieldPlan.programDays
+ *   1. Program Weeks Coverage — aggregate tactic weeks vs program duration
  *   2. Identical/Similar Inputs — 2+ tactics sharing 3 or 4 of their 4 input values
  *   3. Volunteer Hours — any tactic expecting > 6 hrs/week per individual volunteer
  *   4. Weekly Attempts — surfaces per-tactic and total weekly attempts (informational)
@@ -205,21 +177,45 @@ function analyzeTacticFlags(fieldPlan, tactics) {
 
   const programDays = fieldPlan.programDays;
 
-  // --- Check 1: Weeks vs Days Alignment ---
-  tactics.forEach(tactic => {
-    const check = tactic.weeksVsDaysCheck(programDays);
-    if (check) {
+  // --- Check 1: Program Weeks Coverage Analysis ---
+  const programWeeks = programDays ? Math.round(programDays / 7) : null;
+
+  if (programWeeks && tactics.length > 0) {
+    const totalTacticWeeks = tactics.reduce((sum, t) => sum + (t.programLength || 0), 0);
+    const allMatchProgram = tactics.every(t => Math.abs(t.programLength - programWeeks) <= 2);
+
+    if (allMatchProgram && tactics.length > 1) {
+      // Every tactic claims to cover the full program — suspicious
+      flags.push({
+        priority: 'medium',
+        type: 'weeks_vs_days',
+        title: 'Review — All Tactics Cover Full Program Duration',
+        description: `All ${tactics.length} tactics are set to ~${programWeeks} weeks each, ` +
+          `covering the entire program duration. It is unlikely an organization has capacity ` +
+          `to run every tactic for the full program. Verify the organization set realistic ` +
+          `timelines for each tactic.`,
+        programWeeks,
+        totalTacticWeeks,
+        tacticCount: tactics.length
+      });
+    } else if (totalTacticWeeks < programWeeks) {
+      // Total weeks fall short of program duration — gap in coverage
+      const gap = programWeeks - totalTacticWeeks;
       flags.push({
         priority: 'high',
         type: 'weeks_vs_days',
-        title: `Do Not Approve — ${check.tacticName}: Weeks vs Days Mismatch`,
-        description: `${check.tacticName} is set to ${check.tacticWeeks} weeks (${check.tacticDays} days), ` +
-          `but the program dates span ${check.programDays} days — a ${check.difference}-day difference. ` +
-          `The organization may have entered the wrong program length for this tactic.`,
-        tacticName: check.tacticName
+        title: 'Do Not Approve — Tactic Weeks Below Program Duration',
+        description: `The program spans ${programWeeks} weeks, but all tactics combined ` +
+          `total only ${totalTacticWeeks} weeks — a ${gap}-week shortfall. ` +
+          `Tactics should be layered across the program so their combined weeks ` +
+          `at least equal the program duration. Follow up with the organization.`,
+        programWeeks,
+        totalTacticWeeks,
+        gap
       });
     }
-  });
+    // If totalTacticWeeks >= programWeeks and not all identical → healthy layering, no flag
+  }
 
   // --- Check 2: Identical / Similar Tactic Inputs ---
   // Compare every pair of tactics on their 4 input values
@@ -307,7 +303,9 @@ function analyzeTacticFlags(fieldPlan, tactics) {
     totalProgramVolunteerHours: totalProgramVolunteerHours,
     totalWeeklyAttempts: totalWeeklyAttempts,
     totalProgramAttempts: totalProgramAttempts,
-    fteEquivalent: fteEquivalent
+    fteEquivalent: fteEquivalent,
+    programWeeks: programWeeks,
+    totalTacticWeeks: tactics.reduce((sum, t) => sum + (t.programLength || 0), 0)
   };
 
   return { flags: flags, aggregates: aggregates };

@@ -183,7 +183,7 @@ function buildQuickStatsGrid(fieldPlan, tactics, colors) {
     '<tr><td colspan="3" style="height:10px;"></td></tr>' +
     '<tr>' + statCell('Confidence', avgConf, colors.success) + '<td style="width:10px;"></td>' + statCell('Volunteers', agg.totalWeeklyVolunteers || 'N/A', volunteerHoursColor) + '</tr>' +
     '<tr><td colspan="3" style="height:10px;"></td></tr>' +
-    '<tr>' + statCell('Weekly Attempts', weeklyAttemptsDisplay, weeksVsDaysColor) + '<td style="width:10px;"></td>' + statCell('Weekly Vol. Hours', weeklyVolHoursDisplay, volunteerHoursColor) + '</tr>' +
+    '<tr>' + statCell('Tactic Weeks / Program', (agg.totalTacticWeeks != null && agg.programWeeks ? agg.totalTacticWeeks + ' / ' + agg.programWeeks : 'N/A'), weeksVsDaysColor) + '<td style="width:10px;"></td>' + statCell('Weekly Vol. Hours', weeklyVolHoursDisplay, volunteerHoursColor) + '</tr>' +
     '</table></td></tr>';
 }
 
@@ -289,28 +289,19 @@ function buildTacticsSection(fieldPlan, tactics, colors) {
   }
 
   // Render complete tactics with per-tactic validation flags
-  const programDays = fieldPlan ? fieldPlan.programDays : null;
-
   for (let i = 0; i < tactics.length; i++) {
     const tactic = tactics[i];
     const mt = (i === 0) ? '0' : '20px';
 
     // Collect per-tactic flags
     const tacticFlags = [];
-    const wvdCheck = tactic.weeksVsDaysCheck(programDays);
-    if (wvdCheck) {
-      tacticFlags.push('Weeks vs Days mismatch: ' + wvdCheck.tacticWeeks + ' weeks (' + wvdCheck.tacticDays + ' days) vs ' + wvdCheck.programDays + ' program days (' + wvdCheck.difference + '-day difference)');
-    }
     if (tactic.weeklyVolunteerHours > VOLUNTEER_HOURS_THRESHOLD) {
       tacticFlags.push('Excessive volunteer hours: ' + tactic.weeklyVolunteerHours + ' hrs/week per volunteer (max recommended: ' + VOLUNTEER_HOURS_THRESHOLD + ')');
     }
 
     // Per-tactic badge
     let badgeText, badgeColor;
-    if (wvdCheck) {
-      badgeText = 'REJECT';
-      badgeColor = colors.danger;
-    } else if (tactic.weeklyVolunteerHours > VOLUNTEER_HOURS_THRESHOLD + 4) {
+    if (tactic.weeklyVolunteerHours > VOLUNTEER_HOURS_THRESHOLD + 4) {
       badgeText = 'NEEDS EDITS';
       badgeColor = colors.danger;
     } else if (tactic.weeklyVolunteerHours > VOLUNTEER_HOURS_THRESHOLD) {
@@ -469,7 +460,7 @@ function buildActionItemsSection(fieldPlan, tactics, colors) {
 
   // 3. Validation check flags — grouped by type
   const FLAG_GROUP_TITLES = {
-    weeks_vs_days: 'Weeks vs Days Mismatch',
+    weeks_vs_days: 'Program Weeks Coverage',
     identical_inputs: 'Identical Tactic Inputs',
     similar_inputs: 'Near-Identical Tactic Inputs',
     volunteer_hours: 'Volunteer Hours Concern'
