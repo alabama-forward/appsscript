@@ -294,4 +294,134 @@ function mapRaceDemographics(demoRaceArray) {
     return { hasFilter: catalistValues.length > 0, catalistValues: catalistValues, unmapped: unmapped, unmappedComment: unmappedComment };
 }
 
+/**
+ * Maps an array of field plan age selections to SQL BETWEEN clause components.
+ *
+ * Uses the AGE_RANGE_MAP constant from _query_config.js. Detects contiguous
+ * ranges and merges them into a single BETWEEN clause for cleaner SQL.
+ *
+ * Rules:
+ *   - If all age ranges are selected (or none), returns hasFilter:false
+ *     (omit the age filter entirely — targeting everyone is the same as
+ *     no age filter)
+ *   - If ranges are contiguous (e.g., 18-19, 20-29, 30-39), merges into
+ *     a single BETWEEN 18 AND 39
+ *   - If ranges have gaps (e.g., 18-19 and 40-49), produces multiple
+ *     OR'd BETWEEN clauses
+ *
+ * @param {string[]} demoAgeArray - Array of age selections from the form
+ *   (FieldPlan.demoAge, column 29)
+ * @returns {Object} Result object with:
+ *      - hasFilter {boolean}: Whether to include an age WHERE clause
+ *      - ranges {Array<{min:number, max:number}>}: Merged contiguous ranges
+ *      - sqlFragment {string}: Ready-to-use SQL fragment like
+ *           "p.age BETWEEN 18 AND 39" or
+ *           "(p.age BETWEEN 18 AND 19 OR p.age BETWEEN 40 AND 49)"
+ *      - unmapped {string[]}: Form values not found in AGE_RANGE_MAP
+ *      - unmappedComment {string}: SQL comment listing unmapped values or empty string
+ * 
+ * @example
+ *   mapAgeDemographics(['18 - 19', '40 - 49'])
+ *   // { hasFilter: true, ranges: [{min:18, max:19}, {min:40, max:49}],
+ *   //   sqlFragment: '(p.age BETWEEN 18 AND 19 OR p.age BETWEEN 40 AND 49)' }
+ * @example
+ *   mapAgeDemographics(['18 - 19', 'Under 18'])
+ *   // { hasFilter: true, ranges: [{min:18, max:19}],
+ *   //   sqlFragment: 'p.age BETWEEN 18 AND 19', unmapped: ['Under 18'],
+ *   //   unmappedComment: '-- Unmapped age selections: Under 18' }
+ */
+function mapAgeDemographics(demoAgeArray){
+    //Member selected no options, no need to filter
+    if (!demoAgeArray || !Array.isArray(demoAgeArray) || demoAgeArray.length === 0) {
+        Logger.log('mapAgeDemographics: no age selections, omitting age filter');
+        return { hasFilter: false, ranges: [], sqlFragment: '', unmapped: [], unmappedComment: '' };
+    }
 
+    //Member selected all the age options, no need to filter
+    if (demoAgeArray.length >= AGE_RANGE_TOTAL_OPTIONS) {
+        Logger.log(`mapAgeDemographics: all ${AGE_RANGE_TOTAL_OPTIONS} age ranges selected,
+            omitting age filter`);
+        return { hasFilter: false, ranges: [], sqlFragment: '', unmapped: [], unmappedComment: '' };
+    }
+
+    const unmapped = [];
+    const parsedRanges = demoAgeArray
+        .map(v => {
+            const formValue = v.toString().trim();
+            const range = AGE_RANGE_MAP[formValue];
+            if (!range) {
+                unmapped.push(formValue);
+                Logger.log(`mapAgeDemographics: unrecognized age range "${formValue} - excluded from filter`);
+            }
+            return range;
+        })
+        .filter( range => range)
+        .sort((a, b) => a.min - b.min)
+    
+    const unmappedComment = unmapped.length > 0
+        ? `--Unmapped age selections: ${unmapped.join(', ')}`
+        : '';
+    
+    if (parsedRanges.length === 0) {
+        Logger.log('mapAgeDemographics: no valid age ranges parsed, omitting age filter')
+        return { hasFilter: false, ranges: [], sqlFragment: '', unmapped: unmapped, unmappedComment: unmappedComment };
+    }
+
+    //Merge contiguous ranges
+    const merged = parsedRanges.reduce((acc, range) =>{
+        const last = acc[acc.length - 1];
+        if (last && range.min <= last.max + 1) {
+            last.max = Math.max(last.max, range.max);
+        } else {
+            acc.push({ min: range.min, max: range.max });
+        }
+        return acc;
+    }, []);
+
+    const clauses = merged.map(r => 'p.age BETWEEN ' + r.min + ' AND ' + r.max);
+    const sqlFragment = clauses.length === 1
+        ? clauses[0]
+        : '(' + clauses.join(' OR ') + ')';
+    
+    Logger.log(`mapAgeDemographics: ${demoAgeArray.length} selections -> 
+        ${merged.length} range(s): ${sqlFragment}`);
+    return { hasFilter: true, ranges: merged, sqlFragment: sqlFragment, 
+        unmapped: unmapped, unmappedComment: unmappedComment };
+
+}
+
+/**
+ * Generates an activist code from an organization name, county, and precinct.
+ *
+ * Format: {COUNTY_4}_{PRECINCT}_{ORG_INITIALS}
+ *
+ * @param {string} orgName - Organization name from the field plan form
+ * @param {string} countyAbbreviation - 4-character county abbreviation
+ *   (from resolveCountyName().abbreviation)
+ * @param {string} precinctCode - Zero-padded precinct code
+ *   (from resolvePrecinctCode().precinctCode)
+ * @returns {string} Activist code in the format XXXX_XXXXX_XXX
+ *
+ * @example
+ *   generateActivistCode('Southern Alabama Black Women Roundtable', 'HOUS', '00182')
+ *   // 'HOUS_00182_SABWR'
+ * /
+ */
+function generateActivistCode(orgName, countyAbbreviation, precinctCode) {
+  // Generate org initials from significant words
+  const orgInitials = orgName
+    ? orgName.toString().trim().split(/\s+/)
+        .map(w => w.toLowerCase().replace(/[^a-z]/g, ''))
+        .filter(w => w.length > 0 && !ORG_STOP_WORDS.includes(w))
+        .map(w => w.charAt(0).toUpperCase())
+        .join('') || 'ORG'
+    : 'ORG';
+
+  if (orgInitials === 'ORG') {
+    Logger.log(`generateActivistCode: could not extract initials from "${orgName}", using fallback "ORG"`);
+  }
+
+  const activistCode = countyAbbreviation + '_' + precinctCode + '_' + orgInitials;
+  Logger.log(`generateActivistCode: "${orgName}" + "${countyAbbreviation}" + "${precinctCode}" -> "${activistCode}"`);
+  return activistCode;
+}
