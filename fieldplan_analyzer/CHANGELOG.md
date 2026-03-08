@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [1.2.1] - 2026-03-08
+### Added
+- Age demographics resolver with contiguous range merging for SQL queries
+- Activist code generator from org name, county, and precinct
+- Race demographics resolver for race filter queries
+
+### Changed
+- Replace per-tactic `weeksVsDaysCheck` with aggregate program weeks coverage analysis
+
+### Fixed
+- Route `testMostRecentFieldPlan` through `isTestMode` instead of monkey-patching `MailApp.sendEmail`
+
 ## [1.2.0] - 2026-03-04
 ### Added
 - BigQuery query builder configuration module and county precinct config
