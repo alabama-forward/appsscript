@@ -93,12 +93,20 @@ function testEmailFormatting() {
         // Log the analysis results
         Logger.log("Analysis Summary:");
         Logger.log(analysis.summary);
-        
+
+        if (analysis.summary.expectedRange) {
+          const statusLabel = { within: 'WITHIN RANGE', below: 'BELOW RANGE', above: 'ABOVE RANGE' };
+          Logger.log(`\nExpected Outreach Range: $${analysis.summary.expectedRange.low} – $${analysis.summary.expectedRange.high} (midpoint: $${analysis.summary.expectedRange.midpoint})`);
+          Logger.log(`Outreach Status: ${statusLabel[analysis.summary.outreachStatus] || 'unknown'}`);
+        } else {
+          Logger.log(`\nExpected Outreach Range: N/A (no complete tactics)`);
+        }
+
         Logger.log(`\nFound ${analysis.tactics.length} tactics:`);
         analysis.tactics.forEach(tactic => {
           Logger.log(`- ${tactic.tacticName}: $${tactic.costPerAttempt.toFixed(2)}/attempt (${tactic.status})`);
         });
-        
+
         Logger.log(`\nFound ${analysis.gaps.length} gaps:`);
         analysis.gaps.forEach(gap => {
           Logger.log(`- ${gap.category}: $${gap.gap} gap`);

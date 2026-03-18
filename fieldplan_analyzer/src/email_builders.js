@@ -614,8 +614,26 @@ function buildBudgetAnalysisEmailHTML(budget, fieldPlan, analysis, colors) {
   colors = colors || EMAIL_COLORS;
   const orgName = budget.memberOrgName || 'Unknown Organization';
 
-  // Status badge colors
+  // Status badge colors — shared by per-tactic badges and the aggregate outreach badge
   const statusColors = { within: colors.success, below: colors.warning, above: colors.danger };
+  const statusLabels = { within: 'WITHIN RANGE', below: 'BELOW RANGE', above: 'ABOVE RANGE' };
+
+  // Build the Expected Outreach Range display with inline status badge
+  let rangeDisplay;
+  if (analysis.summary.expectedRange && analysis.summary.outreachStatus) {
+    const rangeLow = '$' + analysis.summary.expectedRange.low.toLocaleString();
+    const rangeHigh = '$' + analysis.summary.expectedRange.high.toLocaleString();
+    const badgeColor = statusColors[analysis.summary.outreachStatus];
+    const badgeLabel = statusLabels[analysis.summary.outreachStatus];
+
+    rangeDisplay = rangeLow + ' – ' + rangeHigh +
+      ' <span style="display:inline-block;background-color:' + badgeColor +
+      ';color:#FFFFFF;padding:2px 10px;border-radius:10px;font-size:11px;' +
+      'font-weight:bold;margin-left:8px;text-transform:uppercase;">' +
+      badgeLabel + '</span>';
+  } else {
+    rangeDisplay = 'N/A — no complete tactics submitted';
+  }
 
   // Summary section
   let content = '<tr><td style="padding:25px 30px;">' +
@@ -624,6 +642,7 @@ function buildBudgetAnalysisEmailHTML(budget, fieldPlan, analysis, colors) {
     buildInfoRow('Total Request', analysis.summary.requestSummary, colors) +
     buildInfoRow('Non-Outreach', analysis.summary.notOutreach, colors) +
     buildInfoRow('Outreach', analysis.summary.outreach, colors) +
+    buildInfoRow('Expected Outreach Range', rangeDisplay, colors) +
     buildInfoRow('Data Stipend', analysis.summary.dataStipend, colors) +
     '</table></td></tr>';
 
