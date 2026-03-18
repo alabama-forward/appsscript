@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [1.3.0] - 2026-03-18
+### Added
+- Expected outreach budget range calculation from per-tactic cost bounds and program attempts
+- Outreach status flag (within/below/above) comparing requested amount against expected range
+
+### Changed
+- Render Expected Outreach Range row with color-coded status badge in budget analysis email
+- Log expected range and outreach status in `testEmailFormatting()`
+
 ## [1.2.1] - 2026-03-08
 ### Added
 - Age demographics resolver with contiguous range merging for SQL queries
