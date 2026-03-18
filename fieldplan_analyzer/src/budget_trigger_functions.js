@@ -30,6 +30,38 @@ function getTacticTargets() {
   return targets;
 }
 
+
+/**
+ * Calculates expected outreach budget range using field plan tactic goals
+ * 
+ * Multiplies total program attempts by lower and upper cost-per-attempt bounds
+ * from TACTIC_CONFIG.
+ * 
+ * @param {TacticProgram[]} tactics - Array of valid tactic instances
+ * @returns {Object} { low, high, midpoint } - dollar amounts
+ */
+function expectedBudgetRange(tactics) {
+  const { low, high } = tactics.reduce((totals, tactic) => {
+    const attempts = tactic.programAttempts();
+    const lowerBound = tactic.costTarget - tactic.costStdDev;
+    const upperBound = tactic.costTarget + tactic.costStdDev;
+
+    return {
+      low: totals.low + (attempts * lowerBound),
+      high: totals.high + (attempts * upperBound)
+    };
+  }, { low: 0, high: 0 });
+
+  const midpoint = (low + high) / 2;
+
+  return {
+    low: parseFloat(low.toFixed(0)),
+    high: parseFloat(high.toFixed(0)),
+    midpoint: parseFloat(midpoint.toFixed(0))
+  };
+};
+
+
 // Create time-based trigger for budget analysis
 function createBudgetAnalysisTrigger() {
   const triggers = ScriptApp.getProjectTriggers();
@@ -171,11 +203,25 @@ function analyzeBudgetWithFieldPlan(budget, fieldPlanMatch) {
   analysis.gaps = analyzeGaps(budget, tactics);
 
   // Generate summary
+  const range = tactics.length > 0 ? expectedBudgetRange(tactics): null;
+
+  const outreachTotal = budget.canvassRequested
+    + budget.phoneRequested
+    + budget.textRequested
+    + budget.eventRequested
+    + budget.digitalRequested;
+  
+  const outreachStatus = range
+    ? (outreachTotal < range.low ? 'below' : outreachTotal > range.high ? 'above' : 'within')
+    : null;
+
   analysis.summary = {
     notOutreach: budget.sumNotOutreach(),
     outreach: budget.sumOutreach(),
     dataStipend: budget.needDataStipend(),
-    requestSummary: budget.requestSummary()
+    requestSummary: budget.requestSummary(),
+    expectedRange: range,
+    outreachStatus
   };
 
   return analysis;
