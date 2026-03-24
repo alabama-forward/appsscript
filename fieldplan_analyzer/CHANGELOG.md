@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [1.3.1] - 2026-03-24
+### Fixed
+- Wire attempts-per-hour threshold into per-tactic badge and flag system
+
 ## [1.3.0] - 2026-03-18
 ### Added
 - Expected outreach budget range calculation from per-tactic cost bounds and program attempts
