@@ -127,6 +127,7 @@ class TacticProgram extends FieldProgram {
   get tacticName() { return this._name; }
   get costTarget() { return this._costTarget; }
   get costStdDev() { return this._costStdDev; }
+  get reasonableThreshold() { return this._reasonableThreshold; }
 
   /**
    * Analyze cost efficiency given a funding amount
@@ -285,6 +286,32 @@ function analyzeTacticFlags(fieldPlan, tactics) {
           `(recommended max: ${VOLUNTEER_HOURS_THRESHOLD}). Verify this is per-volunteer and not total hours.`,
         tacticName: tactic.tacticName,
         hoursPerVolunteer: tactic.weeklyVolunteerHours
+      });
+    }
+
+    // --- Check 4: Attempts Per Hour Reasonableness ---
+    const threshold = tactic.reasonableThreshold;
+    if (threshold && tactic.hourlyAttempts > threshold + 10) {
+      flags.push({
+        priority: 'high',
+        type: 'attempts_per_hour',
+        title: `Confirm — ${tactic.tacticName}: Unreasonable Attempts/Hour`,
+        description: `${tactic.tacticName} expects ${tactic.hourlyAttempts} attempts/hour per volunteer ` +
+          `(reasonable max: ${threshold}). This is far beyond a realistic pace and likely indicates a data entry error.`,
+        tacticName: tactic.tacticName,
+        hourlyAttempts: tactic.hourlyAttempts,
+        reasonableThreshold: threshold
+      });
+    } else if (threshold && tactic.hourlyAttempts > threshold) {
+      flags.push({
+        priority: 'medium',
+        type: 'attempts_per_hour',
+        title: `Review — ${tactic.tacticName}: High Attempts/Hour`,
+        description: `${tactic.tacticName} expects ${tactic.hourlyAttempts} attempts/hour per volunteer ` +
+          `(reasonable max: ${threshold}). Verify the organization has set a realistic contact pace.`,
+        tacticName: tactic.tacticName,
+        hourlyAttempts: tactic.hourlyAttempts,
+        reasonableThreshold: threshold
       });
     }
   });

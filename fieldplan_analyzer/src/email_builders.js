@@ -299,12 +299,29 @@ function buildTacticsSection(fieldPlan, tactics, colors) {
       tacticFlags.push('Excessive volunteer hours: ' + tactic.weeklyVolunteerHours + ' hrs/week per volunteer (max recommended: ' + VOLUNTEER_HOURS_THRESHOLD + ')');
     }
 
-    // Per-tactic badge
+    const threshold = tactic.reasonableThreshold;
+    if (threshold && tactic.hourlyAttempts > threshold) {
+      tacticFlags.push('Excessive attempts/hour: ' + tactic.hourlyAttempts + ' (max reasonable: ' + threshold + ')');
+    }
+
+    // Per-tactic badge — pick the worst of volunteer-hours and attempts-per-hour assessments
+    // Volunteer hours assessment: 0 = approve, 1 = review, 2 = needs edits
+    const hoursLevel = tactic.weeklyVolunteerHours > VOLUNTEER_HOURS_THRESHOLD + 4 ? 2
+      : tactic.weeklyVolunteerHours > VOLUNTEER_HOURS_THRESHOLD ? 1
+      : 0;
+
+    // Attempts per hour assessment: same scale
+    const attemptsLevel = (threshold && tactic.hourlyAttempts > threshold + 10) ? 2
+      : (threshold && tactic.hourlyAttempts > threshold) ? 1
+      : 0;
+
+    const worstLevel = Math.max(hoursLevel, attemptsLevel);
+
     let badgeText, badgeColor;
-    if (tactic.weeklyVolunteerHours > VOLUNTEER_HOURS_THRESHOLD + 4) {
+    if (worstLevel === 2) {
       badgeText = 'NEEDS EDITS';
       badgeColor = colors.danger;
-    } else if (tactic.weeklyVolunteerHours > VOLUNTEER_HOURS_THRESHOLD) {
+    } else if (worstLevel === 1) {
       badgeText = 'REVIEW';
       badgeColor = colors.warning;
     } else {
