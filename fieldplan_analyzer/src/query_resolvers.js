@@ -14,25 +14,11 @@
  */
 
 /**
- * Resolves an organization name to its VAN committee ID.
- *
- * Reads the van_id_lookup sheet tab and attempts three matching strategies
- * in order:
- *   1. Exact match (case-insensitive)
- *   2. Normalized match (strip punctuation, extra spaces, lowercase)
- *   3. Contains match (one name contains the other)
- *
- * The van_id_lookup sheet must have two columns:
- *   Column A: Organization name (committeename from BigQuery)
- *   Column B: VAN committee ID (committeeid from BigQuery)
- *
+ * Resolve an org name to its VAN committee ID via exact, normalized, or contains match.
  * @param {string} orgName - Organization name from the field plan form
- *   (FieldPlan.memberOrgName, column 2)
- * @returns {Object} Result object with:
- *   - found {boolean}: Whether a match was found
- *   - committeeId {string|null}: The VAN committee ID if found, null otherwise
- *   - committeeName {string|null}: The matched committee name if found
- *   - matchType {string}: 'exact', 'normalized', 'contains', or 'none'
+ * @returns {{found: boolean, committeeId: string|null, committeeName: string|null, matchType: string}}
+ * @example resolveVanId('NAACP') // { found: true, committeeId: '12345', committeeName: 'NAACP', matchType: 'exact' }
+ * @example resolveVanId('')      // { found: false, committeeId: null, committeeName: null, matchType: 'none' }
  */
 function resolveVanId(orgName) {
     if (!orgName) {
@@ -89,13 +75,11 @@ function resolveVanId(orgName) {
 }
 
 /**
- * Normalizes an organization name for fuzzy matching.
- *
- * Strips punctuation, collapses whitespace, and lowercases. This catches
- * differences like "Org, Inc." vs "Org Inc" or "Org  Name" vs "Org Name".
- *
+ * Normalize an org name for fuzzy matching (lowercase, no punctuation, single spaces).
  * @param {string} name - Raw organization name
- * @returns {string} Normalized name (lowercase, no punctuation, single spaces)
+ * @returns {string} Normalized name
+ * @example normalizeOrgName('Org, Inc.') // 'org inc'
+ * @example normalizeOrgName('')          // ''
  */
 function normalizeOrgName(name) {
   if (!name) return '';
@@ -108,21 +92,11 @@ function normalizeOrgName(name) {
 }
 
 /**
- * Resolves a field plan county name to a validated uppercase county name.
- *
- * The field plan form stores counties as multi-select values.
- * This function takes a single county string, trims it, and converts
- * to uppercase for use in BigQuery WHERE clauses.
- *
+ * Resolve a county name to validated uppercase with 4-char abbreviation.
  * @param {string} fieldPlanCounty - A single county name from the form
- * @returns {Object} Result object with:
- *      - valid {boolean}: Whether the county name is non-empty after cleaning
- *      - countyName {string}: Uppercase trimmed county name
- *      - abbreviation {string}: First 4 characters uppercase (for activist code generation)
- *
- * @example
- *      resolveCountyName('   houston  ')
- *      // { valid: true, countyName: 'HOUSTON', abbreviation: 'HOUS'}
+ * @returns {{valid: boolean, countyName: string, abbreviation: string}}
+ * @example resolveCountyName('houston') // { valid: true, countyName: 'HOUSTON', abbreviation: 'HOUS' }
+ * @example resolveCountyName('')        // { valid: false, countyName: '', abbreviation: '' }
  */
 function resolveCountyName(fieldPlanCounty) {
     if (!fieldPlanCounty) {
@@ -144,9 +118,11 @@ function resolveCountyName(fieldPlanCounty) {
 }
 
 /**
- * Loads valid precinct codes for a county from the county_precinct tab.
- * @param {string} countyName - uppercase county name
+ * Load valid precinct codes for a county from the county_precinct tab.
+ * @param {string} countyName - Uppercase county name
  * @returns {string[]} Array of zero-padded precinct codes
+ * @example getCountyPrecincts('HOUSTON') // ['00182', '00183', '00184']
+ * @example getCountyPrecincts('FAKE')    // []
  */
 function getCountyPrecincts(countyName) {
     const config = getQueryConfig();
@@ -160,18 +136,12 @@ function getCountyPrecincts(countyName) {
 }
 
 /**
- * Resolves a field plan precinct value to a zero-padded precinct code
- * 
- * @param {string} fieldPlanPrecinct - a single precinct value from the form 
- * @param {string} countyName - The resolved uppercanse county name, used for context logging
- * @returns {Object} Result object with:
- *      - valid {boolean}: Whether a numeric precinct code was extracted
- *      - precinctCode {string} : Zero-padded 5-digit precinct code
- *      - rawVale {string}: The original form value (for debugging)
- * 
- * @example
- *      resolvePrecinctCode('182', 'HOUSTON')
- *      // { valid: true, precinctCode: '00182', rawValue: '182' }
+ * Resolve a precinct value to a zero-padded 5-digit code with county validation.
+ * @param {string} fieldPlanPrecinct - A single precinct value from the form
+ * @param {string} countyName - Resolved uppercase county name
+ * @returns {{valid: boolean, precinctCode: string, rawValue: string, matchType: string}}
+ * @example resolvePrecinctCode('182', 'HOUSTON') // { valid: true, precinctCode: '00182', rawValue: '182', matchType: 'exact' }
+ * @example resolvePrecinctCode('', 'HOUSTON')    // { valid: false, precinctCode: '', rawValue: '', matchType: 'none' }
  */
 function resolvePrecinctCode(fieldPlanPrecinct, countyName) {
     //No precinct, mark as empty in log
@@ -236,32 +206,11 @@ function resolvePrecinctCode(fieldPlanPrecinct, countyName) {
 }
 
 /**
- * Maps an array of field plan race selections to Catalist race values.
- *
- * Uses the RACE_MAP constant from _query_config.js. Any form value not
- * found in RACE_MAP is excluded from the Catalist filter and tracked in
- * the `unmapped` array.
- *
- * IMPORTANT: Do NOT map unmapped values to 'unknown'. In Catalist,
- * 'unknown' is a real race value meaning "no race data available for
- * this voter," not a catch-all for unrecognized form inputs.
- *
- * If the input array is empty or null, returns hasFilter: false, which
- * signals the SQL builder to omit the race filter entirely.
- * 
- * @param {string[]} demoRaceArray - Array of race selections. Values are normalized
- *      by the FieldPlan constructor first.
- * @returns {Object} Result object with:
- *      - hasFilter {boolean}: Whether any values were mapped ('true' triggers WHERE clause inclusion)
- *      - catalistValues {string[]}: Set array of Catalist race values
- *      - unmappedComment {string}: SQL comment listing unmapped values or empty string
- *  * @example
- *   mapRaceDemographics(['Black / African American', 'Multiracial'])
- *   // {
- *   //   hasFilter: true,
- *   //   catalistValues: ['black'],
- *   //   unmapped: ['Multiracial'],
- *   //   unmappedComment: -- Unmapped race selections: Multiracial 
+ * Map form race selections to Catalist race values via RACE_MAP. Unmapped values are excluded, not mapped to 'unknown'.
+ * @param {string[]} demoRaceArray - Race selections from the field plan form
+ * @returns {{hasFilter: boolean, catalistValues: string[], unmapped: string[], unmappedComment: string}}
+ * @example mapRaceDemographics(['Black / African American']) // { hasFilter: true, catalistValues: ['black'], unmapped: [], unmappedComment: '' }
+ * @example mapRaceDemographics([])                          // { hasFilter: false, catalistValues: [], unmapped: [] }
  */
 function mapRaceDemographics(demoRaceArray) {
     if (!demoRaceArray || !Array.isArray(demoRaceArray) || demoRaceArray.length === 0) {
@@ -295,40 +244,11 @@ function mapRaceDemographics(demoRaceArray) {
 }
 
 /**
- * Maps an array of field plan age selections to SQL BETWEEN clause components.
- *
- * Uses the AGE_RANGE_MAP constant from _query_config.js. Detects contiguous
- * ranges and merges them into a single BETWEEN clause for cleaner SQL.
- *
- * Rules:
- *   - If all age ranges are selected (or none), returns hasFilter:false
- *     (omit the age filter entirely — targeting everyone is the same as
- *     no age filter)
- *   - If ranges are contiguous (e.g., 18-19, 20-29, 30-39), merges into
- *     a single BETWEEN 18 AND 39
- *   - If ranges have gaps (e.g., 18-19 and 40-49), produces multiple
- *     OR'd BETWEEN clauses
- *
- * @param {string[]} demoAgeArray - Array of age selections from the form
- *   (FieldPlan.demoAge, column 29)
- * @returns {Object} Result object with:
- *      - hasFilter {boolean}: Whether to include an age WHERE clause
- *      - ranges {Array<{min:number, max:number}>}: Merged contiguous ranges
- *      - sqlFragment {string}: Ready-to-use SQL fragment like
- *           "p.age BETWEEN 18 AND 39" or
- *           "(p.age BETWEEN 18 AND 19 OR p.age BETWEEN 40 AND 49)"
- *      - unmapped {string[]}: Form values not found in AGE_RANGE_MAP
- *      - unmappedComment {string}: SQL comment listing unmapped values or empty string
- * 
- * @example
- *   mapAgeDemographics(['18 - 19', '40 - 49'])
- *   // { hasFilter: true, ranges: [{min:18, max:19}, {min:40, max:49}],
- *   //   sqlFragment: '(p.age BETWEEN 18 AND 19 OR p.age BETWEEN 40 AND 49)' }
- * @example
- *   mapAgeDemographics(['18 - 19', 'Under 18'])
- *   // { hasFilter: true, ranges: [{min:18, max:19}],
- *   //   sqlFragment: 'p.age BETWEEN 18 AND 19', unmapped: ['Under 18'],
- *   //   unmappedComment: '-- Unmapped age selections: Under 18' }
+ * Map form age selections to merged SQL BETWEEN clauses. Contiguous ranges are combined; all-selected omits the filter.
+ * @param {string[]} demoAgeArray - Age selections from the field plan form
+ * @returns {{hasFilter: boolean, ranges: Array<{min: number, max: number}>, sqlFragment: string, unmapped: string[], unmappedComment: string}}
+ * @example mapAgeDemographics(['18 - 19', '20 - 29']) // { hasFilter: true, ranges: [{min:18, max:29}], sqlFragment: 'p.age BETWEEN 18 AND 29', unmapped: [], unmappedComment: '' }
+ * @example mapAgeDemographics([])                      // { hasFilter: false, ranges: [], sqlFragment: '', unmapped: [], unmappedComment: '' }
  */
 function mapAgeDemographics(demoAgeArray){
     //Member selected no options, no need to filter
@@ -391,21 +311,13 @@ function mapAgeDemographics(demoAgeArray){
 }
 
 /**
- * Generates an activist code from an organization name, county, and precinct.
- *
- * Format: {COUNTY_4}_{PRECINCT}_{ORG_INITIALS}
- *
+ * Generate an activist code from org name, county abbreviation, and precinct code.
  * @param {string} orgName - Organization name from the field plan form
- * @param {string} countyAbbreviation - 4-character county abbreviation
- *   (from resolveCountyName().abbreviation)
- * @param {string} precinctCode - Zero-padded precinct code
- *   (from resolvePrecinctCode().precinctCode)
- * @returns {string} Activist code in the format XXXX_XXXXX_XXX
- *
- * @example
- *   generateActivistCode('Southern Alabama Black Women Roundtable', 'HOUS', '00182')
- *   // 'HOUS_00182_SABWR'
- * /
+ * @param {string} countyAbbreviation - 4-char county abbreviation from resolveCountyName()
+ * @param {string} precinctCode - Zero-padded precinct code from resolvePrecinctCode()
+ * @returns {string} Activist code (format: XXXX_XXXXX_XXX)
+ * @example generateActivistCode('Southern Alabama Black Women Roundtable', 'HOUS', '00182') // 'HOUS_00182_SABWR'
+ * @example generateActivistCode('', 'HOUS', '00182')                                        // 'HOUS_00182_ORG'
  */
 function generateActivistCode(orgName, countyAbbreviation, precinctCode) {
   // Generate org initials from significant words
