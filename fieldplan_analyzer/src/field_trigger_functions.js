@@ -364,6 +364,12 @@ function onSpreadsheetEdit(e) {
     reprocessBudgetRow(row);
     e.range.setValue(false);
   }
+
+  // Query builder reprocess
+  if (sheetName === fieldPlanSheetName && col === FIELD_PLAN_COLUMNS.REPROCESS_QUERIES + 1 && e.value === 'TRUE' && row > 1) {
+    reprocessQueryBuilderRow(row);
+    e.range.setValue(false);
+  }
 }
 
 /**
@@ -406,5 +412,24 @@ function reprocessBudgetRow(rowNumber) {
     Logger.log('Reprocess complete for budget row ' + rowNumber);
   } catch (error) {
     Logger.log('Error reprocessing budget row ' + rowNumber + ': ' + error.message);
+  }
+}
+
+/**
+ * Reprocesses query builder output for a single field plan row.
+ * @param {number} rowNumber - The 1-indexed spreadsheet row number
+ * @example reprocessQueryBuilderRow(5)
+ *   // => re-runs generateQueriesForFieldPlan for row 5, overwrites query_queue rows and summary
+ * @example reprocessQueryBuilderRow(2)
+ *   // => logs error if row 2 has no field plan data
+ */
+function reprocessQueryBuilderRow(rowNumber) {
+  try {
+    const fieldPlan = FieldPlan.fromSpecificRow(rowNumber);
+    Logger.log(`Reprocessing query builder for row ${rowNumber}: ${fieldPlan.memberOrgName}`);
+    const result = generateQueriesForFieldPlan(fieldPlan, rowNumber);
+    Logger.log(`Query builder reprocess complete for row ${rowNumber}: ${result.queryCount} queries, ${result.errors.length} errors`);
+  } catch (error) {
+    Logger.log(`Error reprocessing query builder row ${rowNumber}: ${error.message}`);
   }
 }

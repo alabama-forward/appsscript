@@ -55,7 +55,8 @@ function onOpen() {
     .addSeparator()
     .addSubMenu(ui.createMenu('Reprocess Setup')
       .addItem('Create Reprocess Trigger', 'createReprocessTrigger')
-      .addItem('Setup Reprocess Columns', 'setupReprocessColumns'))
+      .addItem('Setup Reprocess Columns', 'setupReprocessColumns')
+      .addItem('Setup Query Builder Column', 'setupQueryBuilderColumn'))
     .addToUi();
 }
 
@@ -565,6 +566,46 @@ function setupReprocessColumns() {
   }
 
   Logger.log('Budget Reprocess column set up in column ' + budgetCol + ' (' + budgetLastRow + ' rows)');
+
+  // --- Field Plan Query Builder Reprocess ---
+  const qbCol = FIELD_PLAN_COLUMNS.REPROCESS_QUERIES + 1;
+
+  fieldPlanSheet.getRange(1, qbCol).setValue('Reprocess Queries');
+
+  if (fpLastRow > 1) {
+    const qbRange = fieldPlanSheet.getRange(2, qbCol, fpLastRow - 1, 1);
+    const qbValidation = SpreadsheetApp.newDataValidation()
+      .requireCheckbox()
+      .build();
+    qbRange.setDataValidation(qbValidation);
+    qbRange.setValue(false);
+  }
+
+  Logger.log('Query builder Reprocess column set up in column ' + qbCol + ' (' + fpLastRow + ' rows)');
+}
+
+/**
+ * Adds only the "Reprocess Queries" checkbox column to the field plan sheet.
+ * Use this if the original reprocess columns already exist and you just need the query builder column.
+ */
+function setupQueryBuilderColumn() {
+  const fieldPlanSheetName = scriptProps.getProperty('SHEET_FIELD_PLAN');
+  const fieldPlanSheet = getSheet(fieldPlanSheetName);
+  const qbCol = FIELD_PLAN_COLUMNS.REPROCESS_QUERIES + 1;
+  const lastRow = fieldPlanSheet.getLastRow();
+
+  fieldPlanSheet.getRange(1, qbCol).setValue('Reprocess Queries');
+
+  if (lastRow > 1) {
+    const qbRange = fieldPlanSheet.getRange(2, qbCol, lastRow - 1, 1);
+    const qbValidation = SpreadsheetApp.newDataValidation()
+      .requireCheckbox()
+      .build();
+    qbRange.setDataValidation(qbValidation);
+    qbRange.setValue(false);
+  }
+
+  Logger.log('Query builder Reprocess column set up in column ' + qbCol + ' (' + lastRow + ' rows)');
 }
 
 function testProgramDays() {

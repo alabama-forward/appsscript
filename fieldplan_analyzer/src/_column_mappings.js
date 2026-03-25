@@ -70,9 +70,10 @@ const FIELD_PLAN_COLUMNS = {
     //Submission metadata
     SUBMISSIONURL: 71,
     SUBMISSIONID: 72,
-    //Query builder column will be added at 73
-    REPROCESS: 74
-    
+    //Query builder summary column (written by writeToFieldPlanSheet)
+    QUERY_BUILDER_STATUS: 73,
+    REPROCESS: 74,
+    REPROCESS_QUERIES: 75
 }
 
 //===============================
