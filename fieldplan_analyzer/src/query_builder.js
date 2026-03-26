@@ -41,6 +41,8 @@ function generateQueriesForFieldPlan(fieldPlan, rowNumber) {
     queries: [],
     summary: '',
     vanId: null,
+    raceData: null,
+    ageData: null,
     errors: []
   };
 
@@ -58,6 +60,8 @@ function generateQueriesForFieldPlan(fieldPlan, rowNumber) {
     // Step 2: Resolve demographics
     const raceData = mapRaceDemographics(fieldPlan.demoRace || []);
     const ageData = mapAgeDemographics(fieldPlan.demoAge || []);
+    result.raceData = raceData;
+    result.ageData = ageData;
 
     // Step 3: Build resolved data object shared by both paths
     const resolvedData = {
@@ -70,11 +74,15 @@ function generateQueriesForFieldPlan(fieldPlan, rowNumber) {
     };
 
     // Step 4: Route to correct query path
+    // Check that at least one precinct contains a digit — text-only values
+    // like "no precinct" or "n/a" should fall through to exploration
     const knowsPrecincts = fieldPlan.knowsPrecincts || '';
     const hasPrecincts = knowsPrecincts.toString().trim().toLowerCase().includes('yes');
+    const precinctList = fieldPlan.fieldPrecincts || [];
+    const hasNumericPrecincts = precinctList.some(p => /\d/.test(p));
 
-    if (hasPrecincts && fieldPlan.fieldPrecincts && fieldPlan.fieldPrecincts.length > 0) {
-      Logger.log(`Path: PRECINCT-LEVEL queries (${fieldPlan.fieldPrecincts.length} precincts)`);
+    if (hasPrecincts && hasNumericPrecincts) {
+      Logger.log(`Path: PRECINCT-LEVEL queries (${precinctList.length} precincts)`);
       const precinctQueries = generatePrecinctQueries(fieldPlan, resolvedData);
       result.queries = precinctQueries.queries;
       result.errors = result.errors.concat(precinctQueries.errors);
@@ -87,10 +95,10 @@ function generateQueriesForFieldPlan(fieldPlan, rowNumber) {
 
     result.queryCount = result.queries.length;
 
-    // Step 5: Write to query_queue sheet
+    // Step 5: Write to query_queue sheet and track row numbers
     result.queries.forEach((query, i) => {
       try {
-        writeToQueryQueue(query);
+        query.queueRow = writeToQueryQueue(query);
       } catch (queueError) {
         result.errors.push(`Failed to write query ${i + 1} to queue: ${queueError.message}`);
         Logger.log(`Error writing to query queue: ${queueError.message}`);
@@ -218,12 +226,12 @@ function generatePrecinctQueries(fieldPlan, resolvedData) {
 // =============================================================================
 
 /**
- * Generates exploration and county-level targeting queries (2 per county, precinct='00000').
+ * Generates exploration, county-level targeting, and metadata merge queries (3 per county, precinct='00000').
  * @param {FieldPlan} fieldPlan - The field plan instance
  * @param {Object} resolvedData - Shared resolved data from the main function
  * @returns {{ queries: Array, errors: string[] }}
  * @example generateExplorationQueries(fieldPlan, resolvedData)
- *   // => { queries: [{ type: 'exploration', sql: '...', county: 'HOUSTON' }, { type: 'county_targeting', ... }], errors: [] }
+ *   // => { queries: [{ type: 'exploration', sql: '...' }, { type: 'county_targeting', ... }, { type: 'metadata_merge', ... }], errors: [] }
  * @example generateExplorationQueries(fieldPlanNoCounties, resolvedData)
  *   // => { queries: [], errors: ['No counties specified in field plan for SABWR'] }
  */
@@ -268,14 +276,26 @@ function generateExplorationQueries(fieldPlan, resolvedData) {
       rowNumber: resolvedData.rowNumber
     };
 
-    // Build both query types, catching errors individually
+    // Metadata merge params for the county-level targeting query
+    const metadataParams = {
+      orgName: resolvedData.orgName,
+      countyName: countyResult.countyName,
+      precinctCode: '00000',
+      activistCode: activistCode,
+      committeeId: resolvedData.vanId.committeeId,
+      queryType: resolvedData.queryType,
+      rowNumber: resolvedData.rowNumber
+    };
+
+    // Build all query types, catching errors individually
     const perCountyErrors = [];
     const queries = [
-      { builder: buildExplorationQuery, type: 'exploration' },
-      { builder: buildCountyLevelTargetingQuery, type: 'county_targeting' }
+      { builder: buildExplorationQuery, type: 'exploration', args: countyParams },
+      { builder: buildCountyLevelTargetingQuery, type: 'county_targeting', args: countyParams },
+      { builder: buildMetadataMergeQuery, type: 'metadata_merge', args: metadataParams }
     ].reduce((acc, item) => {
       try {
-        acc.push(Object.assign({ type: item.type, sql: item.builder(countyParams) }, sharedFields));
+        acc.push(Object.assign({ type: item.type, sql: item.builder(item.args) }, sharedFields));
       } catch (e) {
         perCountyErrors.push(`${item.type} query failed for county ${countyResult.countyName}: ${e.message}`);
       }
@@ -299,10 +319,11 @@ function generateExplorationQueries(fieldPlan, resolvedData) {
 /**
  * Appends a single query row to the query_queue sheet (creates header if empty).
  * @param {Object} queryData - Query object (type, sql, county, precinct, activistCode, orgName, committeeId, rowNumber)
+ * @returns {number} The 1-based row number where the query was written
  * @example writeToQueryQueue({ type: 'precinct_list_merge', sql: 'MERGE ...', county: 'HOUSTON', precinct: '00182', activistCode: 'HOUS_00182_SABWR', orgName: 'SABWR', committeeId: '12345', rowNumber: 5 })
- *   // => appends row: [Timestamp, 'SABWR', 'HOUSTON', '00182', 'HOUS_00182_SABWR', 'precinct_list_merge', 'MERGE ...', 'pending', 5, '12345', user@email]
+ *   // => 4 (appended at row 4 of query_queue sheet)
  * @example writeToQueryQueue({ type: 'exploration', sql: 'SELECT ...', county: 'MOBILE', precinct: '00000', activistCode: 'MOBI_00000_OBG', orgName: 'OBG', committeeId: null, rowNumber: 3 })
- *   // => committeeId column is empty string when null
+ *   // => 2 (first data row after header)
  */
 function writeToQueryQueue(queryData) {
   const config = getQueryConfig();
@@ -329,7 +350,17 @@ function writeToQueryQueue(queryData) {
   ];
 
   sheet.appendRow(row);
-  Logger.log(`writeToQueryQueue: appended ${queryData.type} for ${queryData.activistCode}`);
+  const queueRow = sheet.getLastRow();
+
+  // Apply dropdown validation to the Status cell for this row
+  const statusValidation = SpreadsheetApp.newDataValidation()
+    .requireValueInList(['pending', 'run', 'uploaded'], true)
+    .setAllowInvalid(false)
+    .build();
+  sheet.getRange(queueRow, 8).setDataValidation(statusValidation);
+
+  Logger.log(`writeToQueryQueue: appended ${queryData.type} for ${queryData.activistCode} at row ${queueRow}`);
+  return queueRow;
 }
 
 // =============================================================================
@@ -452,42 +483,33 @@ function setupQueryQueueSheet() {
   }
 
   const sheet = ss.insertSheet('query_queue');
-  const headers = [
-    'Timestamp',
-    'Org Name',
-    'County',
-    'Precinct',
-    'Activist Code',
-    'VAN ID',
-    'Status',
-    'Race Filter',
-    'Age Filter',
-    'Metadata SQL',
-    'Precinct List SQL',
-    'DWID Select SQL',
-    'Notes'
-  ];
+  const headers = QUERY_QUEUE_HEADERS;
 
   sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
   sheet.getRange(1, 1, 1, headers.length).setFontWeight('bold');
   sheet.setFrozenRows(1);
 
-  // Set column widths for readability
+  // Set column widths for readability (matches QUERY_QUEUE_HEADERS order)
   sheet.setColumnWidth(1, 160);  // Timestamp
   sheet.setColumnWidth(2, 200);  // Org Name
   sheet.setColumnWidth(3, 120);  // County
   sheet.setColumnWidth(4, 100);  // Precinct
-  sheet.setColumnWidth(5, 120);  // Activist Code
-  sheet.setColumnWidth(6, 80);   // VAN ID
-  sheet.setColumnWidth(7, 100);  // Status
-  sheet.setColumnWidth(8, 120);  // Race Filter
-  sheet.setColumnWidth(9, 120);  // Age Filter
-  sheet.setColumnWidth(10, 300); // Metadata SQL
-  sheet.setColumnWidth(11, 300); // Precinct List SQL
-  sheet.setColumnWidth(12, 300); // DWID Select SQL
-  sheet.setColumnWidth(13, 200); // Notes
+  sheet.setColumnWidth(5, 140);  // Activist Code
+  sheet.setColumnWidth(6, 120);  // Query Type
+  sheet.setColumnWidth(7, 400);  // SQL
+  sheet.setColumnWidth(8, 100);  // Status
+  sheet.setColumnWidth(9, 80);   // Row Number
+  sheet.setColumnWidth(10, 120); // VAN Committee ID
+  sheet.setColumnWidth(11, 180); // Submitted By
 
-  Logger.log('Created "query_queue" sheet with 13 header columns.');
+  // Add dropdown validation to Status column (column 8) for all data rows
+  const statusValidation = SpreadsheetApp.newDataValidation()
+    .requireValueInList(['pending', 'run', 'uploaded'], true)
+    .setAllowInvalid(false)
+    .build();
+  sheet.getRange(2, 8, 999, 1).setDataValidation(statusValidation);
+
+  Logger.log(`Created "query_queue" sheet with ${headers.length} header columns.`);
 }
 
 /**

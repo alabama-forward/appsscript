@@ -441,7 +441,7 @@ function reprocessQueryBuilderRow(rowNumber) {
       result.orgName,
       result.queries,
       result.errors,
-      { orgName: result.orgName, vanId: result.vanId },
+      { orgName: result.orgName, vanId: result.vanId, raceData: result.raceData, ageData: result.ageData },
       false
     );
 

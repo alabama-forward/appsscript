@@ -646,7 +646,7 @@ function testGenerateQueriesForLastRow() {
         result.orgName,
         result.queries,
         result.errors,
-        { orgName: result.orgName, vanId: result.vanId },
+        { orgName: result.orgName, vanId: result.vanId, raceData: result.raceData, ageData: result.ageData },
         true // isTestMode = true
       );
       Logger.log('PASS: Test email sent');
@@ -699,7 +699,7 @@ function testQueryEmail() {
       result.orgName,
       result.queries,
       result.errors,
-      { orgName: result.orgName, vanId: result.vanId },
+      { orgName: result.orgName, vanId: result.vanId, raceData: result.raceData, ageData: result.ageData },
       true // isTestMode — sends to datateam@alforward.org only
     );
 

@@ -50,7 +50,10 @@ const RACE_MAP = {
     'Hispanic / Latino': 'hispanic',
     'White (non-Hispanic)': 'caucasian',
     'Asian / Pacific Islander': 'asian',
-    'Native American / Indigenous': 'nativeAmerican'
+    'Native American / Indigenous': 'nativeAmerican',
+    'American Indian / Alaska Native': 'asian',
+    'East Asian / Southeast Asian': 'asian',
+    'Pacific Islander / Hawaiian Native': 'asian'
 }
 
 const AGE_RANGE_MAP = {

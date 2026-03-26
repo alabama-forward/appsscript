@@ -242,9 +242,14 @@ function executeQueriesForFieldPlan(fieldPlan, rowNumber) {
   const queueData = queueSheet.getDataRange().getValues();
   const orgName = fieldPlan.memberOrgName;
 
+  // QUERY_QUEUE_HEADERS column indices (0-based):
+  // 0:Timestamp 1:OrgName 2:County 3:Precinct 4:ActivistCode
+  // 5:QueryType 6:SQL 7:Status 8:RowNumber 9:CommitteeId 10:SubmittedBy
+  const COL = { ORG: 1, TYPE: 5, SQL: 6, STATUS: 7 };
+
   // Find rows with pending queries for this org (skip header row)
   const matchingRows = queueData.reduce((acc, row, i) => {
-    if (i > 0 && row[1] === orgName && row[6] === 'pending') {
+    if (i > 0 && row[COL.ORG] === orgName && row[COL.STATUS] === 'pending') {
       acc.push(i + 1); // Convert to 1-indexed row number
     }
     return acc;
@@ -258,53 +263,39 @@ function executeQueriesForFieldPlan(fieldPlan, rowNumber) {
 
   Logger.log(`Attempting direct execution of ${matchingRows.length} queries for ${orgName}`);
 
-  const sqlColumns = [
-    { index: 9, name: 'Metadata SQL' },
-    { index: 10, name: 'Precinct List SQL' },
-    { index: 11, name: 'DWID Select SQL' }
-  ];
-
   let allSucceeded = true;
 
   matchingRows.forEach(queueRowNumber => {
-    const queueRow = queueSheet.getRange(queueRowNumber, 1, 1, 13).getValues()[0];
+    const queueRow = queueSheet.getRange(queueRowNumber, 1, 1, QUERY_QUEUE_HEADERS.length).getValues()[0];
+    const queryType = queueRow[COL.TYPE] || 'unknown';
+    const sqlValue = queueRow[COL.SQL];
 
-    // Try each SQL column that has content
-    sqlColumns.forEach(col => {
-      const sqlValue = queueRow[col.index];
-      if (!sqlValue || sqlValue.toString().trim() === '') {
-        return;
-      }
+    if (!sqlValue || sqlValue.toString().trim() === '') {
+      Logger.log(`Skipping row ${queueRowNumber}: empty SQL`);
+      return;
+    }
 
-      try {
-        const queryResult = executeBigQuery(sqlValue.toString(), projectId);
-        result.results.push({
-          type: col.name,
-          totalRows: queryResult.totalRows,
-          success: true
-        });
-        Logger.log(`Executed ${col.name} for ${orgName}: ${queryResult.totalRows} rows`);
-      } catch (execError) {
-        Logger.log(`Failed to execute ${col.name} for ${orgName}: ${execError.message}`);
-        result.results.push({
-          type: col.name,
-          error: execError.message,
-          success: false
-        });
-        allSucceeded = false;
-      }
-    });
+    try {
+      const queryResult = executeBigQuery(sqlValue.toString(), projectId);
+      result.results.push({
+        type: queryType,
+        totalRows: queryResult.totalRows,
+        success: true
+      });
+      Logger.log(`Executed ${queryType} for ${orgName}: ${queryResult.totalRows} rows`);
+    } catch (execError) {
+      Logger.log(`Failed to execute ${queryType} for ${orgName}: ${execError.message}`);
+      result.results.push({
+        type: queryType,
+        error: execError.message,
+        success: false
+      });
+      allSucceeded = false;
+    }
 
-    // Update status in query_queue
+    // Update status in query_queue (column 8 = 1-indexed for STATUS)
     const newStatus = allSucceeded ? 'executed' : 'failed';
-    queueSheet.getRange(queueRowNumber, 7).setValue(newStatus);
-
-    // Update notes
-    const existingNotes = queueRow[12] || '';
-    const executionNote = `Direct execution ${allSucceeded ? 'succeeded' : 'partially failed'} at ${new Date().toLocaleString()}`;
-    queueSheet.getRange(queueRowNumber, 13).setValue(
-      existingNotes ? existingNotes + '; ' + executionNote : executionNote
-    );
+    queueSheet.getRange(queueRowNumber, COL.STATUS + 1).setValue(newStatus);
   });
 
   result.executed = allSucceeded;

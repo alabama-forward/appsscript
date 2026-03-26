@@ -1495,26 +1495,32 @@ function generateTacticRecommendation(tacticType, costPerAttempt, target, status
 
 /**
  * Builds an HTML summary section of resolved query parameters for the email.
- * @param {Object} resolvedData - Resolved data (orgName, vanId, vanIdSource, county, precincts, raceFilter, ageFilter, activistCodes)
+ * @param {Object} resolvedData - Resolved data (orgName, vanId, raceData, ageData)
+ * @param {Object[]} queries - Array of query objects with county, precinct, activistCode fields
  * @param {Object} colors - The EMAIL_COLORS object
  * @returns {string} An HTML table row (<tr>) containing the summary section
- * @example buildQuerySummarySection({ orgName: 'SABWR', vanId: 12345, county: 'HOUSTON', precincts: ['00182'], raceFilter: 'black', ageFilter: 'None', activistCodes: ['HOUS_00182_SABWR'] }, EMAIL_COLORS)
- *   // => '<tr><td ...>...Organization: SABWR...VAN ID: 12345...</td></tr>'
- * @example buildQuerySummarySection({ orgName: 'OBG', vanId: null, county: 'MOBILE', precincts: [], activistCodes: [] }, EMAIL_COLORS)
- *   // => precincts display 'None specified'; VAN ID shows 'Not resolved'
+ * @example buildQuerySummarySection({ orgName: 'SABWR', vanId: { found: true, committeeId: '12345', matchType: 'exact' } }, queries, EMAIL_COLORS)
+ *   // => '<tr><td ...>...Organization: SABWR...VAN ID: 12345 (exact match)...</td></tr>'
+ * @example buildQuerySummarySection({ orgName: 'OBG', vanId: { found: false } }, [], EMAIL_COLORS)
+ *   // => counties display 'Not specified'; VAN ID shows 'Not resolved'
  */
-function buildQuerySummarySection(resolvedData, colors) {
-  const precinctDisplay = resolvedData.precincts && resolvedData.precincts.length > 0
-    ? resolvedData.precincts.join(', ')
-    : 'None specified';
+function buildQuerySummarySection(resolvedData, queries, colors) {
+  // Extract unique counties, precincts, and activist codes from query objects
+  const counties = [...new Set((queries || []).map(q => q.county).filter(Boolean))];
+  const precincts = [...new Set((queries || []).map(q => q.precinct).filter(p => p && p !== '00000'))];
+  const activistCodes = [...new Set((queries || []).map(q => q.activistCode).filter(Boolean))];
 
-  const activistCodeDisplay = resolvedData.activistCodes && resolvedData.activistCodes.length > 0
-    ? resolvedData.activistCodes.join(', ')
-    : 'None specified';
+  const countyDisplay = counties.length > 0 ? counties.join(', ') : 'Not specified';
+  const precinctDisplay = precincts.length > 0 ? precincts.join(', ') : 'None specified (exploration mode)';
+  const activistCodeDisplay = activistCodes.length > 0 ? activistCodes.join(', ') : 'None';
 
-  let vanIdDisplay = resolvedData.vanId ? resolvedData.vanId.toString() : 'Not resolved';
-  if (resolvedData.vanIdSource) {
-    vanIdDisplay += ' (' + resolvedData.vanIdSource + ')';
+  let vanIdDisplay = 'Not resolved';
+  if (resolvedData.vanId && typeof resolvedData.vanId === 'object') {
+    vanIdDisplay = resolvedData.vanId.found
+      ? resolvedData.vanId.committeeId + ' (' + resolvedData.vanId.matchType + ' match)'
+      : 'Not resolved';
+  } else if (resolvedData.vanId) {
+    vanIdDisplay = resolvedData.vanId.toString();
   }
 
   return '<tr><td style="padding:25px 30px;">' +
@@ -1522,10 +1528,10 @@ function buildQuerySummarySection(resolvedData, colors) {
     '<table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">' +
     buildInfoRow('Organization', resolvedData.orgName || 'Unknown', colors) +
     buildInfoRow('VAN ID', vanIdDisplay, colors) +
-    buildInfoRow('County', resolvedData.county || 'Not specified', colors) +
+    buildInfoRow('Counties', countyDisplay, colors) +
     buildInfoRow('Precincts', precinctDisplay, colors) +
-    buildInfoRow('Race Filter', resolvedData.raceFilter || 'None', colors) +
-    buildInfoRow('Age Filter', resolvedData.ageFilter || 'None', colors) +
+    buildInfoRow('Race Filter', resolvedData.raceData && resolvedData.raceData.hasFilter ? resolvedData.raceData.catalistValues.join(', ') : 'None (all races)', colors) +
+    buildInfoRow('Age Filter', resolvedData.ageData && resolvedData.ageData.hasFilter ? resolvedData.ageData.sqlFragment : 'None (all ages)', colors) +
     buildInfoRow('Activist Codes', activistCodeDisplay, colors) +
     '</table></td></tr>';
 }
@@ -1544,6 +1550,30 @@ function buildQuerySqlSection(label, sql, colors) {
     '<pre style="margin:0;font-family:\'Courier New\',Courier,monospace;font-size:12px;line-height:1.5;color:' + colors.text + ';white-space:pre-wrap;word-wrap:break-word;">' +
     sql.replace(/</g, '&lt;').replace(/>/g, '&gt;') +
     '</pre></div></td></tr>';
+}
+
+/**
+ * Renders a query row reference as a labeled link to the query_queue sheet row.
+ * @param {string} label - Display label (e.g., "Query 1: county_targeting")
+ * @param {number} queueRow - The 1-based row number in query_queue
+ * @param {string} rowLink - Full URL to the specific row in the spreadsheet
+ * @param {Object} colors - The EMAIL_COLORS object
+ * @returns {string} An HTML table row (<tr>) with the labeled link
+ * @example buildQueryRowReference('Query 1: county_targeting', 5, 'https://docs.google.com/...&range=A5', EMAIL_COLORS)
+ *   // => '<tr>...<a href="...">query_queue row 5</a>...</tr>'
+ * @example buildQueryRowReference('Query 2: metadata_merge', null, 'https://docs.google.com/...', EMAIL_COLORS)
+ *   // => '<tr>...<a href="...">query_queue sheet</a>...</tr>'
+ */
+function buildQueryRowReference(label, queueRow, rowLink, colors) {
+  const linkText = queueRow
+    ? 'query_queue row ' + queueRow
+    : 'query_queue sheet';
+
+  return '<tr><td style="padding:0 30px 10px 30px;">' +
+    '<p style="margin:0;font-size:13px;color:' + colors.text + ';">' +
+    '<strong style="color:' + colors.primary + ';">' + label + '</strong>' +
+    ' &mdash; <a href="' + rowLink + '" style="color:' + colors.primary + ';text-decoration:underline;">' + linkText + '</a>' +
+    '</p></td></tr>';
 }
 
 /**
@@ -1581,22 +1611,92 @@ function buildQueryWarningSection(warnings, colors) {
 function buildQueryEmailHTML(orgName, queries, warnings, resolvedData, colors) {
   colors = colors || EMAIL_COLORS;
 
-  // Build the summary section
-  let content = buildQuerySummarySection(resolvedData, colors);
+  // Build spreadsheet URL for linking to query_queue rows
+  const spreadsheetId = scriptProps.getProperty('SPREADSHEET_ID');
+  const config = getQueryConfig();
+  const queueSheet = getSheet(config.sheetQueryQueue);
+  const sheetGid = queueSheet.getSheetId();
+  const spreadsheetUrl = 'https://docs.google.com/spreadsheets/d/' + spreadsheetId + '/edit#gid=' + sheetGid;
+
+  // Build the summary section (unchanged) + spreadsheet link
+  let content = buildQuerySummarySection(resolvedData, queries, colors);
+
+  // Add link to query_queue sheet in the parameters section
+  content += '<tr><td style="padding:0 30px 15px 30px;">' +
+    '<p style="margin:0;font-size:13px;color:' + colors.text + ';">' +
+    'SQL queries are stored in the <a href="' + spreadsheetUrl + '" style="color:' + colors.primary + ';text-decoration:underline;font-weight:bold;">query_queue sheet</a>. ' +
+    'Copy the SQL from the referenced rows below and run in BigQuery.</p>' +
+    '</td></tr>';
 
   // Build the warning section (returns empty string if no warnings)
   content += buildQueryWarningSection(warnings, colors);
 
-  // Build the queries section header
-  content += '<tr><td style="padding:0 30px 10px 30px;">' +
-    buildSectionHeader('Generated SQL Queries (' + queries.length + ')', colors) +
-    '</td></tr>';
+  // Split queries into exploration/county-level and precinct-level
+  // County-level metadata merges (precinct='00000') group with their targeting query
+  const explorationQueries = queries.filter(q =>
+      q.type === 'exploration' || q.type === 'county_targeting' ||
+      (q.type === 'metadata_merge' && q.precinct === '00000'));
+  const precinctQueries = queries.filter(q =>
+      !['exploration', 'county_targeting'].includes(q.type) && q.precinct !== '00000');
 
-  // Build each query block
-  queries.forEach((query, i) => {
-    const queryLabel = 'Query ' + (i + 1) + ' of ' + queries.length + ': ' + (query.label || query.type || 'Query');
-    content += buildQuerySqlSection(queryLabel, query.sql, colors);
-  });
+  // Render exploration queries grouped by county — row references instead of inline SQL
+  if (explorationQueries.length > 0) {
+    content += '<tr><td style="padding:0 30px 10px 30px;">' +
+      buildSectionHeader('Exploration Queries (' + explorationQueries.length + ')', colors) +
+      '</td></tr>';
+
+    const countiesExploration = [...new Set(explorationQueries.map(q => q.county))];
+    let explorationIndex = 0;
+
+    countiesExploration.forEach(county => {
+      content += '<tr><td style="padding:0 30px 8px 30px;">' +
+        '<p style="margin:0;font-size:14px;font-weight:bold;color:' + colors.secondary + ';">' + county + ' County</p>' +
+        '</td></tr>';
+
+      explorationQueries.filter(q => q.county === county).forEach(query => {
+        explorationIndex++;
+        const label = 'Query ' + explorationIndex + ': ' + (query.type || 'Query');
+        const rowLink = query.queueRow
+          ? spreadsheetUrl + '&range=A' + query.queueRow
+          : spreadsheetUrl;
+        content += buildQueryRowReference(label, query.queueRow, rowLink, colors);
+      });
+    });
+  }
+
+  // Render precinct-level queries grouped by county then precinct — row references
+  if (precinctQueries.length > 0) {
+    content += '<tr><td style="padding:0 30px 10px 30px;">' +
+      buildSectionHeader('Precinct-Level Queries (' + precinctQueries.length + ')', colors) +
+      '</td></tr>';
+
+    const countiesPrecinct = [...new Set(precinctQueries.map(q => q.county))];
+    let precinctIndex = 0;
+
+    countiesPrecinct.forEach(county => {
+      content += '<tr><td style="padding:0 30px 8px 30px;">' +
+        '<p style="margin:0;font-size:14px;font-weight:bold;color:' + colors.secondary + ';">' + county + ' County</p>' +
+        '</td></tr>';
+
+      const countyQueries = precinctQueries.filter(q => q.county === county);
+      const precincts = [...new Set(countyQueries.map(q => q.precinct))];
+
+      precincts.forEach(precinct => {
+        content += '<tr><td style="padding:0 30px 6px 42px;">' +
+          '<p style="margin:0;font-size:13px;font-weight:bold;color:' + colors.text + ';">Precinct ' + precinct + '</p>' +
+          '</td></tr>';
+
+        countyQueries.filter(q => q.precinct === precinct).forEach(query => {
+          precinctIndex++;
+          const label = 'Query ' + precinctIndex + ': ' + (query.type || 'Query');
+          const rowLink = query.queueRow
+            ? spreadsheetUrl + '&range=A' + query.queueRow
+            : spreadsheetUrl;
+          content += buildQueryRowReference(label, query.queueRow, rowLink, colors);
+        });
+      });
+    });
+  }
 
   // Build the metadata footer
   content += '<tr><td style="padding:0 30px 25px 30px;">' +
@@ -1605,10 +1705,9 @@ function buildQueryEmailHTML(orgName, queries, warnings, resolvedData, colors) {
       weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
       hour: '2-digit', minute: '2-digit'
     }) + '</p>' +
-    '<p style="margin:4px 0 0 0;font-size:12px;color:' + colors.textLight + ';">Copy the SQL above and run in BigQuery project <strong>prod-sv-al-898733e3</strong></p>' +
     '</div></td></tr>';
 
-  return buildEmailShell('[Query Builder] ' + orgName, orgName, content, colors);
+  return buildEmailShell('Query Builder', orgName, content, colors);
 }
 
 /**
@@ -1650,7 +1749,7 @@ function sendQueryEmail(orgName, queries, warnings, resolvedData, isTestMode) {
   }
 
   try {
-    const recipients = getEmailRecipients(isTestMode);
+    const recipients = getQueryEmailRecipients(isTestMode);
     MailApp.sendEmail({
       to: recipients.join(','),
       subject: subject,
@@ -1658,7 +1757,7 @@ function sendQueryEmail(orgName, queries, warnings, resolvedData, isTestMode) {
       name: 'Query Builder System',
       replyTo: scriptProps.getProperty('EMAIL_REPLY_TO') || 'datateam@alforward.org'
     });
-    Logger.log(`Query email sent for ${orgName} (${isTestMode ? 'TEST MODE' : 'PRODUCTION'})`);
+    Logger.log(`Query email sent for ${orgName} to ${recipients.join(', ')} (${isTestMode ? 'TEST MODE' : 'PRODUCTION'})`);
   } catch (error) {
     Logger.log(`Error sending query email for ${orgName}: ${error.message}`);
   }
