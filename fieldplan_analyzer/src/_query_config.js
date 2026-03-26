@@ -37,6 +37,7 @@ function getQueryConfig(){
         sheetQueryQueue: props.getProperty('SHEET_QUERY_QUEUE'),
         sheetVanIdLookup: props.getProperty('SHEET_VAN_ID_LOOKUP'),
         sheetCountyPrecinct: props.getProperty('SHEET_COUNTY_PRECINCT'),
+        runQueriesInBigQuery: props.getProperty('BQ_EXECUTE_ENABLED') === 'true',
         districtTable: 'catalist_AL.District',
         personTable: 'catalist_AL.Person',
         modelsTable: 'catalist_AL.Models',

@@ -160,6 +160,13 @@ function checkForNewRows() {
           // Send email with field plan details
           sendFieldPlanEmail(fieldPlan, rowNumber);
 
+          // Generate BigQuery queries for this field plan
+          try {
+            generateQueriesForFieldPlan(fieldPlan, rowNumber);
+          } catch (queryError) {
+            Logger.log(`Query generation failed for row ${rowNumber} (${fieldPlan.memberOrgName}): ${queryError.message}. Continuing with remaining processing.`);
+          }
+
           // Check for matching budget
           const budgetMatch = findMatchingBudget(fieldPlan.memberOrgName);
           if (!budgetMatch) {
@@ -428,6 +435,16 @@ function reprocessQueryBuilderRow(rowNumber) {
     const fieldPlan = FieldPlan.fromSpecificRow(rowNumber);
     Logger.log(`Reprocessing query builder for row ${rowNumber}: ${fieldPlan.memberOrgName}`);
     const result = generateQueriesForFieldPlan(fieldPlan, rowNumber);
+
+    // Send the query email with generated SQL
+    sendQueryEmail(
+      result.orgName,
+      result.queries,
+      result.errors,
+      { orgName: result.orgName, vanId: result.vanId },
+      false
+    );
+
     Logger.log(`Query builder reprocess complete for row ${rowNumber}: ${result.queryCount} queries, ${result.errors.length} errors`);
   } catch (error) {
     Logger.log(`Error reprocessing query builder row ${rowNumber}: ${error.message}`);

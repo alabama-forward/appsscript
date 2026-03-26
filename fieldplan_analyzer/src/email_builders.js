@@ -1488,3 +1488,178 @@ function generateTacticRecommendation(tacticType, costPerAttempt, target, status
     return `${tacticType} funding exceeds the standard range. Review if the funding request aligns with realistic program expectations.`;
   }
 }
+
+// ============================================
+// QUERY BUILDER EMAIL FUNCTIONS
+// ============================================
+
+/**
+ * Builds an HTML summary section of resolved query parameters for the email.
+ * @param {Object} resolvedData - Resolved data (orgName, vanId, vanIdSource, county, precincts, raceFilter, ageFilter, activistCodes)
+ * @param {Object} colors - The EMAIL_COLORS object
+ * @returns {string} An HTML table row (<tr>) containing the summary section
+ * @example buildQuerySummarySection({ orgName: 'SABWR', vanId: 12345, county: 'HOUSTON', precincts: ['00182'], raceFilter: 'black', ageFilter: 'None', activistCodes: ['HOUS_00182_SABWR'] }, EMAIL_COLORS)
+ *   // => '<tr><td ...>...Organization: SABWR...VAN ID: 12345...</td></tr>'
+ * @example buildQuerySummarySection({ orgName: 'OBG', vanId: null, county: 'MOBILE', precincts: [], activistCodes: [] }, EMAIL_COLORS)
+ *   // => precincts display 'None specified'; VAN ID shows 'Not resolved'
+ */
+function buildQuerySummarySection(resolvedData, colors) {
+  const precinctDisplay = resolvedData.precincts && resolvedData.precincts.length > 0
+    ? resolvedData.precincts.join(', ')
+    : 'None specified';
+
+  const activistCodeDisplay = resolvedData.activistCodes && resolvedData.activistCodes.length > 0
+    ? resolvedData.activistCodes.join(', ')
+    : 'None specified';
+
+  let vanIdDisplay = resolvedData.vanId ? resolvedData.vanId.toString() : 'Not resolved';
+  if (resolvedData.vanIdSource) {
+    vanIdDisplay += ' (' + resolvedData.vanIdSource + ')';
+  }
+
+  return '<tr><td style="padding:25px 30px;">' +
+    buildSectionHeader('Query Parameters', colors) +
+    '<table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">' +
+    buildInfoRow('Organization', resolvedData.orgName || 'Unknown', colors) +
+    buildInfoRow('VAN ID', vanIdDisplay, colors) +
+    buildInfoRow('County', resolvedData.county || 'Not specified', colors) +
+    buildInfoRow('Precincts', precinctDisplay, colors) +
+    buildInfoRow('Race Filter', resolvedData.raceFilter || 'None', colors) +
+    buildInfoRow('Age Filter', resolvedData.ageFilter || 'None', colors) +
+    buildInfoRow('Activist Codes', activistCodeDisplay, colors) +
+    '</table></td></tr>';
+}
+
+/**
+ * Renders a single SQL query inside a copy-friendly <pre> block with monospace font and light gray background.
+ * @param {string} label - Display label for this query (e.g., "Query 1 of 3: Metadata Tracking")
+ * @param {string} sql - The raw SQL string to display
+ * @param {Object} colors - The EMAIL_COLORS object
+ * @returns {string} An HTML table row (<tr>) containing the labeled SQL block
+ */
+function buildQuerySqlSection(label, sql, colors) {
+  return '<tr><td style="padding:0 30px 20px 30px;">' +
+    '<p style="margin:0 0 8px 0;font-size:13px;font-weight:bold;color:' + colors.primary + ';">' + label + '</p>' +
+    '<div style="background-color:' + colors.surface + ';border:1px solid ' + colors.divider + ';border-radius:4px;padding:15px;overflow-x:auto;">' +
+    '<pre style="margin:0;font-family:\'Courier New\',Courier,monospace;font-size:12px;line-height:1.5;color:' + colors.text + ';white-space:pre-wrap;word-wrap:break-word;">' +
+    sql.replace(/</g, '&lt;').replace(/>/g, '&gt;') +
+    '</pre></div></td></tr>';
+}
+
+/**
+ * Builds a yellow-background warning section listing issues found during query generation.
+ * @param {string[]} warnings - Array of human-readable warning strings
+ * @param {Object} colors - The EMAIL_COLORS object
+ * @returns {string} An HTML table row (<tr>) with the warning box, or empty string
+ */
+function buildQueryWarningSection(warnings, colors) {
+  if (!warnings || warnings.length === 0) {
+    return '';
+  }
+
+  const warningItems = warnings.map(warning =>
+    '<li style="margin:4px 0;font-size:14px;color:' + colors.text + ';">' + warning + '</li>'
+  ).join('');
+
+  return '<tr><td style="padding:0 30px 20px 30px;">' +
+    '<div style="background-color:#FFF8E1;border-left:4px solid ' + colors.warning + ';padding:15px 20px;border-radius:4px;">' +
+    '<p style="margin:0 0 8px 0;font-size:14px;font-weight:bold;color:' + colors.text + ';">Warnings</p>' +
+    '<ul style="margin:0;padding-left:20px;list-style-type:disc;">' +
+    warningItems +
+    '</ul></div></td></tr>';
+}
+
+/**
+ * Builds the complete query notification email HTML.
+ * @param {string} orgName - The organization name for the email header
+ * @param {Object[]} queries - Array of query objects, each with { label, sql, type }
+ * @param {string[]} warnings - Array of warning strings (may be empty)
+ * @param {Object} resolvedData - The resolved data object from query generation
+ * @param {Object} colors - The EMAIL_COLORS object
+ * @returns {string} Complete HTML email string
+ */
+function buildQueryEmailHTML(orgName, queries, warnings, resolvedData, colors) {
+  colors = colors || EMAIL_COLORS;
+
+  // Build the summary section
+  let content = buildQuerySummarySection(resolvedData, colors);
+
+  // Build the warning section (returns empty string if no warnings)
+  content += buildQueryWarningSection(warnings, colors);
+
+  // Build the queries section header
+  content += '<tr><td style="padding:0 30px 10px 30px;">' +
+    buildSectionHeader('Generated SQL Queries (' + queries.length + ')', colors) +
+    '</td></tr>';
+
+  // Build each query block
+  queries.forEach((query, i) => {
+    const queryLabel = 'Query ' + (i + 1) + ' of ' + queries.length + ': ' + (query.label || query.type || 'Query');
+    content += buildQuerySqlSection(queryLabel, query.sql, colors);
+  });
+
+  // Build the metadata footer
+  content += '<tr><td style="padding:0 30px 25px 30px;">' +
+    '<div style="background-color:' + colors.surface + ';border-radius:8px;padding:15px 20px;text-align:center;">' +
+    '<p style="margin:0;font-size:12px;color:' + colors.textLight + ';">Generated at ' + new Date().toLocaleString('en-US', {
+      weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
+      hour: '2-digit', minute: '2-digit'
+    }) + '</p>' +
+    '<p style="margin:4px 0 0 0;font-size:12px;color:' + colors.textLight + ';">Copy the SQL above and run in BigQuery project <strong>prod-sv-al-898733e3</strong></p>' +
+    '</div></td></tr>';
+
+  return buildEmailShell('[Query Builder] ' + orgName, orgName, content, colors);
+}
+
+/**
+ * Assembles and sends the query builder notification email.
+ * @param {string} orgName - The organization name
+ * @param {Object[]} queries - Array of query objects with { label, sql, type }
+ * @param {string[]} warnings - Array of warning strings
+ * @param {Object} resolvedData - Resolved data from query generation
+ * @param {boolean} isTestMode - If true, sends to test recipients only
+ */
+function sendQueryEmail(orgName, queries, warnings, resolvedData, isTestMode) {
+  const colors = EMAIL_COLORS;
+  const hasQueries = queries && queries.length > 0;
+
+  const subject = hasQueries
+    ? (isTestMode ? '[TEST] ' : '') + '[Query Builder] Queries Generated for ' + orgName
+    : (isTestMode ? '[TEST] ' : '') + '[Query Builder] FAILED: ' + orgName;
+
+  let emailBody = '';
+  if (isTestMode) {
+    emailBody += buildTestModeBanner();
+  }
+
+  if (hasQueries) {
+    emailBody += buildQueryEmailHTML(orgName, queries, warnings, resolvedData, colors);
+  } else {
+    // Build a failure email using the existing alert pattern
+    const failureLines = [
+      'Query generation failed for this organization.',
+      'No SQL queries could be produced from the submitted field plan data.'
+    ];
+    if (warnings && warnings.length > 0) {
+      failureLines.push('<strong>Issues encountered:</strong>');
+      warnings.forEach(warning => {
+        failureLines.push('- ' + warning);
+      });
+    }
+    emailBody += buildAlertEmailHTML('[Query Builder] Generation Failed', orgName, failureLines, colors.danger, colors);
+  }
+
+  try {
+    const recipients = getEmailRecipients(isTestMode);
+    MailApp.sendEmail({
+      to: recipients.join(','),
+      subject: subject,
+      htmlBody: emailBody,
+      name: 'Query Builder System',
+      replyTo: scriptProps.getProperty('EMAIL_REPLY_TO') || 'datateam@alforward.org'
+    });
+    Logger.log(`Query email sent for ${orgName} (${isTestMode ? 'TEST MODE' : 'PRODUCTION'})`);
+  } catch (error) {
+    Logger.log(`Error sending query email for ${orgName}: ${error.message}`);
+  }
+}

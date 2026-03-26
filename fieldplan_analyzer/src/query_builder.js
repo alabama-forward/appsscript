@@ -430,3 +430,92 @@ function formatQuerySummary(resolvedData, queries, errors) {
 
   return lines.join('\n');
 }
+
+// =============================================================================
+// SHEET SETUP UTILITIES
+// =============================================================================
+
+/**
+ * Creates the query_queue sheet tab with the correct header row.
+ * @example setupQueryQueueSheet()
+ *   // => creates 'query_queue' tab with 13 bold header columns and frozen row 1
+ * @example setupQueryQueueSheet() // when tab already exists
+ *   // => logs 'Sheet "query_queue" already exists. No changes made.'
+ */
+function setupQueryQueueSheet() {
+  const ss = getSpreadsheet();
+  const existing = ss.getSheetByName('query_queue');
+
+  if (existing) {
+    Logger.log('Sheet "query_queue" already exists. No changes made.');
+    return;
+  }
+
+  const sheet = ss.insertSheet('query_queue');
+  const headers = [
+    'Timestamp',
+    'Org Name',
+    'County',
+    'Precinct',
+    'Activist Code',
+    'VAN ID',
+    'Status',
+    'Race Filter',
+    'Age Filter',
+    'Metadata SQL',
+    'Precinct List SQL',
+    'DWID Select SQL',
+    'Notes'
+  ];
+
+  sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
+  sheet.getRange(1, 1, 1, headers.length).setFontWeight('bold');
+  sheet.setFrozenRows(1);
+
+  // Set column widths for readability
+  sheet.setColumnWidth(1, 160);  // Timestamp
+  sheet.setColumnWidth(2, 200);  // Org Name
+  sheet.setColumnWidth(3, 120);  // County
+  sheet.setColumnWidth(4, 100);  // Precinct
+  sheet.setColumnWidth(5, 120);  // Activist Code
+  sheet.setColumnWidth(6, 80);   // VAN ID
+  sheet.setColumnWidth(7, 100);  // Status
+  sheet.setColumnWidth(8, 120);  // Race Filter
+  sheet.setColumnWidth(9, 120);  // Age Filter
+  sheet.setColumnWidth(10, 300); // Metadata SQL
+  sheet.setColumnWidth(11, 300); // Precinct List SQL
+  sheet.setColumnWidth(12, 300); // DWID Select SQL
+  sheet.setColumnWidth(13, 200); // Notes
+
+  Logger.log('Created "query_queue" sheet with 13 header columns.');
+}
+
+/**
+ * Creates the van_id_lookup sheet tab with the correct header row.
+ * @example setupVanIdLookupSheet()
+ *   // => creates 'van_id_lookup' tab with 2 bold header columns
+ * @example setupVanIdLookupSheet() // when tab already exists
+ *   // => logs 'Sheet "van_id_lookup" already exists. No changes made.'
+ */
+function setupVanIdLookupSheet() {
+  const ss = getSpreadsheet();
+  const existing = ss.getSheetByName('van_id_lookup');
+
+  if (existing) {
+    Logger.log('Sheet "van_id_lookup" already exists. No changes made.');
+    return;
+  }
+
+  const sheet = ss.insertSheet('van_id_lookup');
+  const headers = ['committeename', 'committeeid'];
+
+  sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
+  sheet.getRange(1, 1, 1, headers.length).setFontWeight('bold');
+  sheet.setFrozenRows(1);
+
+  sheet.setColumnWidth(1, 300); // committeename
+  sheet.setColumnWidth(2, 120); // committeeid
+
+  Logger.log('Created "van_id_lookup" sheet with 2 header columns.');
+  Logger.log('NEXT STEP: Paste data from Member VAN IDs.csv starting at row 2.');
+}
