@@ -150,7 +150,7 @@ function resolvePrecinctCode(fieldPlanPrecinct, countyName) {
         return { valid: false, precinctCode: '', rawValue: '', matchType: 'none'};
     }
 
-    const rawValue = fieldPlanPractince.toString().trim();
+    const rawValue = fieldPlanPrecinct.toString().trim();
 
     //Extract numeric portion only
     const numericOnly = rawValue.replace(/[^0-9]/g, '');
@@ -161,7 +161,7 @@ function resolvePrecinctCode(fieldPlanPrecinct, countyName) {
     }
 
     //Zero-pad to 5 digits
-    const padded = numericOnly.padStart(5, '0')
+    const padded = numericOnly.padStart(5, '0');
 
     //Load valid precincts for this county
     let validPrecincts = [];
@@ -174,8 +174,7 @@ function resolvePrecinctCode(fieldPlanPrecinct, countyName) {
 
     //Fallback: if lookup tab is empty or unavailable, return unvalidated
     if (validPrecincts.length === 0) {
-        Logger.log(`resolvePrecinctCode: no valid precincts for count ${countyName},
-            returning unvalidated`);
+        Logger.log(`resolvePrecinctCode: no valid precincts for county ${countyName}, returning unvalidated`);
         return { valid: true, precinctCode: padded, rawValue: rawValue, matchType: 'unvalidated' };
     }
 
@@ -187,7 +186,7 @@ function resolvePrecinctCode(fieldPlanPrecinct, countyName) {
     }
 
     //Fuzzy numeric match (distance <=2) - Strategy 2
-    const inputNum = parseint(numericOnly, 10);
+    const inputNum = parseInt(numericOnly, 10);
     const fuzzyMatch = validPrecincts
         .map(code => ({ code, distance: Math.abs(inputNum - parseInt(code, 10)) }))
         .filter(entry => !isNaN(entry.distance) && entry.distance <= 2)

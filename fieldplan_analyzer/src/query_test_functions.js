@@ -16,27 +16,30 @@ function testQueryConfig() {
   let passed = true;
 
   try {
-    // Check QUERY_CONFIG exists
-    if (typeof QUERY_CONFIG === 'undefined') {
-      Logger.log('FAIL: QUERY_CONFIG is not defined. Is _query_config.js loaded?');
+    // Check getQueryConfig() is callable
+    let config;
+    try {
+      config = getQueryConfig();
+      Logger.log('PASS: getQueryConfig() returned successfully');
+    } catch (e) {
+      Logger.log(`FAIL: getQueryConfig() threw an error: ${e.message}`);
       return false;
     }
-    Logger.log('PASS: QUERY_CONFIG is defined');
 
     // Check required config keys
-    const requiredKeys = ['projectId', 'dataset', 'voterTable', 'activistCodeTable'];
+    const requiredKeys = ['projectId', 'precinctListTable', 'metadataTable', 'personTable', 'sheetQueryQueue', 'sheetVanIdLookup'];
     requiredKeys.forEach(key => {
-      if (!QUERY_CONFIG[key]) {
-        Logger.log(`FAIL: QUERY_CONFIG.${key} is missing or empty`);
+      if (!config[key]) {
+        Logger.log(`FAIL: config.${key} is missing or empty`);
         passed = false;
       } else {
-        Logger.log(`PASS: QUERY_CONFIG.${key} = ${QUERY_CONFIG[key]}`);
+        Logger.log(`PASS: config.${key} = ${config[key]}`);
       }
     });
 
     // Check van_id_lookup sheet
     try {
-      const vanSheet = getSheet('van_id_lookup');
+      const vanSheet = getSheet(config.sheetVanIdLookup);
       const vanData = vanSheet.getDataRange().getValues();
       Logger.log(`PASS: van_id_lookup sheet found with ${vanData.length - 1} rows of data`);
     } catch (e) {
@@ -46,7 +49,7 @@ function testQueryConfig() {
 
     // Check query_queue sheet
     try {
-      getSheet('query_queue');
+      getSheet(config.sheetQueryQueue);
       Logger.log('PASS: query_queue sheet found');
     } catch (e) {
       Logger.log(`FAIL: query_queue sheet not found: ${e.message}`);
@@ -63,10 +66,10 @@ function testQueryConfig() {
 }
 
 /**
- * Tests VAN ID resolution with exact match, fuzzy match, and unknown org scenarios.
+ * Tests VAN ID resolution with exact match, normalized match, and unknown org scenarios.
  * @returns {boolean} True if all VAN ID resolution tests pass
  * @example testResolveVanId()
- *   // => true (logs PASS for exact, fuzzy, and unknown tests)
+ *   // => true (logs PASS for exact, normalized, and unknown tests)
  * @example testResolveVanId() // van_id_lookup sheet empty
  *   // => false
  */
@@ -78,35 +81,30 @@ function testResolveVanId() {
     // Test 1: Exact match with a known org
     Logger.log('Test 1: Exact match');
     const exactResult = resolveVanId("People's Budget Birmingham");
-    if (exactResult && exactResult.vanId) {
-      Logger.log(`PASS: Exact match found. VAN ID = ${exactResult.vanId}, source = ${exactResult.source}`);
-      if (exactResult.vanId === 99981) {
-        Logger.log('PASS: VAN ID matches expected value (99981)');
-      } else {
-        Logger.log(`INFO: VAN ID = ${exactResult.vanId} (expected 99981 -- may have changed)`);
-      }
+    if (exactResult && exactResult.found) {
+      Logger.log(`PASS: Match found. committeeId = ${exactResult.committeeId}, matchType = ${exactResult.matchType}`);
     } else {
-      Logger.log('FAIL: No exact match found for "People\'s Budget Birmingham"');
+      Logger.log('FAIL: No match found for "People\'s Budget Birmingham"');
       passed = false;
     }
 
-    // Test 2: Fuzzy match (slightly different casing or spacing)
-    Logger.log('Test 2: Fuzzy match');
+    // Test 2: Normalized match (different casing)
+    Logger.log('Test 2: Normalized match');
     const fuzzyResult = resolveVanId("peoples budget birmingham");
-    if (fuzzyResult && fuzzyResult.vanId) {
-      Logger.log(`PASS: Fuzzy match found. VAN ID = ${fuzzyResult.vanId}, source = ${fuzzyResult.source}`);
+    if (fuzzyResult && fuzzyResult.found) {
+      Logger.log(`PASS: Normalized match found. committeeId = ${fuzzyResult.committeeId}, matchType = ${fuzzyResult.matchType}`);
     } else {
-      Logger.log('FAIL: No fuzzy match found for "peoples budget birmingham"');
+      Logger.log('FAIL: No normalized match found for "peoples budget birmingham"');
       passed = false;
     }
 
     // Test 3: Unknown org
     Logger.log('Test 3: Unknown org');
     const unknownResult = resolveVanId('Completely Fake Organization XYZ 12345');
-    if (!unknownResult || !unknownResult.vanId) {
-      Logger.log('PASS: Correctly returned no match for unknown org');
+    if (!unknownResult.found) {
+      Logger.log('PASS: Correctly returned found=false for unknown org');
     } else {
-      Logger.log(`FAIL: Unexpectedly matched unknown org to VAN ID ${unknownResult.vanId}`);
+      Logger.log(`FAIL: Unexpectedly matched unknown org to committeeId ${unknownResult.committeeId}`);
       passed = false;
     }
 
@@ -121,38 +119,45 @@ function testResolveVanId() {
 }
 
 /**
- * Tests county name normalization and resolution.
+ * Tests county name resolution to uppercase with abbreviation.
  * @returns {boolean} True if all county resolution tests pass
  * @example testResolveCountyName()
  *   // => true (logs PASS for each test case)
- * @example testResolveCountyName() // bad normalization
- *   // => false (logs FAIL for mismatched case)
+ * @example testResolveCountyName() // bad resolution
+ *   // => false (logs FAIL for mismatched result)
  */
 function testResolveCountyName() {
   Logger.log('=== TEST: Resolve County Name ===');
   let passed = true;
 
   try {
+    // resolveCountyName returns { valid, countyName, abbreviation }
+    // countyName is UPPERCASE
     const testCases = [
-      { input: 'Jefferson', expected: 'Jefferson' },
-      { input: 'jefferson', expected: 'Jefferson' },
-      { input: 'JEFFERSON', expected: 'Jefferson' },
-      { input: 'Jefferson County', expected: 'Jefferson' },
-      { input: 'Mobile', expected: 'Mobile' },
-      { input: 'Saint Clair', expected: 'St. Clair' },
-      { input: 'St Clair', expected: 'St. Clair' },
-      { input: 'DeKalb', expected: 'DeKalb' }
+      { input: 'Jefferson', expectedCounty: 'JEFFERSON', expectedAbbrev: 'JEFF' },
+      { input: 'houston', expectedCounty: 'HOUSTON', expectedAbbrev: 'HOUS' },
+      { input: 'Mobile', expectedCounty: 'MOBILE', expectedAbbrev: 'MOBI' },
+      { input: '  Dallas  ', expectedCounty: 'DALLAS', expectedAbbrev: 'DALL' }
     ];
 
     testCases.forEach(tc => {
       const result = resolveCountyName(tc.input);
-      if (result === tc.expected) {
-        Logger.log(`PASS: "${tc.input}" -> "${result}"`);
+      if (result.valid && result.countyName === tc.expectedCounty && result.abbreviation === tc.expectedAbbrev) {
+        Logger.log(`PASS: "${tc.input}" -> countyName="${result.countyName}", abbreviation="${result.abbreviation}"`);
       } else {
-        Logger.log(`FAIL: "${tc.input}" -> "${result}" (expected "${tc.expected}")`);
+        Logger.log(`FAIL: "${tc.input}" -> valid=${result.valid}, countyName="${result.countyName}", abbreviation="${result.abbreviation}" (expected "${tc.expectedCounty}", "${tc.expectedAbbrev}")`);
         passed = false;
       }
     });
+
+    // Test empty input
+    const emptyResult = resolveCountyName('');
+    if (!emptyResult.valid) {
+      Logger.log('PASS: Empty input returns valid=false');
+    } else {
+      Logger.log('FAIL: Empty input returned valid=true');
+      passed = false;
+    }
 
   } catch (error) {
     Logger.log(`FAIL: Unexpected error: ${error.message}`);
@@ -164,7 +169,7 @@ function testResolveCountyName() {
 }
 
 /**
- * Tests precinct code resolution and zero-padding.
+ * Tests precinct code resolution and 5-digit zero-padding.
  * @returns {boolean} True if all precinct code tests pass
  * @example testResolvePrecinctCode()
  *   // => true (logs PASS for each padding scenario)
@@ -176,24 +181,36 @@ function testResolvePrecinctCode() {
   let passed = true;
 
   try {
+    // resolvePrecinctCode(fieldPlanPrecinct, countyName) returns
+    // { valid, precinctCode, rawValue, matchType }
+    // precinctCode is zero-padded to 5 digits
     const testCases = [
-      { input: '1', expected: '001' },
-      { input: '12', expected: '012' },
-      { input: '123', expected: '123' },
-      { input: '1234', expected: '1234' },
-      { input: '001', expected: '001' },
-      { input: ' 45 ', expected: '045' }
+      { input: '1', expected: '00001' },
+      { input: '12', expected: '00012' },
+      { input: '182', expected: '00182' },
+      { input: '1234', expected: '01234' },
+      { input: '00182', expected: '00182' },
+      { input: ' 45 ', expected: '00045' }
     ];
 
     testCases.forEach(tc => {
-      const result = resolvePrecinctCode(tc.input);
-      if (result === tc.expected) {
-        Logger.log(`PASS: "${tc.input}" -> "${result}"`);
+      const result = resolvePrecinctCode(tc.input, 'HOUSTON');
+      if (result.precinctCode === tc.expected) {
+        Logger.log(`PASS: "${tc.input}" -> "${result.precinctCode}" (matchType: ${result.matchType})`);
       } else {
-        Logger.log(`FAIL: "${tc.input}" -> "${result}" (expected "${tc.expected}")`);
+        Logger.log(`FAIL: "${tc.input}" -> "${result.precinctCode}" (expected "${tc.expected}", matchType: ${result.matchType})`);
         passed = false;
       }
     });
+
+    // Test empty input
+    const emptyResult = resolvePrecinctCode('', 'HOUSTON');
+    if (!emptyResult.valid) {
+      Logger.log('PASS: Empty input returns valid=false');
+    } else {
+      Logger.log('FAIL: Empty input returned valid=true');
+      passed = false;
+    }
 
   } catch (error) {
     Logger.log(`FAIL: Unexpected error: ${error.message}`);
@@ -205,7 +222,7 @@ function testResolvePrecinctCode() {
 }
 
 /**
- * Tests race demographic field plan values to BigQuery filter mappings.
+ * Tests race demographic field plan values to Catalist value mappings.
  * @returns {boolean} True if all race mapping tests pass
  * @example testMapRaceDemographics()
  *   // => true
@@ -217,23 +234,49 @@ function testMapRaceDemographics() {
   let passed = true;
 
   try {
-    const testCases = [
-      { input: 'Black/African American', expectContains: 'Black' },
-      { input: 'White/Caucasian', expectContains: 'White' },
-      { input: 'Hispanic/Latino', expectContains: 'Hispanic' },
-      { input: 'Asian American', expectContains: 'Asian' },
-      { input: 'Native American', expectContains: 'Native' }
-    ];
+    // mapRaceDemographics(demoRaceArray) returns
+    // { hasFilter, catalistValues[], unmapped[], unmappedComment }
+    // Input keys must match RACE_MAP exactly
 
-    testCases.forEach(tc => {
-      const result = mapRaceDemographic(tc.input);
-      if (result && result.includes(tc.expectContains)) {
-        Logger.log(`PASS: "${tc.input}" -> "${result}"`);
-      } else {
-        Logger.log(`FAIL: "${tc.input}" -> "${result || 'null'}" (expected to contain "${tc.expectContains}")`);
-        passed = false;
-      }
-    });
+    // Test 1: Single mapped value
+    Logger.log('Test 1: Single mapped race');
+    const blackResult = mapRaceDemographics(['Black / African American']);
+    if (blackResult.hasFilter && blackResult.catalistValues.includes('black')) {
+      Logger.log(`PASS: "Black / African American" -> catalistValues: ${blackResult.catalistValues.join(', ')}`);
+    } else {
+      Logger.log(`FAIL: Expected hasFilter=true with "black" in catalistValues, got hasFilter=${blackResult.hasFilter}, values=${blackResult.catalistValues.join(', ')}`);
+      passed = false;
+    }
+
+    // Test 2: Multiple mapped values
+    Logger.log('Test 2: Multiple races');
+    const multiResult = mapRaceDemographics(['Black / African American', 'Hispanic / Latino']);
+    if (multiResult.hasFilter && multiResult.catalistValues.includes('black') && multiResult.catalistValues.includes('hispanic')) {
+      Logger.log(`PASS: Multiple races -> catalistValues: ${multiResult.catalistValues.join(', ')}`);
+    } else {
+      Logger.log(`FAIL: Expected black+hispanic, got ${multiResult.catalistValues.join(', ')}`);
+      passed = false;
+    }
+
+    // Test 3: Unmapped value
+    Logger.log('Test 3: Unmapped race');
+    const unmappedResult = mapRaceDemographics(['Martian']);
+    if (!unmappedResult.hasFilter && unmappedResult.unmapped.includes('Martian')) {
+      Logger.log(`PASS: "Martian" correctly tracked as unmapped`);
+    } else {
+      Logger.log(`FAIL: Expected hasFilter=false with "Martian" in unmapped`);
+      passed = false;
+    }
+
+    // Test 4: Empty input
+    Logger.log('Test 4: Empty input');
+    const emptyResult = mapRaceDemographics([]);
+    if (!emptyResult.hasFilter) {
+      Logger.log('PASS: Empty input returns hasFilter=false');
+    } else {
+      Logger.log('FAIL: Empty input returned hasFilter=true');
+      passed = false;
+    }
 
   } catch (error) {
     Logger.log(`FAIL: Unexpected error: ${error.message}`);
@@ -257,43 +300,58 @@ function testMapAgeDemographics() {
   let passed = true;
 
   try {
-    // Test contiguous range: 18-24, 25-34 should produce a single range 18-34
+    // mapAgeDemographics(demoAgeArray) returns
+    // { hasFilter, ranges[], sqlFragment, unmapped[], unmappedComment }
+    // Input keys must match AGE_RANGE_MAP exactly (with spaces)
+
+    // Test 1: Contiguous ranges should merge
     Logger.log('Test 1: Contiguous ranges');
-    const contiguousResult = mapAgeDemographics(['18-24', '25-34']);
-    if (contiguousResult) {
-      Logger.log(`PASS: Contiguous ["18-24", "25-34"] -> "${contiguousResult}"`);
+    const contiguousResult = mapAgeDemographics(['18 - 19', '20 - 29']);
+    if (contiguousResult.hasFilter && contiguousResult.sqlFragment) {
+      Logger.log(`PASS: Contiguous -> sqlFragment: "${contiguousResult.sqlFragment}"`);
+      // Should merge to one range: 18-29
+      if (contiguousResult.ranges.length === 1) {
+        Logger.log(`PASS: Merged to ${contiguousResult.ranges.length} range (18-29)`);
+      } else {
+        Logger.log(`INFO: Got ${contiguousResult.ranges.length} ranges (expected 1 merged range)`);
+      }
     } else {
-      Logger.log('FAIL: Contiguous ranges returned null');
+      Logger.log('FAIL: Contiguous ranges returned hasFilter=false or empty sqlFragment');
       passed = false;
     }
 
-    // Test gap scenario: 18-24, 35-44 should produce two separate filters
+    // Test 2: Gap scenario should produce separate clauses
     Logger.log('Test 2: Gap scenario');
-    const gapResult = mapAgeDemographics(['18-24', '35-44']);
-    if (gapResult) {
-      Logger.log(`PASS: Gap ["18-24", "35-44"] -> "${gapResult}"`);
+    const gapResult = mapAgeDemographics(['18 - 19', '40 - 49']);
+    if (gapResult.hasFilter && gapResult.sqlFragment) {
+      Logger.log(`PASS: Gap -> sqlFragment: "${gapResult.sqlFragment}"`);
+      if (gapResult.ranges.length === 2) {
+        Logger.log('PASS: Correctly kept as 2 separate ranges');
+      } else {
+        Logger.log(`INFO: Got ${gapResult.ranges.length} ranges (expected 2)`);
+      }
     } else {
-      Logger.log('FAIL: Gap ranges returned null');
+      Logger.log('FAIL: Gap scenario returned hasFilter=false or empty sqlFragment');
       passed = false;
     }
 
-    // Test single range
+    // Test 3: Single range
     Logger.log('Test 3: Single range');
-    const singleResult = mapAgeDemographics(['65+']);
-    if (singleResult) {
-      Logger.log(`PASS: Single ["65+"] -> "${singleResult}"`);
+    const singleResult = mapAgeDemographics(['90 +']);
+    if (singleResult.hasFilter && singleResult.sqlFragment) {
+      Logger.log(`PASS: Single -> sqlFragment: "${singleResult.sqlFragment}"`);
     } else {
-      Logger.log('FAIL: Single range returned null');
+      Logger.log('FAIL: Single range returned hasFilter=false');
       passed = false;
     }
 
-    // Test empty input
+    // Test 4: Empty input
     Logger.log('Test 4: Empty input');
     const emptyResult = mapAgeDemographics([]);
-    if (!emptyResult || emptyResult === '') {
-      Logger.log('PASS: Empty input returned no filter');
+    if (!emptyResult.hasFilter && emptyResult.sqlFragment === '') {
+      Logger.log('PASS: Empty input returned hasFilter=false, empty sqlFragment');
     } else {
-      Logger.log(`FAIL: Empty input returned: "${emptyResult}"`);
+      Logger.log(`FAIL: Empty input returned hasFilter=${emptyResult.hasFilter}, sqlFragment="${emptyResult.sqlFragment}"`);
       passed = false;
     }
 
@@ -307,11 +365,11 @@ function testMapAgeDemographics() {
 }
 
 /**
- * Tests activist code string generation.
+ * Tests activist code generation (format: COUNTY_PRECINCT_INITIALS).
  * @returns {boolean} True if the activist code format test passes
  * @example testGenerateActivistCode()
- *   // => true (code starts with 'ALF26_')
- * @example testGenerateActivistCode() // wrong prefix
+ *   // => true (code follows XXXX_XXXXX_XXX format)
+ * @example testGenerateActivistCode() // wrong format
  *   // => false
  */
 function testGenerateActivistCode() {
@@ -319,15 +377,26 @@ function testGenerateActivistCode() {
   let passed = true;
 
   try {
-    const result = generateActivistCode("People's Budget Birmingham", 'Jefferson');
+    // generateActivistCode(orgName, countyAbbreviation, precinctCode)
+    // returns string like "HOUS_00182_SABWR"
+    const result = generateActivistCode('Southern Alabama Black Women Rising', 'HOUS', '00182');
     if (result && result.length > 0) {
       Logger.log(`PASS: Generated activist code: "${result}"`);
 
-      // Check format: should start with ALF26_
-      if (result.startsWith('ALF26_')) {
-        Logger.log('PASS: Starts with correct prefix "ALF26_"');
+      // Check format: should be COUNTY_PRECINCT_INITIALS
+      if (result.startsWith('HOUS_00182_')) {
+        Logger.log('PASS: Starts with county + precinct prefix "HOUS_00182_"');
       } else {
-        Logger.log('FAIL: Does not start with "ALF26_" prefix');
+        Logger.log(`FAIL: Expected to start with "HOUS_00182_", got "${result}"`);
+        passed = false;
+      }
+
+      // Check that org initials are present (should be SABWR)
+      const parts = result.split('_');
+      if (parts.length === 3) {
+        Logger.log(`PASS: Format is COUNTY_PRECINCT_INITIALS (${parts[0]}_${parts[1]}_${parts[2]})`);
+      } else {
+        Logger.log(`FAIL: Expected 3 underscore-separated parts, got ${parts.length}`);
         passed = false;
       }
     } else {
@@ -345,39 +414,42 @@ function testGenerateActivistCode() {
 }
 
 /**
- * Tests that buildMetadataQuery() produces valid SQL output.
+ * Tests that buildMetadataMergeQuery() produces valid SQL output.
  * @returns {boolean} True if the metadata query validation passes
  * @example testBuildMetadataQuery()
- *   // => true (SQL contains SELECT, FROM, WHERE and references project)
+ *   // => true (SQL contains MERGE and references project)
  * @example testBuildMetadataQuery() // missing config
  *   // => false
  */
 function testBuildMetadataQuery() {
-  Logger.log('=== TEST: Build Metadata Query ===');
+  Logger.log('=== TEST: Build Metadata Merge Query ===');
   let passed = true;
 
   try {
+    // buildMetadataMergeQuery expects:
+    // { orgName, countyName, precinctCode, activistCode, committeeId, queryType, rowNumber }
     const testParams = {
       orgName: "People's Budget Birmingham",
-      vanId: 99981,
-      county: 'Jefferson',
-      activistCode: 'ALF26_PBB_Jefferson',
-      raceFilter: "EthnicID = 'B'",
-      ageFilter: 'Age >= 18 AND Age <= 34'
+      countyName: 'JEFFERSON',
+      precinctCode: '00001',
+      activistCode: 'JEFF_00001_PBB',
+      committeeId: '99981',
+      queryType: 'member',
+      rowNumber: 5
     };
 
-    const sql = buildMetadataQuery(testParams);
+    const sql = buildMetadataMergeQuery(testParams);
 
     if (!sql || sql.trim() === '') {
-      Logger.log('FAIL: buildMetadataQuery returned empty SQL');
+      Logger.log('FAIL: buildMetadataMergeQuery returned empty SQL');
       return false;
     }
 
     Logger.log(`Generated SQL (${sql.length} chars):`);
     Logger.log(sql);
 
-    // Check for required SQL keywords
-    const requiredKeywords = ['SELECT', 'FROM', 'WHERE'];
+    // Check for MERGE keyword (this is a MERGE query, not SELECT)
+    const requiredKeywords = ['MERGE', 'USING', 'WHEN'];
     requiredKeywords.forEach(keyword => {
       if (sql.toUpperCase().includes(keyword)) {
         Logger.log(`PASS: Contains ${keyword}`);
@@ -387,11 +459,12 @@ function testBuildMetadataQuery() {
       }
     });
 
-    // Check that it references the project/dataset
-    if (sql.includes(QUERY_CONFIG.projectId) || sql.includes(QUERY_CONFIG.dataset)) {
-      Logger.log('PASS: References project or dataset');
+    // Check that it references the project from config
+    const config = getQueryConfig();
+    if (sql.includes(config.projectId)) {
+      Logger.log('PASS: References projectId from config');
     } else {
-      Logger.log('FAIL: Does not reference project or dataset from QUERY_CONFIG');
+      Logger.log('FAIL: Does not reference projectId from getQueryConfig()');
       passed = false;
     }
 
@@ -406,47 +479,51 @@ function testBuildMetadataQuery() {
 }
 
 /**
- * Tests that buildPrecinctListQuery() produces valid SQL output.
+ * Tests that buildPrecinctListMergeQuery() produces valid SQL output.
  * @returns {boolean} True if the precinct list query validation passes
  * @example testBuildPrecinctListQuery()
- *   // => true (SQL contains SELECT and all precinct codes)
- * @example testBuildPrecinctListQuery() // missing precinct in output
+ *   // => true (SQL contains MERGE and activist code)
+ * @example testBuildPrecinctListQuery() // error
  *   // => false
  */
 function testBuildPrecinctListQuery() {
-  Logger.log('=== TEST: Build Precinct List Query ===');
+  Logger.log('=== TEST: Build Precinct List Merge Query ===');
   let passed = true;
 
   try {
+    // buildPrecinctListMergeQuery expects:
+    // { countyName, precinctCode, activistCode, raceData, ageData }
     const testParams = {
-      county: 'Jefferson',
-      precincts: ['001', '002', '015'],
-      vanId: 99981
+      countyName: 'JEFFERSON',
+      precinctCode: '00001',
+      activistCode: 'JEFF_00001_PBB',
+      raceData: { hasFilter: true, catalistValues: ['black'], unmapped: [], unmappedComment: '' },
+      ageData: { hasFilter: false, ranges: [], sqlFragment: '', unmapped: [], unmappedComment: '' }
     };
 
-    const sql = buildPrecinctListQuery(testParams);
+    const sql = buildPrecinctListMergeQuery(testParams);
 
     if (!sql || sql.trim() === '') {
-      Logger.log('FAIL: buildPrecinctListQuery returned empty SQL');
+      Logger.log('FAIL: buildPrecinctListMergeQuery returned empty SQL');
       return false;
     }
 
     Logger.log(`Generated SQL (${sql.length} chars):`);
     Logger.log(sql);
 
-    // Check for required elements
-    if (sql.toUpperCase().includes('SELECT')) {
-      Logger.log('PASS: Contains SELECT');
+    // Check for MERGE keyword
+    if (sql.toUpperCase().includes('MERGE')) {
+      Logger.log('PASS: Contains MERGE');
     } else {
-      Logger.log('FAIL: Missing SELECT');
+      Logger.log('FAIL: Missing MERGE');
       passed = false;
     }
 
-    // Check that precinct values appear in the SQL
-    if (sql.includes('001') && sql.includes('002') && sql.includes('015')) {
-      Logger.log('PASS: Contains all precinct codes');
+    // Check that activist code appears in the SQL
+    if (sql.includes('JEFF_00001_PBB')) {
+      Logger.log('PASS: Contains activist code');
     } else {
-      Logger.log('FAIL: Missing one or more precinct codes');
+      Logger.log('FAIL: Missing activist code in SQL');
       passed = false;
     }
 
@@ -463,7 +540,7 @@ function testBuildPrecinctListQuery() {
  * Tests that buildExplorationQuery() produces valid SQL output.
  * @returns {boolean} True if the exploration query validation passes
  * @example testBuildExplorationQuery()
- *   // => true (SQL contains SELECT, FROM, WHERE and county name)
+ *   // => true (SQL contains SELECT, FROM, and county name)
  * @example testBuildExplorationQuery() // missing county
  *   // => false
  */
@@ -472,11 +549,12 @@ function testBuildExplorationQuery() {
   let passed = true;
 
   try {
+    // buildExplorationQuery expects:
+    // { countyName, raceData, ageData }
     const testParams = {
-      county: 'Mobile',
-      vanId: 99908,
-      raceFilter: "EthnicID = 'B'",
-      ageFilter: 'Age >= 18 AND Age <= 44'
+      countyName: 'MOBILE',
+      raceData: { hasFilter: false, catalistValues: [], unmapped: [], unmappedComment: '' },
+      ageData: { hasFilter: false, ranges: [], sqlFragment: '', unmapped: [], unmappedComment: '' }
     };
 
     const sql = buildExplorationQuery(testParams);
@@ -490,7 +568,7 @@ function testBuildExplorationQuery() {
     Logger.log(sql);
 
     // Check for required keywords
-    const requiredKeywords = ['SELECT', 'FROM', 'WHERE'];
+    const requiredKeywords = ['SELECT', 'FROM', 'GROUP BY'];
     requiredKeywords.forEach(keyword => {
       if (sql.toUpperCase().includes(keyword)) {
         Logger.log(`PASS: Contains ${keyword}`);
@@ -501,10 +579,10 @@ function testBuildExplorationQuery() {
     });
 
     // Check for county reference
-    if (sql.includes('Mobile')) {
-      Logger.log('PASS: Contains county name "Mobile"');
+    if (sql.includes('MOBILE')) {
+      Logger.log('PASS: Contains county name "MOBILE"');
     } else {
-      Logger.log('FAIL: Missing county name "Mobile"');
+      Logger.log('FAIL: Missing county name "MOBILE"');
       passed = false;
     }
 
@@ -547,11 +625,11 @@ function testGenerateQueriesForLastRow() {
 
     Logger.log(`Result: success=${result.success}`);
     Logger.log(`Queries generated: ${result.queries.length}`);
-    Logger.log(`Warnings: ${result.warnings.length}`);
+    Logger.log(`Errors: ${result.errors.length}`);
 
-    if (result.warnings && result.warnings.length > 0) {
-      result.warnings.forEach(warning => {
-        Logger.log(`  Warning: ${warning}`);
+    if (result.errors && result.errors.length > 0) {
+      result.errors.forEach(err => {
+        Logger.log(`  Error: ${err}`);
       });
     }
 
@@ -565,10 +643,10 @@ function testGenerateQueriesForLastRow() {
       // Send a test email with the results
       Logger.log('Sending test email to datateam@alforward.org...');
       sendQueryEmail(
-        fieldPlan.memberOrgName,
+        result.orgName,
         result.queries,
-        result.warnings,
-        result.resolvedData || {},
+        result.errors,
+        { orgName: result.orgName, vanId: result.vanId },
         true // isTestMode = true
       );
       Logger.log('PASS: Test email sent');
@@ -591,6 +669,51 @@ function testGenerateQueriesForLastRow() {
 }
 
 /**
+ * Tests query email formatting and delivery using the last field plan row.
+ * Sends to test recipients only (datateam@alforward.org).
+ * @returns {boolean} True if email was sent successfully
+ * @example testQueryEmail()
+ *   // => true (sends test email with generated SQL to datateam@alforward.org)
+ * @example testQueryEmail() // empty sheet
+ *   // => false (logs SKIP)
+ */
+function testQueryEmail() {
+  Logger.log('=== TEST: Query Email (Test Mode) ===');
+
+  try {
+    const sheet = getSheet(scriptProps.getProperty('SHEET_FIELD_PLAN'));
+    const lastRow = sheet.getLastRow();
+
+    if (lastRow < 2) {
+      Logger.log('SKIP: No field plan data in sheet');
+      return false;
+    }
+
+    const fieldPlan = FieldPlan.fromSpecificRow(lastRow);
+    Logger.log(`Using field plan from row ${lastRow}: ${fieldPlan.memberOrgName}`);
+
+    const result = generateQueriesForFieldPlan(fieldPlan, lastRow);
+
+    Logger.log(`Sending test query email for ${result.orgName} (${result.queryCount} queries)...`);
+    sendQueryEmail(
+      result.orgName,
+      result.queries,
+      result.errors,
+      { orgName: result.orgName, vanId: result.vanId },
+      true // isTestMode — sends to datateam@alforward.org only
+    );
+
+    Logger.log('PASS: Test query email sent to datateam@alforward.org');
+    return true;
+
+  } catch (error) {
+    Logger.log(`FAIL: ${error.message}`);
+    Logger.log(`Stack: ${error.stack}`);
+    return false;
+  }
+}
+
+/**
  * Tests service account token generation (Phase 2 only).
  * @returns {boolean|null} True if token obtained, false if failed, null if credentials not configured (skipped)
  * @example testServiceAccountToken()
@@ -606,13 +729,12 @@ function testServiceAccountToken() {
 
   if (!clientEmail || !privateKey) {
     Logger.log('SKIP: Service account credentials not configured.');
-    Logger.log('  To configure: run storeServiceAccountCredentials() with your JSON key.');
+    Logger.log('  To configure: add SA_CLIENT_EMAIL and SA_PRIVATE_KEY to Script Properties.');
     return null;
   }
 
   if (privateKey.includes('PASTE_YOUR_PRIVATE_KEY_HERE')) {
     Logger.log('SKIP: SA_PRIVATE_KEY still contains placeholder value.');
-    Logger.log('  To configure: run storeServiceAccountCredentials() with your real key.');
     return null;
   }
 
@@ -655,10 +777,11 @@ function runAllQueryBuilderTests() {
     { name: 'Race Demographics', fn: testMapRaceDemographics },
     { name: 'Age Demographics', fn: testMapAgeDemographics },
     { name: 'Activist Code Generation', fn: testGenerateActivistCode },
-    { name: 'Metadata Query SQL', fn: testBuildMetadataQuery },
-    { name: 'Precinct List Query SQL', fn: testBuildPrecinctListQuery },
+    { name: 'Metadata Merge Query SQL', fn: testBuildMetadataQuery },
+    { name: 'Precinct List Merge Query SQL', fn: testBuildPrecinctListQuery },
     { name: 'Exploration Query SQL', fn: testBuildExplorationQuery },
     { name: 'End-to-End (Last Row)', fn: testGenerateQueriesForLastRow },
+    { name: 'Query Email (Test Mode)', fn: testQueryEmail },
     { name: 'Service Account Token', fn: testServiceAccountToken }
   ];
 

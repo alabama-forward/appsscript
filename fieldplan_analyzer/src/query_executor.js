@@ -315,3 +315,27 @@ function executeQueriesForFieldPlan(fieldPlan, rowNumber) {
   Logger.log(`Direct execution for ${orgName}: ${allSucceeded ? 'SUCCESS' : 'PARTIAL FAILURE'}`);
   return result;
 }
+
+/**
+ * Adds only the "Reprocess Queries" checkbox column to the field plan sheet.
+ * Use this if the original reprocess columns already exist and you just need the query builder column.
+ */
+function setupQueryBuilderColumn() {
+  const fieldPlanSheetName = scriptProps.getProperty('SHEET_FIELD_PLAN');
+  const fieldPlanSheet = getSheet(fieldPlanSheetName);
+  const qbCol = FIELD_PLAN_COLUMNS.REPROCESS_QUERIES + 1;
+  const lastRow = fieldPlanSheet.getLastRow();
+
+  fieldPlanSheet.getRange(1, qbCol).setValue('Reprocess Queries');
+
+  if (lastRow > 1) {
+    const qbRange = fieldPlanSheet.getRange(2, qbCol, lastRow - 1, 1);
+    const qbValidation = SpreadsheetApp.newDataValidation()
+      .requireCheckbox()
+      .build();
+    qbRange.setDataValidation(qbValidation);
+    qbRange.setValue(false);
+  }
+
+  Logger.log('Query builder Reprocess column set up in column ' + qbCol + ' (' + lastRow + ' rows)');
+}

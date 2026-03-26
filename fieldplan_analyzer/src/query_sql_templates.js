@@ -91,7 +91,7 @@ function buildWhereClause(params) {
  */
 function buildVoteHistoryClause(voteHistoryColumns) {
     const config = getQueryConfig();
-    const columns = voteHistoryColumns || config.voteHistoryColumns;
+    let columns = voteHistoryColumns || config.voteHistoryColumns;
 
     if (!columns || columns.length === 0) {
         columns = DEFAULT_VOTE_HISTORY_COLUMNS;
