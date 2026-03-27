@@ -1,9 +1,6 @@
 ---
 layout: default
 title: Spreadsheet Mapping
-parent: For Developers
-has_children: true
-nav_order: 6
 ---
 
 # Spreadsheet Mapping Guide

@@ -133,21 +133,21 @@ Cost Analysis by Tactic:
 
 Door Knocking:
 • Funding: $25,000
-• Attempts: 5,000
-• Cost per attempt: $5.00
-• Target: $4.50-$6.00
+• Attempts: 25,000
+• Cost per attempt: $1.00
+• Target: $0.80-$1.20
 • Status: ✓ Within range
 
 Phone Banking:
 • Funding: $5,000
 • Attempts: 20,000
 • Cost per attempt: $0.25
-• Target: $0.30-$0.50
+• Target: $0.51-$0.81
 • Status: ⚠ Below target - may need more funding
 
 Gap Funding Analysis:
-If you fund the $15,000 gap toward Phone Banking:
-• New cost per attempt: $0.40
+If you direct $8,000 of the gap toward Phone Banking:
+• New cost per attempt: $0.65
 • Status: ✓ Within efficiency targets
 ```
 

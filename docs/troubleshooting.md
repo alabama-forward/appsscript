@@ -109,22 +109,10 @@ This guide helps you resolve common issues with the Field Coordination Browser a
    - Check trigger execution history
 
 2. **Review logs**
-   ```javascript
-   // Add this function to check recent executions
-   function checkTriggerLogs() {
-     const logs = SpreadsheetApp.getActiveSpreadsheet()
-       .getSheetByName('timer_logs');
-     
-     if (logs) {
-       const recentLogs = logs.getRange(
-         logs.getLastRow() - 9, 1, 10, 5
-       ).getValues();
-       
-       console.log('Recent trigger executions:');
-       recentLogs.forEach(log => console.log(log));
-     }
-   }
-   ```
+   - Open the Apps Script editor
+   - Click "Executions" in the left sidebar to see recent runs
+   - Filter by function name (e.g., `checkForNewRows`, `analyzeBudgets`)
+   - Check for error status or unexpected completion times
 
 3. **Verify state management**
    - Check Script Properties for last processed rows
@@ -204,14 +192,13 @@ function debugAnalysis() {
     console.log('Last column:', sheet.getLastColumn());
     
     // Test specific function
-    const testData = sheet.getRange('A2:Z2').getValues()[0];
-    console.log('Test row data:', testData);
-    
+    const testRow = 2; // 1-based row number
+    console.log('Test row data:', sheet.getRange(`A${testRow}:Z${testRow}`).getValues()[0]);
+
     // Process with detailed logging
-    const budget = FieldBudget.fromRow(testData);
+    const budget = FieldBudget.fromSpecificRow(testRow);
     console.log('Parsed budget:', {
-      organization: budget.organization,
-      email: budget.email,
+      organization: budget.memberOrgName,
       totalRequest: budget.totalRequest
     });
     

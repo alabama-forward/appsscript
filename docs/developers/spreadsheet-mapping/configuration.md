@@ -1,9 +1,6 @@
 ---
 layout: default
 title: Configuration Guide
-parent: Spreadsheet Mapping
-grand_parent: For Developers
-nav_order: 1
 ---
 
 # Spreadsheet Configuration Guide

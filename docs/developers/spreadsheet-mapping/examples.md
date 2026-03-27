@@ -1,9 +1,6 @@
 ---
 layout: default
 title: Mapping Examples
-parent: Spreadsheet Mapping
-grand_parent: For Developers
-nav_order: 2
 ---
 
 # Spreadsheet Mapping Examples

@@ -283,15 +283,15 @@ SHEET_USER_SELECTIONS - Name of selections sheet
 
 ### Code Organization
 ```
-field_coordination_browser/
-├── src/
+deprecated/field_coordination_browser/
+├── 2025v/src/
 │   ├── appsscript.json      # Manifest file
 │   ├── server-side.js       # Server logic
 │   ├── index.html           # Main HTML
 │   ├── client-side.html     # Client JavaScript
 │   └── styles.html          # CSS styles
-└── developing/
-    └── bigquery-integration.js  # Future features
+└── 2026v/src/
+    └── ...                   # Updated version
 ```
 
 ## Testing Approach
