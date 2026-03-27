@@ -3,410 +3,57 @@ layout: default
 title: Troubleshooting
 ---
 
-# Troubleshooting Guide
+# Troubleshooting
 
-This guide helps you resolve common issues with the FieldPlan Analyzer.
+## Emails not being sent
 
-## Common Issues
+1. **Email quota exceeded** — Google Workspace allows 1,500 emails/day. Check Apps Script execution logs for `Service invoked too many times for one day: email`. Wait 24 hours for the quota to reset.
 
-### Authentication and Access
+2. **Invalid recipient addresses** — Check the `EMAIL_RECIPIENTS` script property for typos or extra spaces.
 
-#### "You don't have permission to access this app"
+3. **Script not authorized** — Re-authorize the script. In the Apps Script editor, run any function manually and accept the OAuth prompt.
 
-**Cause**: Your Google account doesn't have access to the web app.
+## Analysis not running automatically
 
-**Solutions**:
-1. Contact your administrator to grant access
-2. Ensure you're logged into the correct Google account
-3. Clear browser cache and cookies, then try again
-4. Try accessing in an incognito/private browser window
+1. **Check triggers** — In the Apps Script editor, go to Triggers. Verify `checkForNewRows` and `analyzeBudgets` exist and aren't showing errors in the execution history.
 
-#### "Authorization required" error
+2. **Check state** — Open Script Properties and look at `LAST_PROCESSED_ROW`. If it's ahead of or equal to the sheet's last row, no new rows will be processed. To force reprocessing, set it to `1` or use the `REPROCESS` checkbox on individual rows.
 
-**Cause**: The script needs permissions to access Google services.
+3. **Trigger was deleted** — Run `createSpreadsheetTrigger()` and `createBudgetAnalysisTrigger()` from the editor to recreate them. These functions check for duplicates before creating.
 
-**Solutions**:
-1. Click "Review Permissions" when prompted
-2. Sign in with your Google account
-3. Click "Advanced" → "Go to [App Name] (unsafe)"
-4. Review and accept the required permissions
+## "Cannot find matching field plan"
 
-### FieldPlan Analyzer Issues
+Organization names must match **exactly** between the `2026_field_plan` and `2026_field_budget` sheets. Check for:
+- Trailing spaces
+- Different capitalization
+- Abbreviations vs. full names
 
-#### Emails not being sent
+## Budget shows as already analyzed but email was never sent
 
-**Common causes**:
+The `ANALYZED` column (column 55) was set to `TRUE` but the email step may have failed. To retry:
+1. Clear the `ANALYZED` cell for that row
+2. Check the `REPROCESS` checkbox — the `onEdit` trigger will re-run the analysis
 
-1. **Email quota exceeded**
-   ```
-   Error: Service invoked too many times for one day: email
-   ```
-   **Solution**: Google has daily email limits. Wait 24 hours or upgrade to Google Workspace.
+## Reprocess checkbox not working
 
-2. **Invalid email addresses**
-   - Check for typos in recipient emails
-   - Verify email format is correct
-   - Remove any extra spaces or special characters
+The reprocess feature requires an **installable** `onEdit` trigger (not a simple trigger), because it uses `MailApp`. Verify:
+1. An `onSpreadsheetEdit` trigger exists in the Triggers panel
+2. It's set to "On edit" for the correct spreadsheet
+3. Run `createReprocessTrigger()` if missing
 
-3. **Script not authorized**
-   - Re-authorize the script with Gmail permissions
-   - Check Apps Script project OAuth scopes
+## Debugging a specific row
 
-#### Analysis not running automatically
-
-**Troubleshooting steps**:
-
-1. **Check triggers**
-   - Go to Apps Script Editor → Triggers
-   - Verify triggers are enabled and not failing
-   - Check trigger execution history
-
-2. **Review logs**
-   - Open the Apps Script editor
-   - Click "Executions" in the left sidebar to see recent runs
-   - Filter by function name (e.g., `checkForNewRows`, `analyzeBudgets`)
-   - Check for error status or unexpected completion times
-
-3. **Verify state management**
-   - Check Script Properties for last processed rows
-   - Reset state if necessary:
-   ```javascript
-   function resetProcessingState() {
-     PropertiesService.getScriptProperties().deleteAllProperties();
-     console.log('Processing state reset');
-   }
-   ```
-
-#### Budget analysis errors
-
-**"Cannot find matching field plan"**
-
-**Solutions**:
-1. Verify organization names match exactly
-2. Check for extra spaces or special characters
-3. Ensure field plan was submitted and processed
-
-**"Invalid budget data"**
-
-**Solutions**:
-1. Check for missing required fields
-2. Verify numeric fields contain valid numbers
-3. Remove any formula errors in the spreadsheet
-
-### Google Apps Script Execution Logger
-
-#### Understanding the Execution Logger
-
-The Apps Script editor provides detailed execution logs:
-
-1. **Access the logger**
-   - Open Apps Script editor
-   - Click "Executions" in the left sidebar
-   - Select a function execution to see details
-
-2. **Log levels**
-   - `console.log()`: General information
-   - `console.error()`: Error messages
-   - `console.warn()`: Warnings
-   - `console.time()/timeEnd()`: Performance timing
-
-3. **Common log messages**
-
-   **Successful execution**:
-   ```
-   [timestamp] Starting budget analysis...
-   [timestamp] Found 5 pending budgets
-   [timestamp] Analysis complete: {analyzed: 3, errors: 0, missingFieldPlans: 2}
-   ```
-
-   **Error execution**:
-   ```
-   [timestamp] Error in analyzeBudgets: TypeError: Cannot read property 'length' of undefined
-   [timestamp] Stack trace: at analyzeBudgets (Code:45:15)
-   ```
-
-#### Debugging with logs
-
-Add detailed logging to troubleshoot:
+Run this in the Apps Script editor, changing the row number:
 
 ```javascript
-function debugAnalysis() {
-  console.log('=== Debug Analysis Started ===');
-  
-  try {
-    // Log environment
-    console.log('User:', Session.getActiveUser().getEmail());
-    console.log('Spreadsheet:', SpreadsheetApp.getActiveSpreadsheet().getName());
-    
-    // Check data
-    const sheet = SpreadsheetApp.getActiveSheet();
-    console.log('Active sheet:', sheet.getName());
-    console.log('Last row:', sheet.getLastRow());
-    console.log('Last column:', sheet.getLastColumn());
-    
-    // Test specific function
-    const testRow = 2; // 1-based row number
-    console.log('Test row data:', sheet.getRange(`A${testRow}:Z${testRow}`).getValues()[0]);
+function debugRow() {
+    const plan = FieldPlan.fromSpecificRow(5);
+    Logger.log(`Org: ${plan.memberOrgName}`);
+    Logger.log(`Counties: ${plan.fieldCounties}`);
+    Logger.log(`Tactics: ${plan.fieldTactics}`);
 
-    // Process with detailed logging
-    const budget = FieldBudget.fromSpecificRow(testRow);
-    console.log('Parsed budget:', {
-      organization: budget.memberOrgName,
-      totalRequest: budget.totalRequest
-    });
-    
-  } catch (error) {
-    console.error('Debug failed:', error);
-    console.error('Stack trace:', error.stack);
-  }
-  
-  console.log('=== Debug Analysis Complete ===');
+    const budget = FieldBudget.fromSpecificRow(3);
+    Logger.log(`Budget org: ${budget.memberOrgName}`);
+    Logger.log(`Requested: ${budget.requestedTotal}`);
 }
 ```
-
-### Performance Issues
-
-#### Script running slowly
-
-**Solutions**:
-
-1. **Batch operations**
-   ```javascript
-   // Instead of this (slow):
-   for (let i = 0; i < 100; i++) {
-     sheet.getRange(i + 1, 1).setValue(data[i]);
-   }
-   
-   // Do this (fast):
-   const values = data.map(item => [item]);
-   sheet.getRange(1, 1, values.length, 1).setValues(values);
-   ```
-
-2. **Minimize API calls**
-   - Cache spreadsheet data in variables
-   - Use batch gets/sets for ranges
-   - Avoid repeated calls to getRange()
-
-3. **Implement pagination**
-   ```javascript
-   function loadDataWithPagination(page = 1, pageSize = 50) {
-     const startRow = (page - 1) * pageSize + 2; // Skip header
-     const sheet = SpreadsheetApp.getActiveSheet();
-     
-     return sheet.getRange(
-       startRow, 1, pageSize, sheet.getLastColumn()
-     ).getValues();
-   }
-   ```
-
-#### "Exceeded maximum execution time"
-
-Apps Script has a 6-minute execution limit. Solutions:
-
-1. **Break into smaller chunks**
-   ```javascript
-   function processLargeDataset() {
-     const BATCH_SIZE = 100;
-     const props = PropertiesService.getScriptProperties();
-     const startIndex = parseInt(props.getProperty('PROCESS_INDEX') || '0');
-     
-     const data = getAllData();
-     const endIndex = Math.min(startIndex + BATCH_SIZE, data.length);
-     
-     // Process batch
-     for (let i = startIndex; i < endIndex; i++) {
-       processItem(data[i]);
-     }
-     
-     if (endIndex < data.length) {
-       // Save progress and create trigger for next batch
-       props.setProperty('PROCESS_INDEX', endIndex.toString());
-       
-       ScriptApp.newTrigger('processLargeDataset')
-         .timeBased()
-         .after(1000) // 1 second
-         .create();
-     } else {
-       // Cleanup
-       props.deleteProperty('PROCESS_INDEX');
-     }
-   }
-   ```
-
-2. **Use time-based triggers**
-   - Split processing across multiple executions
-   - Save state between runs
-   - Use Properties Service for checkpointing
-
-### Data Issues
-
-#### Spreadsheet formulas causing errors
-
-**Solutions**:
-1. Replace volatile formulas with static values where possible
-2. Use Apps Script to calculate instead of spreadsheet formulas
-3. Limit the use of IMPORTRANGE and other external data functions
-
-#### Data validation failures
-
-**Common validation issues**:
-
-1. **Email validation**
-   ```javascript
-   function validateEmail(email) {
-     const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-     
-     if (!regex.test(email)) {
-       console.error('Invalid email:', email);
-       return false;
-     }
-     
-     return true;
-   }
-   ```
-
-2. **Number parsing**
-   ```javascript
-   function parseNumber(value) {
-     // Handle various formats
-     if (!value) return 0;
-     
-     const cleaned = value.toString()
-       .replace(/[$,]/g, '') // Remove currency symbols
-       .replace(/[^\d.-]/g, '') // Keep only digits, dots, and minus
-       .trim();
-     
-     const num = parseFloat(cleaned);
-     
-     if (isNaN(num)) {
-       console.warn('Failed to parse number:', value);
-       return 0;
-     }
-     
-     return num;
-   }
-   ```
-
-### Error Recovery
-
-#### Implementing error recovery
-
-```javascript
-function robustProcess() {
-  const errors = [];
-  const processed = [];
-  
-  const items = getItemsToProcess();
-  
-  items.forEach((item, index) => {
-    try {
-      const result = processItem(item);
-      processed.push(result);
-      
-    } catch (error) {
-      console.error(`Error processing item ${index}:`, error);
-      
-      errors.push({
-        item: item,
-        index: index,
-        error: error.toString(),
-        timestamp: new Date()
-      });
-      
-      // Continue processing other items
-    }
-  });
-  
-  // Log errors for review
-  if (errors.length > 0) {
-    logErrors(errors);
-    notifyAdminOfErrors(errors);
-  }
-  
-  return {
-    successful: processed.length,
-    failed: errors.length,
-    errors: errors
-  };
-}
-
-function logErrors(errors) {
-  const errorSheet = SpreadsheetApp.getActiveSpreadsheet()
-    .getSheetByName('error_log') || createErrorLogSheet();
-  
-  const rows = errors.map(e => [
-    e.timestamp,
-    e.index,
-    JSON.stringify(e.item),
-    e.error
-  ]);
-  
-  errorSheet.getRange(
-    errorSheet.getLastRow() + 1, 
-    1, 
-    rows.length, 
-    4
-  ).setValues(rows);
-}
-```
-
-## Getting Help
-
-### Before asking for help
-
-1. **Check the logs**
-   - Review Apps Script execution logs
-   - Look for error messages and stack traces
-   - Note the timestamp of the error
-
-2. **Isolate the problem**
-   - Test with a small dataset
-   - Try manual execution vs triggered
-   - Check if the issue is consistent
-
-3. **Gather information**
-   - Error messages (exact text)
-   - Steps to reproduce
-   - Recent changes made
-   - Browser and OS information
-
-### Contacting support
-
-When reporting issues, include:
-
-1. **Error details**
-   ```
-   Error message: [exact error text]
-   Function name: [where error occurred]
-   Timestamp: [when it happened]
-   User affected: [email]
-   ```
-
-2. **Context**
-   - What were you trying to do?
-   - Has this worked before?
-   - Any recent changes?
-
-3. **Screenshots**
-   - Error messages
-   - Execution logs
-   - Relevant spreadsheet data (sanitized)
-
-### Self-service resources
-
-1. **Google Apps Script Documentation**
-   - [Official Documentation](https://developers.google.com/apps-script)
-   - [Stack Overflow - Apps Script](https://stackoverflow.com/questions/tagged/google-apps-script)
-   - [Google Apps Script Community](https://groups.google.com/g/google-apps-script-community)
-
-2. **This documentation**
-   - Review relevant sections
-   - Check code examples
-   - Follow best practices
-
-3. **Test environment**
-   - Create a copy of the spreadsheet
-   - Test changes in isolation
-   - Use console.log() liberally
-
-Remember: Most issues can be resolved by carefully reading error messages and checking logs!

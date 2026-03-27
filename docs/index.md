@@ -3,39 +3,21 @@ layout: default
 title: Home
 ---
 
-# Apps Script Field Coordination Documentation
+# FieldPlan Analyzer Documentation
 
-Welcome to the documentation for the FieldPlan Analyzer. This tool leverages Google Apps Script to create powerful workflow automation using Google Sheets as a database.
+The FieldPlan Analyzer processes field planning and budget submissions from JotForm, calculates cost efficiency metrics against configurable targets, and sends HTML email reports to staff. It runs on Google Apps Script with time-based triggers.
 
-## What You'll Find Here
+## For End Users
 
-### For End Users
-Learn about Google Apps Script and how the FieldPlan Analyzer works to streamline budget analysis and field coordination processes.
+- [FieldPlan Analyzer Overview](./end-users/fieldplan-analyzer-overview) — what the system does, how analysis works, email report examples
 
-- [What is Google Apps Script?](./end-users/what-is-apps-script)
-- [FieldPlan Analyzer Overview](./end-users/fieldplan-analyzer-overview)
+## For Developers
 
-### For Developers
-Technical documentation for implementing your own Apps Script solutions based on these patterns.
+- [Class Structure](./developers/fieldplan-analyzer/class-structure) — `FieldPlan` → `FieldProgram` → `TacticProgram` hierarchy and `FieldBudget`
+- [Timer Implementation](./developers/fieldplan-analyzer/timers) — triggers, state management, reprocess workflow
+- [Spreadsheet Mapping](./developers/spreadsheet-mapping/) — `_column_mappings.js` configuration and usage
 
-- [Getting Started](./developers/getting-started)
-- [FieldPlan Analyzer Guide](./developers/fieldplan-analyzer/)
-- [Script Properties Guide](./developers/script-properties-guide)
-- [Spreadsheet Mapping](./developers/spreadsheet-mapping/)
+## Reference
 
-## Quick Links
-
-- [Troubleshooting Guide](./troubleshooting)
-- [Frequently Asked Questions](./faq)
-
-## About the FieldPlan Analyzer
-
-An automated analysis system that processes form submissions, analyzes budget data, and generates email reports. It uses class-based architecture and time-based triggers for sophisticated workflow automation.
-
-## Prerequisites
-
-- Google Account with access to Google Sheets
-- Basic understanding of JavaScript (for developers)
-- Access to Google Apps Script editor
-
-Choose your path above to get started!
+- [Troubleshooting](./troubleshooting)
+- [FAQ](./faq)

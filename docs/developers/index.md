@@ -5,172 +5,23 @@ title: For Developers
 
 # Developer Documentation
 
-Welcome to the developer documentation for the FieldPlan Analyzer. This section provides technical details for implementing your own Apps Script solutions based on these proven patterns.
+Technical documentation for the FieldPlan Analyzer codebase.
 
-## Prerequisites
+## Architecture
 
-To work with this application, you should have:
+The FieldPlan Analyzer is a server-side Apps Script project deployed via `clasp push`. No build step, no transpilation, no external dependencies.
 
-- JavaScript programming knowledge
-- Familiarity with Google Workspace APIs
-- Access to Google Apps Script editor
+- **Data source**: Two Google Sheets tabs (`2026_field_plan`, `2026_field_budget`) populated by JotForm
+- **Processing**: Time-based triggers run `checkForNewRows()` and `analyzeBudgets()` every 12 hours
+- **Output**: HTML email reports sent via `MailApp`
+- **Configuration**: All runtime config in `PropertiesService.getScriptProperties()`
 
-## Architecture Overview
-
-### FieldPlan Analyzer
-- **Pattern**: Automated data processor with email reporting
-- **Key Technologies**: Time-based triggers, Gmail Service
-- **Architecture**: Class-based models with scheduled execution
-- **Best For**: Workflow automation and analysis systems
-
-## Documentation Structure
-
-### Getting Started
-- [Getting Started Guide](./getting-started) - Set up your development environment
+## Documentation
 
 ### FieldPlan Analyzer
-- [Class Structure](./fieldplan-analyzer/class-structure)
-- [Timer Implementation](./fieldplan-analyzer/timers)
-
-### Configuration & Security
-- [Script Properties Guide](./script-properties-guide)
+- [Class Structure](./fieldplan-analyzer/class-structure) — `FieldPlan` → `FieldProgram` → `TacticProgram` hierarchy, `FieldBudget`, factory methods
+- [Timer Implementation](./fieldplan-analyzer/timers) — trigger setup, `checkForNewRows`, `analyzeBudgets`, state management, reprocess workflow
 
 ### Spreadsheet Mapping
-- [Configuration Guide](./spreadsheet-mapping/configuration)
-- [Mapping Examples](./spreadsheet-mapping/examples)
-
-## Key Concepts
-
-### 1. **Spreadsheet as Database**
-Learn how to effectively use Google Sheets as a lightweight database:
-- Column-based data mapping
-- Row tracking for state management
-- Efficient data retrieval patterns
-- Transaction-like operations
-
-### 2. **Web App Deployment**
-Deploy interactive web applications without infrastructure:
-- HTML Service for user interfaces
-- Server-client communication patterns
-- Session management
-- Real-time updates
-
-### 3. **Class-Based Architecture**
-Structure your code for maintainability:
-- Data model classes
-- Factory methods
-- Encapsulation patterns
-- Reusable components
-
-### 4. **Automated Processing**
-Build systems that run without intervention:
-- Time-based triggers
-- Event-driven processing
-- State management
-- Error recovery
-
-### 5. **Email Generation**
-Create professional automated communications:
-- HTML email templates
-- Dynamic content insertion
-- Batch processing
-- Delivery management
-
-## Development Workflow
-
-1. **Clone and Customize**
-   - Start with our code patterns
-   - Modify for your needs
-   - Keep security in mind
-
-2. **Test Locally**
-   - Use test spreadsheets
-   - Enable test mode for emails
-   - Verify trigger behavior
-
-3. **Deploy Gradually**
-   - Start with limited users
-   - Monitor performance
-   - Scale as needed
-
-4. **Maintain and Iterate**
-   - Track usage patterns
-   - Gather user feedback
-   - Improve continuously
-
-## Best Practices
-
-### Security
-- Never hard-code sensitive data
-- Use script properties for configuration
-- Implement proper access controls
-- Validate all user input
-
-### Performance
-- Batch spreadsheet operations
-- Cache frequently accessed data
-- Minimize API calls
-- Use efficient data structures
-
-### Maintainability
-- Document your code
-- Use meaningful variable names
-- Follow consistent patterns
-- Implement error handling
-
-### Scalability
-- Design for growth
-- Monitor quotas
-- Optimize operations
-- Plan for edge cases
-
-## Quick Start Examples
-
-### Reading from a Spreadsheet
-```javascript
-function getDataFromSheet() {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const sheet = ss.getSheetByName('Data');
-  const data = sheet.getDataRange().getValues();
-  return data;
-}
-```
-
-### Writing to a Spreadsheet
-```javascript
-function writeDataToSheet(data) {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const sheet = ss.getSheetByName('Output');
-  sheet.clear();
-  sheet.getRange(1, 1, data.length, data[0].length).setValues(data);
-}
-```
-
-### Creating a Web App
-```javascript
-function doGet() {
-  return HtmlService.createHtmlOutputFromFile('index')
-    .setTitle('My Web App')
-    .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
-}
-```
-
-### Setting up a Trigger
-```javascript
-function createTimeTrigger() {
-  ScriptApp.newTrigger('myFunction')
-    .timeBased()
-    .everyHours(12)
-    .create();
-}
-```
-
-## Resources
-
-- [Google Apps Script Documentation](https://developers.google.com/apps-script)
-- [Apps Script Samples](https://github.com/googleworkspace/apps-script-samples)
-- [Stack Overflow Apps Script Tag](https://stackoverflow.com/questions/tagged/google-apps-script)
-
-## Ready to Build?
-
-Start with our [Getting Started Guide](./getting-started) to set up your development environment and begin building your own Apps Script solutions.
+- [Configuration](./spreadsheet-mapping/configuration) — `FIELD_PLAN_COLUMNS`, `BUDGET_COLUMNS`, `PROGRAM_COLUMNS`, update/validation workflow
+- [Examples](./spreadsheet-mapping/examples) — how classes read rows using column constants
