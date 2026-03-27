@@ -3,26 +3,13 @@ layout: default
 title: Spreadsheet Mapping
 ---
 
-# Spreadsheet Mapping Guide
+# Spreadsheet Mapping
 
-Learn how to map your own spreadsheets to work with Apps Script applications. This guide covers the patterns and best practices for using Google Sheets as a database backend.
+The FieldPlan Analyzer reads all data from two Google Sheets tabs (`2026_field_plan` and `2026_field_budget`) using 0-based column index constants defined in a single file: `_column_mappings.js`. Classes never reference columns by number directly — they use named constants from this file.
 
-## Overview
-
-Spreadsheet mapping is the process of:
-1. Defining your data structure in sheets
-2. Creating column mappings in your code
-3. Implementing data access patterns
-4. Managing relationships between sheets
-
-## Key Concepts
-
-- **Column-based mapping**: Reference data by column position
-- **Named ranges**: Use named ranges for dynamic references
-- **Sheet relationships**: Link data across multiple sheets
-- **Data validation**: Ensure data integrity
+When the JotForm structure changes or columns shift, `_column_mappings.js` is the only file that needs updating.
 
 ## In This Section
 
-- [Configuration Guide](./configuration) - Set up your spreadsheet structure
-- [Mapping Examples](./examples) - Real-world mapping patterns
+- [Configuration](./configuration) — How column mappings are structured and how to update them
+- [Examples](./examples) — How classes use column mappings to read spreadsheet data
