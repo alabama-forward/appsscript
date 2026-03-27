@@ -133,39 +133,62 @@ function generateQueriesForFieldPlan(fieldPlan, rowNumber) {
 
 /**
  * Generates 3 queries (metadata MERGE, precinct list MERGE, DWID SELECT) per precinct.
+ * Tries each county for each precinct so multi-county orgs and invalid counties
+ * don't block the entire run.
  * @param {FieldPlan} fieldPlan - The field plan instance
  * @param {Object} resolvedData - Shared resolved data from the main function
  * @returns {{ queries: Array, errors: string[] }}
  * @example generatePrecinctQueries(fieldPlan, resolvedData)
  *   // => { queries: [{ type: 'metadata_merge', sql: '...', county: 'HOUSTON', precinct: '00182' }, ...], errors: [] }
  * @example generatePrecinctQueries(fieldPlanWithBadCounty, resolvedData)
- *   // => { queries: [], errors: ['Invalid county "HOUTON" for precinct "00182", skipping'] }
+ *   // => { queries: [], errors: ['Invalid county "HOUTON", skipping'] }
  */
 function generatePrecinctQueries(fieldPlan, resolvedData) {
-  const counties = fieldPlan.fieldCounties || [];
+  const rawCounties = fieldPlan.fieldCounties || [];
   const precincts = fieldPlan.fieldPrecincts || [];
 
-  Logger.log(`Generating precinct queries: ${counties.length} counties, ${precincts.length} precincts`);
+  Logger.log(`Generating precinct queries: ${rawCounties.length} counties, ${precincts.length} precincts`);
 
-  // Resolve county once (all precincts use the first county)
-  const countyForPrecinct = counties.length > 0 ? counties[0] : '';
-  const countyResult = resolveCountyName(countyForPrecinct);
+  // Resolve all counties up front, collecting errors for invalid ones
+  const allErrors = [];
+  const resolvedCounties = rawCounties.reduce((acc, rawCounty) => {
+    const countyResult = resolveCountyName(rawCounty);
+    if (countyResult.valid) {
+      acc.push(countyResult);
+    } else {
+      allErrors.push(`Invalid county "${rawCounty}", skipping`);
+    }
+    return acc;
+  }, []);
 
-  // Map each precinct to a result object with queries and errors
+  if (resolvedCounties.length === 0) {
+    allErrors.push(`No valid counties resolved for ${resolvedData.orgName}`);
+    return { queries: [], errors: allErrors };
+  }
+
+  // For each precinct, try each resolved county until one validates
   const results = precincts.map(rawPrecinct => {
-    if (!countyResult.valid) {
-      return { queries: [], errors: [`Invalid county "${countyForPrecinct}" for precinct "${rawPrecinct}", skipping`] };
-    }
-
-    const precinctResult = resolvePrecinctCode(rawPrecinct, countyResult.countyName);
-    if (!precinctResult.valid) {
-      return { queries: [], errors: [`Invalid precinct "${rawPrecinct}" in county ${countyResult.countyName}, skipping`] };
-    }
-
-    // Warn on fuzzy matches but continue generating queries
     const precinctWarnings = [];
+
+    // Try counties in order — first valid match wins
+    const match = resolvedCounties.reduce((found, countyResult) => {
+      if (found) return found;
+      const precinctResult = resolvePrecinctCode(rawPrecinct, countyResult.countyName);
+      if (precinctResult.valid) {
+        return { countyResult, precinctResult };
+      }
+      return null;
+    }, null);
+
+    if (!match) {
+      const triedCounties = resolvedCounties.map(c => c.countyName).join(', ');
+      return { queries: [], errors: [`Precinct "${rawPrecinct}" not found in any county (tried: ${triedCounties}), skipping`] };
+    }
+
+    const { countyResult, precinctResult } = match;
+
     if (precinctResult.matchType === 'fuzzy') {
-      precinctWarnings.push(`Precinct "${rawPrecinct}" not found exactly; matched to ${precinctResult.precinctCode} — please verify`);
+      precinctWarnings.push(`Precinct "${rawPrecinct}" not found exactly in ${countyResult.countyName}; matched to ${precinctResult.precinctCode} — please verify`);
     }
 
     const activistCode = generateActivistCode(
@@ -186,7 +209,6 @@ function generatePrecinctQueries(fieldPlan, resolvedData) {
       ageData: resolvedData.ageData
     };
 
-    // Shared fields for all query objects from this precinct
     const sharedFields = {
       county: countyResult.countyName,
       precinct: precinctResult.precinctCode,
@@ -215,10 +237,10 @@ function generatePrecinctQueries(fieldPlan, resolvedData) {
   });
 
   const allQueries = results.flatMap(r => r.queries);
-  const allErrors = results.flatMap(r => r.errors);
+  const perPrecinctErrors = results.flatMap(r => r.errors);
 
-  Logger.log(`Precinct queries generated: ${allQueries.length} queries, ${allErrors.length} errors`);
-  return { queries: allQueries, errors: allErrors };
+  Logger.log(`Precinct queries generated: ${allQueries.length} queries, ${allErrors.concat(perPrecinctErrors).length} errors`);
+  return { queries: allQueries, errors: allErrors.concat(perPrecinctErrors) };
 }
 
 // =============================================================================
