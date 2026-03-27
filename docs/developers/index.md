@@ -20,11 +20,11 @@ To work with these applications, you should have:
 
 Both applications demonstrate advanced Apps Script patterns:
 
-### Field Coordination Browser
+### Field Coordination Browser (Deprecated)
 - **Pattern**: Web app with spreadsheet backend
 - **Key Technologies**: HTML Service, Spreadsheet Service
 - **Architecture**: Server-side processing with client-side UI
-- **Best For**: Interactive data management applications
+- **Status**: Deprecated — moved to `deprecated/` directory, no longer actively maintained
 
 ### FieldPlan Analyzer  
 - **Pattern**: Automated data processor with email reporting

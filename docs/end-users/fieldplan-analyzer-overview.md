@@ -12,13 +12,14 @@ The FieldPlan Analyzer is an automated system that processes field planning and 
 ### Core Functionality
 
 1. **Field Plan Processing**
-   - Reads new field plan submissions from '2025_field_plan' sheet
-   - Extracts 58 columns of data including tactics, demographics, and program details
+   - Reads new field plan submissions from the `2026_field_plan` sheet
+   - Extracts 76 columns of data including tactics, demographics, confidence scores, and program details
    - Sends notification emails for each new submission
+   - Generates BigQuery SQL queries for voter targeting
    - Tracks last processed row to avoid duplicates
 
 2. **Budget Analysis**
-   - Reads budget data from '2025_field_budget' sheet
+   - Reads budget data from the `2026_field_budget` sheet (57 columns)
    - Matches budgets to field plans by organization name
    - Calculates cost per attempt for 7 tactics
    - Compares costs against predefined targets
@@ -42,9 +43,10 @@ The FieldPlan Analyzer is an automated system that processes field planning and 
 
 1. **Field Plan Detection**
    - `checkForNewRows()` runs every 12 hours
-   - Checks '2025_field_plan' sheet for new rows
+   - Checks `2026_field_plan` sheet for new rows
    - Creates FieldPlan object for each new submission
    - Sends notification email with all plan details
+   - Generates BigQuery queries via `generateQueriesForFieldPlan()`
 
 2. **Budget Processing**
    - `analyzeBudgets()` runs every 12 hours
@@ -62,30 +64,34 @@ The FieldPlan Analyzer is an automated system that processes field planning and 
 
 The system processes two main data types:
 
-**Field Plans (58 columns):**
+**Field Plans (76 columns):**
 - Organization info and contacts
-- Field tactics data (Door, Phone, Text, Mail, etc.)
+- Field tactics data (Door, Phone, Text, Mail, Open, Relational, Registration)
 - Demographics and counties
 - Program timeline and volunteer hours
-- Coaching assessment
+- Six confidence self-assessment scores (new in 2026)
+- Query builder status and reprocess checkboxes
 
-**Budgets (55 columns):**
+**Budgets (57 columns):**
 - 15 budget categories with requested/total/gap amounts
 - Organization identifier
-- Analysis status tracking
+- Analysis status tracking and reprocess checkbox
 
 ## Key Features
 
 ### 1. **Tactic-Specific Analysis**
 
-The analyzer evaluates 7 field tactics:
-- **Door Knocking**: 5-10% contact rate, $4.50-$6.00 per attempt target
-- **Phone Banking**: 5-10% contact rate, $0.30-$0.50 per attempt target
-- **Text Messaging**: 1-5% response rate, $0.25-$0.50 per attempt target
-- **Mail**: 1-5% response rate, $2.00-$4.00 per attempt target
-- **Open Events**: Various metrics
-- **Relational Organizing**: Custom thresholds
-- **Registration**: Specific targets
+The analyzer evaluates 7 field tactics using `TACTIC_CONFIG`:
+
+| Tactic | Cost Target | Range | Contact Rate |
+|--------|------------|-------|--------------|
+| Phone Banking | $0.66/attempt | $0.51 - $0.81 | 5-10% |
+| Door Canvassing | $1.00/attempt | $0.80 - $1.20 | 5-10% |
+| Open Canvassing | $0.40/attempt | $0.30 - $0.50 | 10-15% |
+| Relational Organizing | $0.50/attempt | $0.35 - $0.65 | 20-30% |
+| Voter Registration | $0.75/attempt | $0.55 - $0.95 | 15-25% |
+| Text Banking | $0.02/attempt | $0.01 - $0.03 | 5-10% |
+| Mailers | $0.50/mailer | $0.35 - $0.65 | 100% |
 
 ### 2. **Cost Efficiency Calculations**
 
@@ -173,23 +179,17 @@ Coaching Assessment: 7/10 confidence
 ### Script Properties Required
 
 ```
-SPREADSHEET_ID - Google Sheet containing data
-FIELD_PLAN_SHEET - Field plan sheet name (default: '2025_field_plan')
-BUDGET_SHEET - Budget sheet name (default: '2025_field_budget')
-EMAIL_RECIPIENTS - Comma-separated email list
-LAST_PROCESSED_ROW - Tracks field plan processing
-MISSING_THRESHOLD_HOURS - Hours before alerting (default: 72)
+SPREADSHEET_ID                        — Google Sheet containing data
+SHEET_FIELD_PLAN                      — Field plan tab name (default: '2026_field_plan')
+SHEET_FIELD_BUDGET                    — Budget tab name (default: '2026_field_budget')
+EMAIL_RECIPIENTS                      — Comma-separated email list
+LAST_PROCESSED_ROW                    — Tracks field plan processing
+TRIGGER_MISSING_PLAN_THRESHOLD_HOURS  — Hours before alerting (default: 72)
 ```
 
 ### Cost Targets Configuration
 
-Each tactic has configurable targets:
-```
-[TACTIC]_TARGET - Target cost per attempt
-[TACTIC]_SD - Standard deviation for range
-```
-
-Example: `DOOR_TARGET: 5.0, DOOR_SD: 0.75`
+Cost targets are defined in `TACTIC_CONFIG` in `field_tactics_extension_class.js`. Each tactic has a `costTarget` and `costStdDev` — the acceptable range is `costTarget ± costStdDev`. To change targets, edit the config object directly.
 
 ## Limitations
 
@@ -217,10 +217,10 @@ Example: `DOOR_TARGET: 5.0, DOOR_SD: 0.75`
 
 ### Class Structure
 
-1. **FieldPlan**: Base class reading field plan data
-2. **FieldProgram**: Extends FieldPlan with program calculations
-3. **Tactic Classes**: PhoneTactic, DoorTactic, etc. with specific metrics
-4. **FieldBudget**: Reads and processes budget data
+1. **FieldPlan**: Base class — parses contact, geography, demographics, confidence scores
+2. **FieldProgram**: Extends FieldPlan — adds volunteer hours, attempts, projections
+3. **TacticProgram**: Extends FieldProgram — single config-driven class for all 7 tactics via `TACTIC_CONFIG`
+4. **FieldBudget**: Standalone class — parses budget rows, tracks analyzed status
 
 ### Trigger Functions
 

@@ -35,6 +35,8 @@ Your data remains within your Google account:
 
 ## Field Coordination Browser Questions
 
+> **Note:** The Field Coordination Browser has been deprecated and moved to the `deprecated/` directory. The information below is retained for reference but the application is no longer actively maintained.
+
 ### How do I access the Field Coordination Browser?
 
 1. Get the web app URL from your administrator
@@ -108,11 +110,14 @@ Targets are based on:
 - Efficiency goals
 - Regional variations
 
-Current default ranges:
-- Door Knocking: $4.50 - $6.00 per attempt
-- Phone Banking: $0.30 - $0.50 per attempt
-- Text Messaging: $0.25 - $0.50 per attempt
-- Mail: $2.00 - $4.00 per attempt
+Current default ranges (from `TACTIC_CONFIG`):
+- Door Canvassing: $0.80 - $1.20 per attempt (target: $1.00)
+- Phone Banking: $0.51 - $0.81 per attempt (target: $0.66)
+- Text Banking: $0.01 - $0.03 per attempt (target: $0.02)
+- Open Canvassing: $0.30 - $0.50 per attempt (target: $0.40)
+- Relational Organizing: $0.35 - $0.65 per attempt (target: $0.50)
+- Voter Registration: $0.55 - $0.95 per attempt (target: $0.75)
+- Mailers: $0.35 - $0.65 per mailer (target: $0.50)
 
 ### What does "confidence level" mean?
 

@@ -5,6 +5,8 @@ title: Field Coordination Browser Overview
 
 # Field Coordination Browser Overview
 
+> **Deprecated:** This project has been deprecated and moved to the `deprecated/` directory. It is no longer actively maintained. The documentation below is retained for reference only.
+
 The Field Coordination Browser is a precinct claim management system that allows organizations to claim precincts for voter outreach activities. It provides a simple web interface for searching and claiming precincts from a Google Sheets database.
 
 ## What It Does

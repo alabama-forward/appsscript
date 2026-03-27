@@ -7,8 +7,9 @@ Automated analysis system for Alabama Forward's 2026 field organizing cycle. Pro
 ```mermaid
 graph TD
     subgraph "Google Sheets"
-        FP[2026_field_plan<br/>73 columns]
-        FB[2026_field_budget<br/>56 columns]
+        FP[2026_field_plan<br/>76 columns]
+        FB[2026_field_budget<br/>57 columns]
+        QQ[query_queue]
     end
 
     subgraph "Classes"
@@ -20,6 +21,11 @@ graph TD
         T1[checkForNewRows<br/>every 12h]
         T2[analyzeBudgets<br/>every 12h]
         T3[runWeeklySummaryTrigger<br/>Mondays 9am]
+        T4[onSpreadsheetEdit<br/>reprocess trigger]
+    end
+
+    subgraph "Query Builder"
+        QB[generateQueriesForFieldPlan]
     end
 
     subgraph "Outputs"
@@ -27,22 +33,30 @@ graph TD
         E2[Budget Analysis Email]
         E3[Missing Document Alert]
         E4[Weekly Summary]
+        E5[Query Email]
     end
 
     FP --> T1 --> E1
+    T1 --> QB --> QQ
+    QB --> E5
     FB --> T2
     T2 --> |match by org name| E2
     T2 --> |no match after 72h| E3
     T3 --> E4
+    T4 --> |reprocess checkbox| T1
+    T4 --> |reprocess checkbox| T2
+    T4 --> |reprocess queries| QB
 ```
 
 ## Data Flow
 
 1. An organization submits a **field plan** via JotForm; responses land in the `2026_field_plan` sheet
 2. `checkForNewRows()` (every 12h) detects new rows, creates `FieldPlan` objects, and sends a field plan notification email
-3. The organization also submits a **budget** form; responses land in the `2026_field_budget` sheet
-4. `analyzeBudgets()` (every 12h) picks up unanalyzed budgets, matches each to a field plan by organization name, runs cost analysis per tactic, and sends a budget analysis email
-5. If a budget or field plan goes unmatched for 72 hours, a missing-document alert email is sent
+3. `generateQueriesForFieldPlan()` builds BigQuery SQL for each submission and writes results to the `query_queue` sheet and sends a query email
+4. The organization also submits a **budget** form; responses land in the `2026_field_budget` sheet
+5. `analyzeBudgets()` (every 12h) picks up unanalyzed budgets, matches each to a field plan by organization name, runs cost analysis per tactic, and sends a budget analysis email
+6. If a budget or field plan goes unmatched for 72 hours, a missing-document alert email is sent
+7. `onSpreadsheetEdit()` watches for reprocess checkboxes — checking a box re-runs the field plan, budget, or query builder pipeline for that row
 
 ## Project Structure
 
@@ -58,8 +72,14 @@ fieldplan_analyzer/
 │   ├── field_trigger_functions.js        — Field plan triggers, matching, tracking
 │   ├── budget_trigger_functions.js       — Budget triggers, cost analysis, gap analysis
 │   ├── email_builders.js                 — HTML email templates (Material Design)
+│   ├── _query_config.js                  — BigQuery configuration, race/age mappings
+│   ├── query_builder.js                  — Query orchestration entry point
+│   ├── query_resolvers.js               — County, precinct, VAN ID, demographic resolvers
+│   ├── query_sql_templates.js           — SQL template builders (MERGE, SELECT)
+│   ├── query_executor.js               — BigQuery execution (deprecated, disabled)
 │   ├── field_test_functions.js           — Field plan test suite
 │   ├── budget_test_functions.js          — Budget test suite
+│   ├── query_test_functions.js          — Query builder test suite
 │   └── appsscript.json                   — OAuth scopes and runtime config
 ├── guides/                               — Implementation and reference guides
 └── .clasp.json                           — Maps to Apps Script project
@@ -78,7 +98,7 @@ FieldBudget              → parses budget row; sums outreach vs. non-outreach; 
 
 ### FieldPlan (`field_plan_parent_class.js`)
 
-Base class constructed from a single spreadsheet row. Parses 73 columns covering:
+Base class constructed from a single spreadsheet row. Parses 76 columns covering:
 - Contact info (org name, email, phone)
 - Data & tools (VAN committee, data storage, program tools)
 - Geography (counties, cities, precincts, special areas)
@@ -126,8 +146,8 @@ Parses 56-column budget rows with requested/total/gap amounts for 15 line items 
 ### Column Mappings (`_column_mappings.js`)
 
 Single source of truth for all column indices. Three mapping objects:
-- `FIELD_PLAN_COLUMNS` — 35 keys, columns 0-72
-- `BUDGET_COLUMNS` — 56 keys, columns 0-55
+- `FIELD_PLAN_COLUMNS` — 35 keys, columns 0-75
+- `BUDGET_COLUMNS` — 23 keys, columns 0-56
 - `PROGRAM_COLUMNS` — 7 tactic groups x 4 metrics, columns 37-64
 
 Includes `validateColumnMappings()` to check for duplicates and overlaps, and `COLUMN_QUESTIONS` mapping each column to its original form question text.
@@ -154,6 +174,21 @@ HTML email generator using Alabama Forward brand colors (navy `#363d4a`, rust `#
 - `sendBudgetAnalysisEmail(budget, fieldPlan, analysis)` — cost analysis results per tactic with status indicators
 
 Also: `sendMissingFieldPlanNotification()`, `sendMissingBudgetNotification()`, `sendErrorNotification()`
+
+### Query Builder (`query_builder.js`, `query_resolvers.js`, `query_sql_templates.js`)
+
+Generates BigQuery SQL for each field plan submission. Routes to precinct-level or exploration queries depending on whether the organization specified precincts.
+
+- `generateQueriesForFieldPlan(fieldPlan, rowNumber)` — main entry point; resolves VAN IDs, demographics, counties, and precincts, then builds SQL and writes to `query_queue` sheet
+- `generatePrecinctQueries()` — 3 queries per precinct (metadata MERGE, precinct list MERGE, DWID SELECT)
+- `generateExplorationQueries()` — 3 queries per county when no precincts are specified
+- `writeToQueryQueue()` / `writeToFieldPlanSheet()` — output writers
+- `setupQueryQueueSheet()` / `setupVanIdLookupSheet()` — one-time sheet setup utilities
+
+### Reprocess Triggers (`field_trigger_functions.js`)
+
+- `onSpreadsheetEdit(e)` — installable onEdit trigger that watches for reprocess checkboxes on both sheets; dispatches to `reprocessFieldPlanRow()`, `reprocessBudgetRow()`, or `reprocessQueryBuilderRow()`
+- `createReprocessTrigger()` — sets up the installable onEdit trigger (run once)
 
 ## Getting Started
 
@@ -193,6 +228,10 @@ All settings are stored as Apps Script **Script Properties** (Project Settings >
 | `TRIGGER_MISSING_PLAN_THRESHOLD_HOURS` | `72` | Hours before missing-doc alert |
 | `TRIGGER_WEEKLY_SUMMARY_DAY` | `MONDAY` | Weekly summary day |
 | `TRIGGER_WEEKLY_SUMMARY_HOUR` | `9` | Weekly summary hour (ET) |
+| `SHEET_QUERY_QUEUE` | `query_queue` | Query queue tab name |
+| `SHEET_VAN_ID_LOOKUP` | `van_id_lookup` | VAN ID lookup tab name |
+| `BQ_PROJECT_ID` | *(set in script properties)* | BigQuery project ID |
+| `BQ_EXECUTE_ENABLED` | `false` | Enable/disable BQ execution |
 
 ## Testing
 

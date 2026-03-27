@@ -32,8 +32,8 @@ Technical documentation for implementing your own Apps Script solutions based on
 
 ## About These Applications
 
-### Field Coordination Browser
-A web-based application that transforms Google Sheets into a searchable, claimable database system. Users can browse, search, and claim items through a user-friendly web interface.
+### Field Coordination Browser (Deprecated)
+A web-based application that transformed Google Sheets into a searchable, claimable database system. This project has been deprecated and moved to the `deprecated/` directory.
 
 ### FieldPlan Analyzer
 An automated analysis system that processes form submissions, analyzes budget data, and generates email reports. It uses class-based architecture and time-based triggers for sophisticated workflow automation.

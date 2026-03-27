@@ -3,477 +3,203 @@ layout: default
 title: Class Structure - FieldPlan Analyzer
 ---
 
-# Class-Based Architecture in FieldPlan Analyzer
+# Class Structure in FieldPlan Analyzer
 
-The FieldPlan Analyzer uses object-oriented programming with a simple class hierarchy to process field planning and budget data. This guide explains the actual class structure implemented in the code.
+The FieldPlan Analyzer uses a three-level class hierarchy for field plan data plus a standalone class for budgets. All tactics are handled by a single configuration-driven class — there are no per-tactic subclasses.
 
 ## Architecture Overview
 
 ```
-┌─────────────────────┐
-│    Base Classes     │
-├─────────────────────┤
-│ FieldPlan           │ ← Base class for field plan data
-│ FieldBudget         │ ← Budget data model
-└──────────┬──────────┘
-           │
-┌──────────▼──────────┐
-│  Extension Classes  │
-├─────────────────────┤
-│ FieldProgram        │ ← Extends FieldPlan with calculations
-└──────────┬──────────┘
-           │
-┌──────────▼──────────┐
-│   Tactic Classes    │
-├─────────────────────┤
-│ PhoneTactic         │ ← Extends FieldProgram
-│ DoorTactic          │ ← Extends FieldProgram
-│ TextTactic          │ ← Extends FieldProgram
-│ MailTactic          │ ← Extends FieldProgram
-│ OpenTactic          │ ← Extends FieldProgram
-│ RelationalTactic    │ ← Extends FieldProgram
-│ RegistrationTactic  │ ← Extends FieldProgram
-└─────────────────────┘
+FieldPlan                → base: contact info, geography, demographics, confidence scores
+  └─ FieldProgram        → adds: programLength, weeklyVolunteers, weeklyHours, hourlyAttempts
+       └─ TacticProgram  → adds: TACTIC_CONFIG-driven cost analysis (all 7 tactics)
+
+FieldBudget              → standalone: parses budget rows, tracks analyzed status
 ```
 
-## Core Classes
+## FieldPlan (`field_plan_parent_class.js`)
 
-### 1. **FieldPlan Class**
+Base class constructed from a single spreadsheet row. Reads columns via `FIELD_PLAN_COLUMNS` indices defined in `_column_mappings.js`.
 
-The base class that reads field plan data from the spreadsheet:
+**Key features:**
+- Multi-select fields (counties, demographics, tactics) are normalized from JotForm's newline-delimited strings into arrays
+- Six confidence self-assessment scores (new in 2026) with `needsCoaching()` method
+- Three static factory methods for creating instances from the sheet
 
 ```javascript
-class FieldPlan {
-  constructor(rowData) {
-    this.data = {};
-    this._columnIndices = {};
-    this._parseHeaders();
-    this._parseRow(rowData);
-  }
-  
-  _parseHeaders() {
-    const headers = this._getHeaders();
-    headers.forEach((header, index) => {
-      if (header) {
-        const key = this._normalizeHeader(header);
-        this._columnIndices[key] = index;
-      }
-    });
-  }
-  
-  _parseRow(rowData) {
-    // Parse all 58 columns of data
-    Object.keys(this._columnIndices).forEach(key => {
-      const index = this._columnIndices[key];
-      let value = rowData[index];
-      
-      // Normalize array fields
-      if (this._isArrayField(key)) {
-        value = this._parseArrayField(value);
-      }
-      
-      this.data[key] = value;
-    });
-  }
-  
-  _normalizeHeader(header) {
-    return header.toLowerCase()
-      .replace(/[^a-z0-9]+/g, '_')
-      .replace(/^_|_$/g, '');
-  }
-  
-  _isArrayField(key) {
-    const arrayFields = [
-      'field_counties',
-      'priority_demographics',
-      'what_tools_do_you_use',
-      'coaching_support_requested'
-    ];
-    return arrayFields.includes(key);
-  }
-  
-  _parseArrayField(value) {
+// Static factories — all use getSheet(scriptProps.getProperty('SHEET_FIELD_PLAN'))
+FieldPlan.fromLastRow()
+FieldPlan.fromFirstRow()
+FieldPlan.fromSpecificRow(rowNumber)  // 1-based row number
+```
+
+**Constructor pattern** — reads columns by index, not by header parsing:
+
+```javascript
+constructor(rowData) {
+  const normalizeField = (value) => {
     if (!value) return [];
     if (Array.isArray(value)) return value;
-    return value.toString().split(',').map(v => v.trim()).filter(v => v);
-  }
-  
-  // Static factory methods
-  static fromLastRow() {
-    const sheet = SpreadsheetApp.getActiveSpreadsheet()
-      .getSheetByName(this.getSheetName());
-    const lastRow = sheet.getLastRow();
-    const rowData = sheet.getRange(lastRow, 1, 1, sheet.getLastColumn())
-      .getValues()[0];
-    return new this(rowData);
-  }
-  
-  static fromFirstRow() {
-    const sheet = SpreadsheetApp.getActiveSpreadsheet()
-      .getSheetByName(this.getSheetName());
-    const rowData = sheet.getRange(2, 1, 1, sheet.getLastColumn())
-      .getValues()[0];
-    return new this(rowData);
-  }
-  
-  static getSheetName() {
-    return PropertiesService.getScriptProperties()
-      .getProperty('FIELD_PLAN_SHEET') || '2025_field_plan';
-  }
+    const str = value.toString();
+    if (str.includes('\n')) {
+      return str.split('\n').map(item => item.trim()).filter(item => item);
+    }
+    return [str.trim()];
+  };
+
+  this._memberOrgName = rowData[FIELD_PLAN_COLUMNS.MEMBERNAME];
+  this._fieldCounties = normalizeField(rowData[FIELD_PLAN_COLUMNS.FIELDCOUNTIES]);
+  this._demoRace = normalizeField(rowData[FIELD_PLAN_COLUMNS.DEMORACE]);
+  // ... 76 columns total
 }
 ```
 
-### 2. **FieldProgram Class**
+## FieldProgram (`field_program_extension_class.js`)
 
-Extends FieldPlan to add program-specific calculations:
+Extends `FieldPlan` with per-tactic program metrics. The constructor takes a `tacticType` key (e.g., `'PHONE'`) and reads 4 numeric fields from `PROGRAM_COLUMNS[tacticType]`.
 
 ```javascript
 class FieldProgram extends FieldPlan {
-  constructor(rowData) {
+  constructor(rowData, tacticType) {
     super(rowData);
-  }
-  
-  // Calculate total program volunteer hours
-  getTotalProgramVolunteerHours() {
-    const fields = [
-      'door_volunteer_hours',
-      'phone_volunteer_hours',
-      'text_volunteer_hours',
-      'mail_volunteer_hours',
-      'open_events_volunteer_hours',
-      'relational_volunteer_hours',
-      'registration_volunteer_hours'
-    ];
-    
-    return fields.reduce((total, field) => {
-      const hours = parseFloat(this.data[field]) || 0;
-      return total + hours;
-    }, 0);
-  }
-  
-  // Calculate weekly volunteer hours
-  getWeeklyVolunteerHours() {
-    const totalHours = this.getTotalProgramVolunteerHours();
-    const weeks = parseFloat(this.data['program_length_in_weeks']) || 1;
-    return totalHours / weeks;
-  }
-  
-  // Calculate weekly contact attempts
-  getWeeklyContactAttempts() {
-    const contactsPerWeek = parseFloat(this.data['contact_attempts_per_week']) || 0;
-    return contactsPerWeek;
-  }
-  
-  // Get total program attempts
-  getTotalProgramAttempts() {
-    const weeklyAttempts = this.getWeeklyContactAttempts();
-    const weeks = parseFloat(this.data['program_length_in_weeks']) || 1;
-    return weeklyAttempts * weeks;
-  }
-  
-  // Get program length in weeks
-  getProgramLength() {
-    return parseFloat(this.data['program_length_in_weeks']) || 0;
-  }
-  
-  // Check if a specific tactic is enabled
-  isTacticEnabled(tacticName) {
-    const field = `${tacticName}_volunteer_hours`;
-    const hours = parseFloat(this.data[field]) || 0;
-    return hours > 0;
+    const columns = PROGRAM_COLUMNS[tacticType];
+
+    this._programLength = validateColumn(columns.PROGRAMLENGTH, 'Program Length');
+    this._weeklyVolunteers = validateColumn(columns.WEEKLYVOLUNTEERS, 'Weekly Volunteers');
+    this._weeklyHours = validateColumn(columns.WEEKLYHOURS, 'Weekly Hours');
+    this._hourlyAttempts = validateColumn(columns.HOURLYATTEMPTS, 'Hourly Attempts');
   }
 }
 ```
 
-### 3. **Tactic-Specific Classes**
+**Calculation methods:**
 
-Each tactic has its own class with specific metrics and thresholds:
+| Method | Formula |
+|--------|---------|
+| `programVolunteerHours()` | volunteers x hours x weeks |
+| `weekVolunteerHours()` | volunteers x hours |
+| `weeklyAttempts()` | volunteers x hours x hourly rate |
+| `programAttempts()` | weeks x volunteers x hours x hourly rate |
+| `attemptReasonableMessage(threshold, name)` | checks if hourly attempts exceed a threshold |
+| `expectedContactsMessage(contactRange, name)` | projects successful contacts using a contact rate range |
+
+## TacticProgram (`field_tactics_extension_class.js`)
+
+Extends `FieldProgram`. A single class handles all 7 tactics — configuration is passed via `TACTIC_CONFIG`:
 
 ```javascript
-class PhoneTactic extends FieldProgram {
-  constructor(rowData) {
-    super(rowData);
-    this.tacticName = 'phone';
-    this.contactRateRange = { low: 0.05, high: 0.10 }; // 5-10%
-    this.reasonableHourlyAttempts = 35;
-  }
-  
-  getVolunteerHours() {
-    return parseFloat(this.data['phone_volunteer_hours']) || 0;
-  }
-  
-  checkVolunteerExpectationsReasonable() {
-    const weeklyHours = this.getVolunteerHours() / this.getProgramLength();
-    const weeklyVolunteers = parseFloat(this.data['weekly_phone_volunteers']) || 0;
-    
-    if (weeklyVolunteers === 0) return true;
-    
-    const hoursPerVolunteer = weeklyHours / weeklyVolunteers;
-    return hoursPerVolunteer >= 2 && hoursPerVolunteer <= 20;
-  }
-  
-  getTacticContactRate() {
-    const rate = parseFloat(this.data['phone_contact_rate_percentage']) || 0;
-    return rate / 100; // Convert percentage to decimal
-  }
-  
-  // Calculate expected successful contacts
-  calculateSuccessfulContacts() {
-    const attempts = this.calculateAttempts();
-    const contactRate = this.getTacticContactRate() || 
-                       (this.contactRateRange.low + this.contactRateRange.high) / 2;
-    return Math.round(attempts * contactRate);
-  }
-  
-  // Calculate total attempts for this tactic
-  calculateAttempts() {
-    const hours = this.getVolunteerHours();
-    const attemptsPerHour = parseFloat(this.data['phone_attempts_per_hour']) || 
-                           this.reasonableHourlyAttempts;
-    return Math.round(hours * attemptsPerHour);
-  }
-}
+const TACTIC_CONFIG = {
+  PHONE: { name: 'Phone Banking', columnKey: 'PHONE', contactRange: [0.05, 0.10],
+           reasonableThreshold: 30, costTarget: 0.66, costStdDev: 0.15 },
+  DOOR:  { name: 'Door to Door Canvassing', columnKey: 'DOOR', contactRange: [0.05, 0.10],
+           reasonableThreshold: 30, costTarget: 1.00, costStdDev: 0.20 },
+  OPEN:  { name: 'Open Canvassing / Tabling', columnKey: 'OPEN', contactRange: [0.10, 0.15],
+           reasonableThreshold: 40, costTarget: 0.40, costStdDev: 0.10 },
+  // ... RELATIONAL, REGISTRATION, TEXT, MAIL
+};
 
-// Similar structure for other tactics
-class DoorTactic extends FieldProgram {
-  constructor(rowData) {
-    super(rowData);
-    this.tacticName = 'door';
-    this.contactRateRange = { low: 0.05, high: 0.10 }; // 5-10%
-    this.reasonableHourlyAttempts = 10;
+class TacticProgram extends FieldProgram {
+  constructor(rowData, tacticKey) {
+    const config = TACTIC_CONFIG[tacticKey];
+    super(rowData, config.columnKey);
+    this._tacticKey = tacticKey;
+    this._name = config.name;
+    this._costTarget = config.costTarget;
+    this._costStdDev = config.costStdDev;
+    // ...
   }
-  // ... similar methods
-}
-
-class TextTactic extends FieldProgram {
-  constructor(rowData) {
-    super(rowData);
-    this.tacticName = 'text';
-    this.contactRateRange = { low: 0.01, high: 0.05 }; // 1-5%
-    this.reasonableHourlyAttempts = 150;
-  }
-  // ... similar methods
-}
-
-class MailTactic extends FieldProgram {
-  constructor(rowData) {
-    super(rowData);
-    this.tacticName = 'mail';
-    this.contactRateRange = { low: 0.01, high: 0.05 }; // 1-5%
-    this.reasonableHourlyAttempts = 100;
-  }
-  // ... similar methods
 }
 ```
 
-### 4. **FieldBudget Class**
+**Key method — `analyzeCost(fundingAmount)`:**
 
-Handles budget data and analysis:
+```javascript
+analyzeCost(fundingAmount) {
+  const programAttempts = this.programAttempts();
+  const costPerAttempt = programAttempts > 0 ? fundingAmount / programAttempts : 0;
+  const lowerBound = this._costTarget - this._costStdDev;
+  const upperBound = this._costTarget + this._costStdDev;
+
+  const status = costPerAttempt <= lowerBound ? 'below' :
+                 costPerAttempt >= upperBound ? 'above' : 'within';
+
+  return { tacticName, programAttempts, costPerAttempt, targetCost, lowerBound, upperBound, status };
+}
+```
+
+**Adding a new tactic** requires only adding an entry to `TACTIC_CONFIG` — no new class needed.
+
+## FieldBudget (`budget_class.js`)
+
+Standalone class (not in the FieldPlan hierarchy). Parses 57-column budget rows with requested/total/gap amounts for 15 line items.
 
 ```javascript
 class FieldBudget {
   constructor(rowData) {
-    this.rowData = rowData;
-    this.data = {};
-    this.parseData();
+    this._memberOrgName = rowData[BUDGET_COLUMNS.MEMBERNAME];
+    this._canvassRequested = rowData[BUDGET_COLUMNS.CANVASSREQUESTED];
+    // ... 15 budget categories x 3 columns each
   }
-  
-  parseData() {
-    // Map column indices to data fields
-    this.data.timestamp = this.rowData[0];
-    this.data.firstName = this.rowData[1];
-    this.data.lastName = this.rowData[2];
-    this.data.email = this.rowData[3];
-    this.data.organization = this.rowData[4];
-    
-    // Parse budget categories (15 categories x 3 columns each)
-    this.parseBudgetCategories();
-    
-    // Parse analysis status
-    this.data.analyzed = this.rowData[49];
-    this.data.analyzedTimestamp = this.rowData[50];
-    this.data.missingFieldPlanNotificationSent = this.rowData[51];
-    this.data.missingFieldPlanTimestamp = this.rowData[52];
-  }
-  
-  parseBudgetCategories() {
-    const categories = [
-      'indirect', 'travel', 'supplies', 'literature',
-      'swag', 'phonebanking', 'textbanking', 'door',
-      'mail', 'events', 'relational', 'registration',
-      'digital', 'other', 'total'
-    ];
-    
-    this.data.budget = {};
-    let colIndex = 5; // Starting column for budget data
-    
-    categories.forEach(category => {
-      this.data.budget[category] = {
-        requested: this.parseNumber(this.rowData[colIndex]),
-        total: this.parseNumber(this.rowData[colIndex + 1]),
-        gap: this.parseNumber(this.rowData[colIndex + 2])
-      };
-      colIndex += 3;
-    });
-  }
-  
-  parseNumber(value) {
-    if (!value) return 0;
-    const cleaned = value.toString().replace(/[$,]/g, '').trim();
-    const num = parseFloat(cleaned);
-    return isNaN(num) ? 0 : num;
-  }
-  
-  // Calculate proportion of request that is indirect
-  calculateIndirectProportion() {
-    const indirect = this.data.budget.indirect.requested;
-    const total = this.data.budget.total.requested;
-    return total > 0 ? indirect / total : 0;
-  }
-  
-  // Calculate proportion of request that is outreach
-  calculateOutreachProportion() {
-    const outreachCategories = [
-      'phonebanking', 'textbanking', 'door', 'mail',
-      'events', 'relational', 'registration'
-    ];
-    
-    const outreach = outreachCategories.reduce((sum, cat) => {
-      return sum + this.data.budget[cat].requested;
-    }, 0);
-    
-    const total = this.data.budget.total.requested;
-    return total > 0 ? outreach / total : 0;
-  }
-  
-  // Check if budget needs analysis
-  needsAnalysis() {
-    return !this.data.analyzed && this.data.email;
-  }
-  
-  // Get organization name for matching
-  getOrganizationName() {
-    return this.data.organization || '';
-  }
-  
-  // Get total funding gap
-  getTotalGap() {
-    return Math.abs(this.data.budget.total.gap || 0);
-  }
-  
-  // Static factory methods
-  static getAllUnanalyzed() {
-    const sheet = SpreadsheetApp.getActiveSpreadsheet()
-      .getSheetByName(this.getSheetName());
-    const allData = sheet.getDataRange().getValues();
-    const budgets = [];
-    
-    // Skip header row
-    for (let i = 1; i < allData.length; i++) {
-      const budget = new FieldBudget(allData[i]);
-      if (budget.needsAnalysis()) {
-        budget.rowIndex = i + 1; // Store 1-based row index
-        budgets.push(budget);
-      }
-    }
-    
-    return budgets;
-  }
-  
-  static getSheetName() {
-    return PropertiesService.getScriptProperties()
-      .getProperty('BUDGET_SHEET') || '2025_field_budget';
-  }
+}
+
+// Column indices assigned after class definition
+FieldBudget.COLUMNS = BUDGET_COLUMNS;
+```
+
+**Static factories:** `fromLastRow()`, `fromFirstRow()`, `fromSpecificRow(rowNumber)`
+
+**Key methods:**
+- `sumOutreach()` / `sumNotOutreach()` — proportional spending breakdown
+- `needDataStipend()` — calculates stipend hours at $20/hr
+- `requestSummary()` — formatted HTML summary
+- `markAsAnalyzed(rowNumber)` — writes `true` to the ANALYZED column
+- `getUnanalyzedBudgets()` — static, returns all rows where ANALYZED !== true
+
+## How Classes Are Used in Triggers
+
+### Field Plan Processing (`checkForNewRows`)
+
+```javascript
+// field_trigger_functions.js — simplified from actual source
+const fieldPlan = FieldPlan.fromSpecificRow(rowNumber);
+sendFieldPlanEmail(fieldPlan, rowNumber);
+generateQueriesForFieldPlan(fieldPlan, rowNumber);
+```
+
+### Tactic Instantiation (`getTacticInstances`)
+
+```javascript
+// field_trigger_functions.js — iterates TACTIC_CONFIG to create tactics
+for (const [tacticKey, config] of Object.entries(TACTIC_CONFIG)) {
+  const columns = PROGRAM_COLUMNS[config.columnKey];
+  // Check if all 4 fields are filled
+  // If complete: tactics.push(new TacticProgram(rowData, tacticKey));
+  // If partial: track as incomplete
 }
 ```
 
-## Usage in Trigger Functions
-
-### Field Plan Processing
+### Budget Analysis (`analyzeBudgets`)
 
 ```javascript
-function checkForNewRows() {
-  const sheet = SpreadsheetApp.getActiveSpreadsheet()
-    .getSheetByName(FieldPlan.getSheetName());
-  
-  const lastProcessedRow = getLastProcessedRow();
-  const currentLastRow = sheet.getLastRow();
-  
-  for (let row = lastProcessedRow + 1; row <= currentLastRow; row++) {
-    const rowData = sheet.getRange(row, 1, 1, sheet.getLastColumn())
-      .getValues()[0];
-    
-    // Create appropriate tactic class instance
-    const fieldPlan = new FieldProgram(rowData);
-    
-    // Send notification email
-    sendFieldPlanNotification(fieldPlan);
-    
-    // Check if matching budget exists
-    const matchingBudget = findMatchingBudget(fieldPlan.data.organization_name);
-    if (matchingBudget) {
-      analyzeBudget(matchingBudget, fieldPlan);
-    }
+// budget_trigger_functions.js — simplified from actual source
+const unanalyzedBudgets = FieldBudget.getUnanalyzedBudgets();
+for (const budgetData of unanalyzedBudgets) {
+  const fieldPlanMatch = findMatchingFieldPlan(budgetData.budget.memberOrgName);
+  if (fieldPlanMatch) {
+    const analysis = analyzeBudgetWithFieldPlan(budgetData.budget, fieldPlanMatch);
+    sendBudgetAnalysisEmail(budgetData.budget, fieldPlanMatch.fieldPlan, analysis);
+    budgetData.budget.markAsAnalyzed(budgetData.rowNumber);
   }
-  
-  updateLastProcessedRow(currentLastRow);
-}
-```
-
-### Budget Analysis
-
-```javascript
-function analyzeBudgets() {
-  const unanalyzedBudgets = FieldBudget.getAllUnanalyzed();
-  
-  unanalyzedBudgets.forEach(budget => {
-    try {
-      // Find matching field plan
-      const fieldPlan = findMatchingFieldPlan(budget.getOrganizationName());
-      
-      if (fieldPlan) {
-        // Perform analysis
-        const analysis = performCostAnalysis(budget, fieldPlan);
-        
-        // Send email
-        sendBudgetAnalysisEmail(budget, fieldPlan, analysis);
-        
-        // Mark as analyzed
-        markBudgetAsAnalyzed(budget.rowIndex);
-      } else {
-        // Check if we should send missing plan notification
-        checkMissingPlanNotification(budget);
-      }
-    } catch (error) {
-      console.error(`Error analyzing budget for ${budget.getOrganizationName()}:`, error);
-    }
-  });
 }
 ```
 
 ## Key Design Principles
 
-### 1. **Simple Inheritance**
-- Base class (FieldPlan) handles data parsing
-- FieldProgram adds calculation methods
-- Tactic classes add specific metrics
-
-### 2. **Data Encapsulation**
-- Raw spreadsheet data stored in `data` object
-- Methods provide calculated values
-- No complex state management
-
-### 3. **Factory Methods**
-- Static methods for creating instances from sheets
-- Consistent interface across classes
-
-### 4. **No Over-Engineering**
-- No abstract classes or interfaces
-- No complex design patterns
-- Focus on practical functionality
+1. **Configuration over inheritance** — One `TacticProgram` class + `TACTIC_CONFIG` replaces what would be 7 separate tactic subclasses
+2. **Column mappings as single source of truth** — All indices live in `_column_mappings.js`; classes reference constants, not magic numbers
+3. **Static factory methods** — `fromLastRow()`, `fromSpecificRow(n)` provide clean construction from sheet data
+4. **Script properties for runtime config** — Sheet names, email lists, and trigger intervals are stored in `PropertiesService`, not in code
 
 ## Next Steps
 
-- Learn about [Timer Implementation](/appsscript/developers/fieldplan-analyzer/timers)
-- Master [Email Response Generation](/appsscript/developers/fieldplan-analyzer/email-responses)
-- Understand [Spreadsheet Integration](/appsscript/developers/spreadsheet-mapping/examples)
+- Learn about [Timer Implementation](./timers) for trigger setup and scheduling
