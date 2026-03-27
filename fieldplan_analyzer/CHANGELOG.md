@@ -7,6 +7,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [1.4.0] - 2026-03-27
+### Added
+- SQL WHERE clause builder for fieldplan query templates
+- SQL template functions for BigQuery query builder (exploration, county-targeting, precinct-list, metadata merge, DWID select)
+- Query builder orchestration with reprocess checkbox support
+- Query email builder, BigQuery executor, and test suite
+- Metadata merge query in county-level exploration path for full run tracking
+- Commented-out precinct filter placeholder in county-targeting queries for manual use
+- Inline edit hints in county-level metadata merge for precinct/activist code replacement
+- Dropdown validation (pending/run/uploaded) on query_queue Status column
+- Numeric precinct validation to route text-only values like "n/a" to exploration path
+
+### Changed
+- Rewrite query email to link to query_queue sheet rows instead of embedding inline SQL
+- Restructure email query sections into exploration and precinct-level groups by county
+- Remove exposed BigQuery project name from email footer
+- Rename email shell title from "[Query Builder] OrgName" to "Query Builder"
+- Switch sendQueryEmail to use getQueryEmailRecipients for correct routing
+- Pass raceData and ageData through to email for filter rendering in summary section
+- Refactor query_queue sheet setup to use QUERY_QUEUE_HEADERS constant
+- Update query_executor column references to match new queue schema
+- Expand RACE_MAP with additional Asian/Pacific Islander category mappings
+- Simplify query resolver docstrings to concise JSDoc style
+
+### Fixed
+- Correct deceased filter from 'f' to 'N' in buildWhereClause
+- Add precinctcode/precinctname NOT NULL checks to WHERE clause
+- Add missing HAVING clause to exploration query
+- Correct typos and mismatched test assumptions across query builder
+
 ## [1.3.1] - 2026-03-24
 ### Fixed
 - Wire attempts-per-hour threshold into per-tactic badge and flag system
