@@ -5,7 +5,7 @@ title: Troubleshooting
 
 # Troubleshooting Guide
 
-This guide helps you resolve common issues with the Field Coordination Browser and FieldPlan Analyzer applications.
+This guide helps you resolve common issues with the FieldPlan Analyzer.
 
 ## Common Issues
 
@@ -30,53 +30,6 @@ This guide helps you resolve common issues with the Field Coordination Browser a
 2. Sign in with your Google account
 3. Click "Advanced" → "Go to [App Name] (unsafe)"
 4. Review and accept the required permissions
-
-### Field Coordination Browser Issues
-
-#### Search returns no results
-
-**Possible causes and solutions**:
-
-1. **Empty search index**
-   - Check if data exists in the main spreadsheet
-   - Verify the search configuration sheet is set up correctly
-   
-2. **Case sensitivity**
-   - Try searching with different case combinations
-   - Check if the search is case-sensitive in the code
-
-3. **Special characters**
-   - Remove special characters from search terms
-   - Try searching for partial terms
-
-#### Claims not working
-
-**Error: "Item already claimed"**
-
-**Solutions**:
-1. Refresh the page to see updated claim status
-2. Check if someone else claimed it simultaneously
-3. Verify your email is properly configured
-
-**Error: "Failed to claim item"**
-
-**Solutions**:
-1. Check your internet connection
-2. Verify you have edit permissions on the spreadsheet
-3. Look for any lock conflicts in the Apps Script editor
-
-#### Page loads slowly
-
-**Solutions**:
-1. **Optimize data loading**
-   - Implement pagination for large datasets
-   - Load only necessary columns
-   - Cache frequently accessed data
-
-2. **Check spreadsheet size**
-   - Remove unnecessary historical data
-   - Archive old records to a separate sheet
-   - Limit the number of formulas in the spreadsheet
 
 ### FieldPlan Analyzer Issues
 

@@ -1,7 +1,7 @@
 # Jekyll configuration for Apps Script Documentation
 
 title: Apps Script Field Coordination Documentation
-description: Documentation for Field Coordination Browser and FieldPlan Analyzer
+description: Documentation for the FieldPlan Analyzer
 baseurl: "/appsscript"
 url: ""
 

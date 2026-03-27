@@ -31,17 +31,8 @@ You can create web applications that:
 - Can be accessed by anyone you choose
 - Work on any device with a browser
 
-## How Our Applications Use Apps Script
+## How the FieldPlan Analyzer Uses Apps Script
 
-### Field Coordination Browser
-This application demonstrates how Apps Script can transform a simple Google Sheet into a sophisticated web application:
-
-- **Spreadsheet as Database**: Instead of a traditional database, we use Google Sheets to store data
-- **Web Interface**: Users interact through a clean web interface, not directly with the spreadsheet
-- **Real-time Updates**: Changes are reflected immediately for all users
-- **Email Notifications**: Automated emails keep everyone informed
-
-### FieldPlan Analyzer
 This application shows Apps Script's power for automated data processing:
 
 - **Form Processing**: Automatically processes Google Form submissions
@@ -111,7 +102,6 @@ While you don't need to be a programmer to use applications built with Apps Scri
 
 Now that you understand what Apps Script is and why it's powerful, explore how our specific applications work:
 
-- [Field Coordination Browser Overview](./field-coordination-browser-overview)
 - [FieldPlan Analyzer Overview](./fieldplan-analyzer-overview)
 
 These guides will show you how we've applied Apps Script principles to solve real organizational challenges.

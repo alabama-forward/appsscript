@@ -5,28 +5,19 @@ title: For Developers
 
 # Developer Documentation
 
-Welcome to the developer documentation for the Field Coordination Browser and FieldPlan Analyzer. This section provides technical details for implementing your own Apps Script solutions based on these proven patterns.
+Welcome to the developer documentation for the FieldPlan Analyzer. This section provides technical details for implementing your own Apps Script solutions based on these proven patterns.
 
 ## Prerequisites
 
-To work with these applications, you should have:
+To work with this application, you should have:
 
 - JavaScript programming knowledge
 - Familiarity with Google Workspace APIs
-- Understanding of web development basics (HTML/CSS)
 - Access to Google Apps Script editor
 
 ## Architecture Overview
 
-Both applications demonstrate advanced Apps Script patterns:
-
-### Field Coordination Browser (Deprecated)
-- **Pattern**: Web app with spreadsheet backend
-- **Key Technologies**: HTML Service, Spreadsheet Service
-- **Architecture**: Server-side processing with client-side UI
-- **Status**: Deprecated — moved to `deprecated/` directory, no longer actively maintained
-
-### FieldPlan Analyzer  
+### FieldPlan Analyzer
 - **Pattern**: Automated data processor with email reporting
 - **Key Technologies**: Time-based triggers, Gmail Service
 - **Architecture**: Class-based models with scheduled execution
@@ -36,11 +27,6 @@ Both applications demonstrate advanced Apps Script patterns:
 
 ### Getting Started
 - [Getting Started Guide](./getting-started) - Set up your development environment
-
-### Field Coordination Browser
-- [Architecture Overview](./field-coordination-browser/architecture)
-- [Spreadsheet as Database](./field-coordination-browser/spreadsheet-as-database)
-- [Web Deployment](./field-coordination-browser/web-deployment)
 
 ### FieldPlan Analyzer
 - [Class Structure](./fieldplan-analyzer/class-structure)
