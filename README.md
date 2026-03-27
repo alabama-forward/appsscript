@@ -1,6 +1,6 @@
 # Apps Script Field Coordination Tools
 
-A monorepo of Google Apps Script applications used by Alabama Forward for field organizing coordination. These tools turn Google Sheets into automated systems for precinct claiming, field plan analysis, budget tracking, and volunteer matching.
+A monorepo of Google Apps Script applications used by Alabama Forward for field organizing coordination. The active project — **FieldPlan Analyzer** — turns Google Sheets into an automated system for field plan analysis, budget tracking, BigQuery voter targeting, and email reporting.
 
 ## Architecture Overview
 
@@ -11,89 +11,92 @@ graph TD
         GS[(Google Sheets)]
     end
 
-    subgraph "Apps Script Applications"
-        FPA[FieldPlan Analyzer]
-        FCB[Field Coordination Browser]
-        FCS[Field Coordination Sheets]
-        FQ[Field Quiz]
+    subgraph "FieldPlan Analyzer"
+        FPA[Field Plan & Budget Analysis]
+        QB[Query Builder]
     end
 
     subgraph "Outputs"
-        Email[Email Reports]
-        WebApp[Web Interface]
-        MC[Mailchimp]
+        Email[HTML Email Reports]
+        BQ[(BigQuery)]
+        QS[Query Queue Sheet]
     end
 
     GF -->|form submissions| FPA
     GS -->|field plans & budgets| FPA
-    FPA -->|HTML analysis emails| Email
-
-    GS -->|precinct data| FCB
-    FCB -->|claim updates| GS
-    FCB -->|search UI| WebApp
-
-    GS -->|precinct data| FCS
-    FCS -->|claim updates| GS
-
-    GF -->|webhook POST| FQ
-    FQ -->|responses & matches| GS
-    FQ -->|subscriber adds| MC
+    FPA -->|analysis emails| Email
+    FPA -->|resolvers| QB
+    QB -->|SQL queries| QS
+    QB -->|voter targeting| BQ
+    QB -->|summary emails| Email
 ```
 
 ## Project Structure
 
 ```
 appsscript/
-├── fieldplan_analyzer/          — Field plan & budget analysis system
-│   └── src/                     — 2026 cycle (active development)
+├── fieldplan_analyzer/          — Field plan & budget analysis system (active)
+│   └── src/                     — 2026 cycle
 │
-├── field_coordination_browser/  — Web-based precinct claiming app
-│   ├── 2025v/src/               — 2025 cycle
-│   └── 2026v/src/               — 2026 cycle
-│
-├── field_coordination_sheets/   — Sheets-native precinct claiming (no web UI)
-│
-├── field_quiz/src/              — JotForm webhook → Mailchimp integration
+├── field_coordination_browser/  — Deprecated: web-based precinct claiming
+├── field_coordination_sheets/   — Deprecated: Sheets-native precinct claiming
+├── field_quiz/                  — Deprecated: JotForm webhook → Mailchimp
 │
 ├── docs/                        — Jekyll documentation site (GitHub Pages)
 │
 └── package.json                 — clasp dependency for deployment
 ```
 
-## Key Components
+## FieldPlan Analyzer (`fieldplan_analyzer/`)
 
-### FieldPlan Analyzer (`fieldplan_analyzer/`)
+Processes field plan and budget form submissions, analyzes them against programmatic standards, generates BigQuery voter targeting queries, and sends detailed HTML email reports to staff.
 
-Processes field plan and budget form submissions, analyzes them against programmatic standards, and sends detailed HTML email reports to staff.
+### Class Hierarchy
 
-**Class hierarchy:**
 - `FieldPlan` — base class; parses a form row into organization info, contact details, geography, and demographics
 - `FieldProgram` (extends `FieldPlan`) — adds volunteer hours, weekly attempts, and program length calculations
-- `TacticProgram` (extends `FieldProgram`) — config-driven analysis for 7 tactic types (Phone Banking, Door Canvassing, Open Canvassing, Relational Organizing, Voter Registration, Text Banking, Mailers)
-- `FieldBudget` — parses budget submissions; compares outreach vs. non-outreach spending; flags missing data stipends
+- `TacticProgram` (extends `FieldProgram`) — config-driven analysis for 7 tactic types (Phone Banking, Door Canvassing, Open Canvassing, Relational Organizing, Voter Registration, Text Banking, Mailers) with per-tactic APPROVE/REVIEW/NEEDS EDITS/REJECT badges
+- `FieldBudget` — parses budget submissions; compares outreach vs. non-outreach spending; calculates expected outreach range with status flags
 
-**Entry points:**
-- Form submission triggers — process new field plans on submit
+### Entry Points
+
+- `processAllFieldPlans()` — time-based trigger to process new field plan submissions
 - `analyzeBudgets()` — time-based trigger (every 12 hours) to analyze unprocessed budgets
 - `checkForMissingFieldPlans()` — alerts when a budget exists without a matching field plan
+- `buildQueriesForFieldPlan()` — generates BigQuery SQL queries for voter targeting based on field plan geography and demographics
+- `onSpreadsheetEdit()` — reprocess trigger that detects checkbox edits on the REPROCESS column
+- `generateWeeklySummary()` — Monday 9am summary of all field plan activity
 
-**Source files:** `_globals.js`, `_column_mappings.js`, `field_plan_parent_class.js`, `field_program_extension_class.js`, `field_tactics_extension_class.js`, `budget_class.js`, `field_trigger_functions.js`, `budget_trigger_functions.js`, `email_builders.js`, `field_test_functions.js`, `budget_test_functions.js`
+### BigQuery Query Builder
 
-### Field Coordination Browser (`field_coordination_browser/`)
+Generates voter targeting SQL from field plan data:
 
-Web application that lets organizations search and claim precincts through an HTML interface served by Apps Script's HtmlService.
+1. **Resolvers** — resolve VAN IDs, race/age demographics, counties, and precincts from field plan inputs
+2. **SQL Templates** — build exploration, county-targeting, precinct-list, metadata merge, and DWID select queries
+3. **Queue Management** — writes queries to a `query_queue` sheet with pending/run/uploaded status tracking
+4. **Executor** — runs queued queries against BigQuery and tracks results
 
-- **server-side.js** — `onOpen()` adds a custom menu; `onEdit()` watches dropdown selections in the search sheet and calls `claimItemForOrganization()` to update the priorities sheet
-- **index.html / client-side.html** — search form (county, precinct name, precinct number) with dynamic results table
-- **styles.html** — CSS styling
+### Source Files
 
-### Field Coordination Sheets (`field_coordination_sheets/`)
+**Infrastructure:** `_globals.js`, `_column_mappings.js`, `_query_config.js`
 
-A simpler, container-bound version of precinct claiming that runs entirely within a Google Sheet (no separate web UI). Uses `onEdit` triggers to detect dropdown selections and record claims.
+**Data models:** `field_plan_parent_class.js`, `field_program_extension_class.js`, `field_tactics_extension_class.js`, `budget_class.js`
 
-### Field Quiz (`field_quiz/`)
+**Triggers:** `field_trigger_functions.js`, `budget_trigger_functions.js`
 
-Receives JotForm webhook submissions via `doPost()`, matches respondents with organizations based on their interests and zip code, saves results to a Google Sheet, and adds subscribers to Mailchimp via API.
+**Query builder:** `query_builder.js`, `query_resolvers.js`, `query_sql_templates.js`, `query_executor.js`
+
+**Presentation:** `email_builders.js`
+
+**Tests:** `field_test_functions.js`, `budget_test_functions.js`, `query_test_functions.js`
+
+### Deprecated Projects
+
+The following projects are no longer in active development and remain in the repo for reference only:
+
+- **Field Coordination Browser** (`field_coordination_browser/`) — web-based precinct claiming via Apps Script HtmlService
+- **Field Coordination Sheets** (`field_coordination_sheets/`) — Sheets-native precinct claiming using `onEdit` triggers
+- **Field Quiz** (`field_quiz/`) — JotForm webhook → Google Sheets → Mailchimp integration
 
 ## Getting Started
 
@@ -150,11 +153,8 @@ Implementation guides for each analyzer version live in their respective `guides
 
 ## Development
 
-**Branches:**
-- `main` — stable production code
-- `2026dev` — active development for the 2026 cycle
-- `2026prod` — production deployment for 2026
+**Branch:** `main` — all development and production code lives on a single branch.
 
-**Deployment:** Use `clasp push` from the relevant sub-project directory. Each version (2025, 2026) deploys to its own Apps Script project.
+**Deployment:** Use `clasp push` from the `fieldplan_analyzer/` directory. The `.clasp.json` maps it to the Apps Script project.
 
-**Testing:** Each analyzer includes test functions (e.g., `testMostRecentFieldPlan()`) that send output to a test email address instead of production recipients.
+**Testing:** Test functions (e.g., `testMostRecentFieldPlan()`) run in the Apps Script editor with `isTestMode = true`, routing emails to a test address with a `[TEST]` subject prefix. Tests never modify the ANALYZED column.
