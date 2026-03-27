@@ -791,6 +791,6 @@ class SpreadsheetPool {
 
 ## Next Steps
 
-- Explore [Web Deployment](/appsscript/developers/field-coordination-browser/web-deployment) strategies
-- Learn about [Class Structures](/appsscript/developers/fieldplan-analyzer/class-structure) in the analyzer
-- Master [Spreadsheet Mapping](/appsscript/developers/spreadsheet-mapping/configuration) techniques
+- Explore [Web Deployment](./web-deployment) strategies
+- Learn about [Class Structures](../fieldplan-analyzer/class-structure) in the analyzer
+- Master [Spreadsheet Mapping](../spreadsheet-mapping/configuration) techniques

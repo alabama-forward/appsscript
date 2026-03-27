@@ -236,6 +236,6 @@ Cost targets are defined in `TACTIC_CONFIG` in `field_tactics_extension_class.js
 
 ## Next Steps
 
-- Learn about the [Field Coordination Browser](/appsscript/docs/end-users/field-coordination-browser-overview)
-- Read the [FAQ](/appsscript/docs/faq) for common questions
-- Check [Troubleshooting](/appsscript/docs/troubleshooting) for issues
+- Learn about the [Field Coordination Browser](./field-coordination-browser-overview)
+- Read the [FAQ](../faq) for common questions
+- Check [Troubleshooting](../troubleshooting) for issues

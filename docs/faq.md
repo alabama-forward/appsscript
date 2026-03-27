@@ -315,7 +315,7 @@ Regular backups recommended:
 
 If your question isn't answered here:
 
-1. Check the [Troubleshooting Guide](/appsscript/docs/troubleshooting)
+1. Check the [Troubleshooting Guide](./troubleshooting)
 2. Review relevant documentation sections
 3. Contact your system administrator
 4. For developers: Check Google Apps Script documentation

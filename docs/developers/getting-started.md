@@ -360,10 +360,10 @@ class DataModel {
 
 Now that you understand the basics:
 
-1. Explore the [Field Coordination Browser Architecture](/appsscript/developers/field-coordination-browser/architecture)
-2. Learn about [Class-Based Structures](/appsscript/developers/fieldplan-analyzer/class-structure)
-3. Master [Spreadsheet Mapping](/appsscript/developers/spreadsheet-mapping/configuration)
-4. Implement [Timer-Based Automation](/appsscript/developers/fieldplan-analyzer/timers)
+1. Explore the [Field Coordination Browser Architecture](./field-coordination-browser/architecture)
+2. Learn about [Class-Based Structures](./fieldplan-analyzer/class-structure)
+3. Master [Spreadsheet Mapping](./spreadsheet-mapping/configuration)
+4. Implement [Timer-Based Automation](./fieldplan-analyzer/timers)
 
 ## Troubleshooting
 

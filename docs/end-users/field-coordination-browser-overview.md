@@ -201,6 +201,6 @@ The following features are in development but not currently active:
 
 ## Next Steps
 
-- Learn about the [FieldPlan Analyzer](/appsscript/docs/end-users/fieldplan-analyzer-overview)
-- Visit the [FAQ](/appsscript/docs/faq) for common questions
-- Check [Troubleshooting](/appsscript/docs/troubleshooting) if you encounter issues
+- Learn about the [FieldPlan Analyzer](./fieldplan-analyzer-overview)
+- Visit the [FAQ](../faq) for common questions
+- Check [Troubleshooting](../troubleshooting) if you encounter issues

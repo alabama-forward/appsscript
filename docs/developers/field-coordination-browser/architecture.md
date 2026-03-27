@@ -328,6 +328,6 @@ For developers looking to enhance this application:
 
 ## Related Documentation
 
-- Learn about [Spreadsheet as Database](/appsscript/developers/field-coordination-browser/spreadsheet-as-database) patterns
-- Explore [Web Deployment](/appsscript/developers/field-coordination-browser/web-deployment) strategies
-- Review [Spreadsheet Mapping](/appsscript/developers/spreadsheet-mapping/configuration) techniques
+- Learn about [Spreadsheet as Database](./spreadsheet-as-database) patterns
+- Explore [Web Deployment](./web-deployment) strategies
+- Review [Spreadsheet Mapping](../spreadsheet-mapping/configuration) techniques

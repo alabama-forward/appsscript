@@ -187,4 +187,4 @@ function createTimeTrigger() {
 
 ## Ready to Build?
 
-Start with our [Getting Started Guide](/appsscript/developers/getting-started) to set up your development environment and begin building your own Apps Script solutions.
+Start with our [Getting Started Guide](./getting-started) to set up your development environment and begin building your own Apps Script solutions.

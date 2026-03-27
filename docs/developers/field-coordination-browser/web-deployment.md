@@ -846,6 +846,5 @@ function renderEditButton() {
 
 ## Next Steps
 
-- Learn about [Class Structures](/appsscript/developers/fieldplan-analyzer/class-structure) for organized code
-- Explore [Timer Implementation](/appsscript/developers/fieldplan-analyzer/timers) for automation
-- Master [Email Response Generation](/appsscript/developers/fieldplan-analyzer/email-responses)
+- Learn about [Class Structures](../fieldplan-analyzer/class-structure) for organized code
+- Explore [Timer Implementation](../fieldplan-analyzer/timers) for automation
