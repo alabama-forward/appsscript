@@ -15,6 +15,7 @@ The FieldPlan Analyzer processes field planning and budget submissions from JotF
 
 - [Class Structure](./developers/fieldplan-analyzer/class-structure) — `FieldPlan` → `FieldProgram` → `TacticProgram` hierarchy and `FieldBudget`
 - [Timer Implementation](./developers/fieldplan-analyzer/timers) — triggers, state management, reprocess workflow
+- [Query Builder](./developers/fieldplan-analyzer/query-builder) — BigQuery SQL generation, value resolution, query queue workflow
 - [Spreadsheet Mapping](./developers/spreadsheet-mapping/) — `_column_mappings.js` configuration and usage
 
 ## Reference

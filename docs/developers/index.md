@@ -21,6 +21,7 @@ The FieldPlan Analyzer is a server-side Apps Script project deployed via `clasp 
 ### FieldPlan Analyzer
 - [Class Structure](./fieldplan-analyzer/class-structure) — `FieldPlan` → `FieldProgram` → `TacticProgram` hierarchy, `FieldBudget`, factory methods
 - [Timer Implementation](./fieldplan-analyzer/timers) — trigger setup, `checkForNewRows`, `analyzeBudgets`, state management, reprocess workflow
+- [Query Builder](./fieldplan-analyzer/query-builder) — BigQuery SQL generation, value resolution, query queue workflow
 
 ### Spreadsheet Mapping
 - [Configuration](./spreadsheet-mapping/configuration) — `FIELD_PLAN_COLUMNS`, `BUDGET_COLUMNS`, `PROGRAM_COLUMNS`, update/validation workflow
