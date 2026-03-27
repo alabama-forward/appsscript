@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [1.4.2] - 2026-03-27
+### Changed
+- Deprecate BigQuery execution and isolate setup utility
+
 ## [1.4.1] - 2026-03-27
 ### Fixed
 - Make precinct query generation resilient to county failures by resolving all counties up front and trying each one per precinct
