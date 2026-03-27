@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [1.4.1] - 2026-03-27
+### Fixed
+- Make precinct query generation resilient to county failures by resolving all counties up front and trying each one per precinct
+
 ## [1.4.0] - 2026-03-27
 ### Added
 - SQL WHERE clause builder for fieldplan query templates
