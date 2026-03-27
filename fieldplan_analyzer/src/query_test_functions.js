@@ -714,6 +714,7 @@ function testQueryEmail() {
 }
 
 /**
+ * @deprecated Tests deprecated BigQuery execution in query_executor.js.
  * Tests service account token generation (Phase 2 only).
  * @returns {boolean|null} True if token obtained, false if failed, null if credentials not configured (skipped)
  * @example testServiceAccountToken()
@@ -781,8 +782,7 @@ function runAllQueryBuilderTests() {
     { name: 'Precinct List Merge Query SQL', fn: testBuildPrecinctListQuery },
     { name: 'Exploration Query SQL', fn: testBuildExplorationQuery },
     { name: 'End-to-End (Last Row)', fn: testGenerateQueriesForLastRow },
-    { name: 'Query Email (Test Mode)', fn: testQueryEmail },
-    { name: 'Service Account Token', fn: testServiceAccountToken }
+    { name: 'Query Email (Test Mode)', fn: testQueryEmail }
   ];
 
   const results = testFunctions.map(test => {
