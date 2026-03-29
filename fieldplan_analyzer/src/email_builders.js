@@ -295,10 +295,6 @@ function buildTacticsSection(fieldPlan, tactics, colors) {
 
     // Collect per-tactic flags
     const tacticFlags = [];
-    if (tactic.weeklyVolunteerHours > VOLUNTEER_HOURS_THRESHOLD) {
-      tacticFlags.push('Excessive volunteer hours: ' + tactic.weeklyVolunteerHours + ' hrs/week per volunteer (max recommended: ' + VOLUNTEER_HOURS_THRESHOLD + ')');
-    }
-
     const threshold = tactic.reasonableThreshold;
     if (threshold && tactic.hourlyAttempts > threshold) {
       tacticFlags.push('Excessive attempts/hour: ' + tactic.hourlyAttempts + ' (max reasonable: ' + threshold + ')');
@@ -367,7 +363,7 @@ function buildTacticsSection(fieldPlan, tactics, colors) {
     if (tactic.weeklyVolunteerHours > VOLUNTEER_HOURS_THRESHOLD) {
       html += '<div style="background-color:#FFF8E1;border-left:4px solid ' + colors.warning + ';padding:8px 12px;margin-bottom:10px;border-radius:4px;">' +
         '<p style="margin:0;font-size:13px;font-weight:bold;color:' + colors.warning + ';">' +
-        '\u26A0 These projections are based on ' + tactic.weeklyVolunteerHours + ' volunteer hours/week, which exceeds the ' + VOLUNTEER_HOURS_THRESHOLD + ' hr/week threshold. Actual results may differ significantly.</p></div>';
+        '\u26A0 These projections are based on ' + tactic.weeklyVolunteerHours + ' volunteer hours/week, which seems high. Double-check that this is the intended per-volunteer commitment.</p></div>';
     }
 
     html += '<p style="margin:0 0 4px 0;font-size:14px;"><strong>Weekly Attempts:</strong> ' + tactic.weeklyAttempts().toLocaleString() + '</p>' +
@@ -458,14 +454,13 @@ function buildActionItemsSection(fieldPlan, tactics, colors) {
 
   // 1. Approval recommendation and follow-up — always first
   if (hasBlockingTacticIssues || hasHighPriorityFlags) {
-    actions.push({ priority: 'high', title: 'Significant Concerns', description: 'This field plan has issues that should be resolved before approval. Review the flagged items below and follow up with the organization.' });
+    actions.push({ priority: 'high', title: 'Significant Concerns — Follow Up', description: 'This field plan has issues that should be resolved before approval. Review the flagged items below and schedule a check-in call to follow up with the organization.' });
   } else if (hasMediumPriorityFlags) {
-    actions.push({ priority: 'medium', title: 'Some Concerns', description: 'This field plan has items that warrant review. Verify the flagged items below before approving.' });
+    actions.push({ priority: 'medium', title: 'Some Concerns — Follow Up', description: 'This field plan has items that warrant review. Verify the flagged items below and schedule a check-in call before approving.' });
   } else {
     actions.push({ priority: 'low', title: 'Review and Approve', description: 'Review field plan details and approve or request revisions.' });
+    actions.push({ priority: 'low', title: 'Follow Up', description: 'Schedule a check-in call to discuss the field plan.' });
   }
-
-  actions.push({ priority: hasAnyFlags ? 'high' : 'low', title: 'Follow Up', description: 'Schedule a check-in call to discuss the field plan.' });
 
   // 2. Tactic goal issues — these block approval
   if (tactics && tactics.noTacticsAtAll) {
@@ -480,7 +475,8 @@ function buildActionItemsSection(fieldPlan, tactics, colors) {
     weeks_vs_days: 'Program Weeks Coverage',
     identical_inputs: 'Identical Tactic Inputs',
     similar_inputs: 'Near-Identical Tactic Inputs',
-    volunteer_hours: 'Volunteer Hours Concern'
+    volunteer_hours: 'Volunteer Hours Concern',
+    attempts_per_hour: 'Attempts Per Hour Concern'
   };
 
   const groupedFlags = analysis.flags.reduce(function(groups, flag) {
