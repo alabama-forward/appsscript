@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [1.4.3] - 2026-03-29
+### Changed
+- Clean up action items: merge "Follow Up" into concern cards when flags are present, keep standalone only for clean plans
+- Remove duplicate volunteer hours flag from tactic sections; keep only the yellow projection warning
+- Soften projection warning language to omit threshold number and prompt a double-check instead
+- Add missing attempts_per_hour entry to flag group titles for proper action item headers
+
 ## [1.4.2] - 2026-03-27
 ### Changed
 - Deprecate BigQuery execution and isolate setup utility
