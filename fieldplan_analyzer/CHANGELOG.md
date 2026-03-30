@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [1.4.4] - 2026-03-30
+### Fixed
+- Correct confidence score scale from /10 to /9 and rescale all coaching thresholds proportionally
+
 ## [1.4.3] - 2026-03-29
 ### Changed
 - Clean up action items: merge "Follow Up" into concern cards when flags are present, keep standalone only for clean plans
