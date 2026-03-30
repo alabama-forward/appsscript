@@ -228,10 +228,10 @@ class FieldPlan {
      * reasonable expectations, data/technology, plan quality, staff capacity, 
      * tactic skills, and goal attainment.
      * 
-     * Scoring thresholds:
-     *    - Average <= 5: High coaching need, reach out
-     *    - Average: 6-8: Medium need, offer coaching
-     *    - Average: > 8: Low, no coaching needed
+     * Scoring thresholds (scores are 0–9):
+     *    - Average <= 4: High coaching need, reach out
+     *    - Average: 5-7: Medium need, offer coaching
+     *    - Average: > 7: Low, no coaching needed
      * 
      * Also highlights specific low-scoring areas for targeted coaching
      * 
@@ -258,17 +258,17 @@ class FieldPlan {
         .reduce((sum, [_, val]) => sum + Number(val), 0) / validScores.length;
       
       const lowAreas = validScores
-        .filter(([_, val]) => Number(val) <=5)
+        .filter(([_, val]) => Number(val) <= 4)
         .map(([area, _]) => area);
-      
+
       let message = '';
 
-      if (avgConfidence <= 5) {
-        message = `${this._memberOrgName} had an average confidence score of ${avgConfidence.toFixed(1)}/10. Reach out to them to confirm what coaching they will need.`;
-      } else if (avgConfidence <= 8) {
-        message = `${this._memberOrgName} had an average confidence score of ${avgConfidence.toFixed(1)}/10. Reach out to them to ask if they would like some coaching on their field plan.`;
+      if (avgConfidence <= 4) {
+        message = `${this._memberOrgName} had an average confidence score of ${avgConfidence.toFixed(1)}/9. Reach out to them to confirm what coaching they will need.`;
+      } else if (avgConfidence <= 7) {
+        message = `${this._memberOrgName} had an average confidence score of ${avgConfidence.toFixed(1)}/9. Reach out to them to ask if they would like some coaching on their field plan.`;
       } else {
-        message = `${this._memberOrgName} had an average confidence score of ${avgConfidence.toFixed(1)}/10. They did not request coaching on their field plan.`;
+        message = `${this._memberOrgName} had an average confidence score of ${avgConfidence.toFixed(1)}/9. They did not request coaching on their field plan.`;
       }
 
       if (lowAreas.length > 0) {

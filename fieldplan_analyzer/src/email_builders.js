@@ -408,7 +408,7 @@ function buildConfidenceSection(fieldPlan, colors) {
   const avgScore = validScores.length > 0
     ? (validScores.reduce(function(sum, s) { return sum + Number(s.value); }, 0) / validScores.length).toFixed(1)
     : 0;
-  const needsCoaching = avgScore < 6;
+  const needsCoaching = avgScore < 5;
   const coachingColor = needsCoaching ? colors.danger : colors.success;
 
   let html = '<tr><td style="padding:0 30px 25px 30px;">' +
@@ -420,12 +420,12 @@ function buildConfidenceSection(fieldPlan, colors) {
   // Progress bars for each score
   for (let i = 0; i < scores.length; i++) {
     const score = Number(scores[i].value) || 0;
-    const pct = (score / 10) * 100;
-    const barColor = score >= 8 ? colors.success : score >= 6 ? colors.warning : colors.danger;
+    const pct = (score / 9) * 100;
+    const barColor = score >= 7 ? colors.success : score >= 5 ? colors.warning : colors.danger;
 
     html += '<table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin-bottom:12px;">' +
       '<tr><td style="font-size:13px;font-weight:bold;color:' + colors.text + ';padding-bottom:4px;">' + scores[i].label + '</td>' +
-      '<td style="font-size:13px;font-weight:bold;color:' + barColor + ';text-align:right;padding-bottom:4px;">' + score + '/10</td></tr>' +
+      '<td style="font-size:13px;font-weight:bold;color:' + barColor + ';text-align:right;padding-bottom:4px;">' + score + '/9</td></tr>' +
       '<tr><td colspan="2">' +
       '<table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%"><tr>' +
       '<td style="width:' + pct + '%;height:8px;background-color:' + barColor + ';border-radius:4px 0 0 4px;"></td>' +
@@ -436,7 +436,7 @@ function buildConfidenceSection(fieldPlan, colors) {
   // Average score display
   html += '<div style="text-align:center;margin-top:15px;padding:18px;">' +
     '<p style="margin:0 0 5px 0;font-size:12px;color:' + colors.textLight + ';text-transform:uppercase;font-weight:bold;">Average Confidence Score</p>' +
-    '<p style="margin:0;font-size:36px;font-weight:bold;color:' + coachingColor + ';">' + avgScore + '/10</p></div>' +
+    '<p style="margin:0;font-size:36px;font-weight:bold;color:' + coachingColor + ';">' + avgScore + '/9</p></div>' +
     '</td></tr>';
   return html;
 }
@@ -512,7 +512,7 @@ function buildActionItemsSection(fieldPlan, tactics, colors) {
     .filter(function(s) { return s && !isNaN(s); });
   if (confScores.length > 0) {
     const avg = confScores.reduce(function(a, b) { return a + Number(b); }, 0) / confScores.length;
-    if (avg < 6) actions.push({ priority: 'high', title: 'Provide Coaching', description: 'Low confidence scores (avg ' + avg.toFixed(1) + '/10) indicate coaching need.' });
+    if (avg < 5) actions.push({ priority: 'high', title: 'Provide Coaching', description: 'Low confidence scores (avg ' + avg.toFixed(1) + '/9) indicate coaching need.' });
   }
 
   if (fieldPlan.runningForOffice && fieldPlan.runningForOffice.toString().toLowerCase().indexOf('yes') !== -1) {
@@ -1316,8 +1316,8 @@ function generateWeeklySummary(isTestMode = false) {
         : null;
 
       if (confidence) {
-        if (confidence <= 5) coachingNeeds.high++;
-        else if (confidence <= 8) coachingNeeds.medium++;
+        if (confidence <= 4) coachingNeeds.high++;
+        else if (confidence <= 7) coachingNeeds.medium++;
         else coachingNeeds.low++;
       }
     }
