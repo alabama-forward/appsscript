@@ -41,6 +41,11 @@ const TACTIC_CONFIG = {
     costTarget: 0.40,      // $0.40 per attempt
     costStdDev: 0.10       // ±$0.10 acceptable range ($0.30 - $0.50)
   },
+  // RELATIONAL and REGISTRATION were removed from the JotForm and spreadsheet
+  // in April 2026. To re-enable either tactic:
+  //   1. Add matching columns to the JotForm and spreadsheet
+  //   2. Add a RELATIONAL/REGISTRATION entry to PROGRAM_COLUMNS in _column_mappings.js
+  //   3. Set enabled: true below
   RELATIONAL: {
     enabled: false,
     name: 'Relational Organizing',
