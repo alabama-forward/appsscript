@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [1.4.6] - 2026-04-01
+### Changed
+- Renumber column mappings for removed RELATIONAL/REGISTRATION tactic columns (2026-Apr form version)
+- Derive tactic counts and gap analysis from TACTIC_CONFIG.enabled instead of hardcoding tactic keys
+
 ## [1.4.5] - 2026-04-01
 ### Changed
 - Add enabled kill switch to TACTIC_CONFIG entries for toggling individual tactics
