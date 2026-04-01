@@ -69,7 +69,7 @@ const TACTIC_CONFIG = {
     name: 'Text Banking',
     columnKey: 'TEXT',
     contactRange: [0.05, 0.10],
-    reasonableThreshold: 100,
+    reasonableThreshold: 1000,
     costTarget: 0.02,      // $0.02 per attempt
     costStdDev: 0.01       // ±$0.01 acceptable range ($0.01 - $0.03)
   },
