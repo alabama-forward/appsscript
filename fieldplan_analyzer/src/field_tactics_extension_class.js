@@ -15,6 +15,7 @@
 
 const TACTIC_CONFIG = {
   PHONE: {
+    enabled: true,
     name: 'Phone Banking',
     columnKey: 'PHONE',
     contactRange: [0.05, 0.10],
@@ -23,6 +24,7 @@ const TACTIC_CONFIG = {
     costStdDev: 0.15       //+-$0.15 acceptable range ($0.15 - $0.81)
   },
   DOOR: {
+    enabled: true,
     name: 'Door to Door Canvassing',
     columnKey: 'DOOR',
     contactRange: [0.05, 0.10],
@@ -31,6 +33,7 @@ const TACTIC_CONFIG = {
     costStdDev: 0.20       // ±$0.20 acceptable range ($0.80 - $1.20)
   },
   OPEN: {
+    enabled: true,
     name: 'Open Canvassing / Tabling',
     columnKey: 'OPEN',
     contactRange: [0.10, 0.15],
@@ -39,6 +42,7 @@ const TACTIC_CONFIG = {
     costStdDev: 0.10       // ±$0.10 acceptable range ($0.30 - $0.50)
   },
   RELATIONAL: {
+    enabled: false,
     name: 'Relational Organizing',
     columnKey: 'RELATIONAL',
     contactRange: [0.20, 0.30],
@@ -47,6 +51,7 @@ const TACTIC_CONFIG = {
     costStdDev: 0.15       // ±$0.15 acceptable range
   },
   REGISTRATION: {
+    enabled: false,
     name: 'Voter Registration',
     columnKey: 'REGISTRATION',
     contactRange: [0.15, 0.25],
@@ -55,6 +60,7 @@ const TACTIC_CONFIG = {
     costStdDev: 0.20       // ±$0.20 acceptable range
   },
   TEXT: {
+    enabled: true,
     name: 'Text Banking',
     columnKey: 'TEXT',
     contactRange: [0.05, 0.10],
@@ -63,6 +69,7 @@ const TACTIC_CONFIG = {
     costStdDev: 0.01       // ±$0.01 acceptable range ($0.01 - $0.03)
   },
   MAIL: {
+    enabled: true,
     name: 'Mailers',
     columnKey: 'MAIL',
     contactRange: [1.0, 1.0],  // 100% delivery expected

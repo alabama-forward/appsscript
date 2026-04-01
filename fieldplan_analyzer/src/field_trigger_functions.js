@@ -33,6 +33,7 @@ function getTacticInstances(rowData) {
   let anyDataFound = false;
 
   for (const [tacticKey, config] of Object.entries(TACTIC_CONFIG)) {
+    if (!config.enabled) continue;
     try {
       const columns = PROGRAM_COLUMNS[config.columnKey];
       if (!columns) {
