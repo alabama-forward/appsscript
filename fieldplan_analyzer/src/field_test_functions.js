@@ -543,7 +543,7 @@ function setupReprocessColumns() {
   const fpLastRow = fieldPlanSheet.getLastRow();
 
   // Set header
-  fieldPlanSheet.getRange(1, fpCol).setValue('Reprocess');
+  fieldPlanSheet.getRange(1, fpCol).setValue('Reprocess Plan');
 
   // Add checkbox validation to all data rows
   if (fpLastRow > 1) {
@@ -564,7 +564,7 @@ function setupReprocessColumns() {
   const budgetLastRow = budgetSheet.getLastRow();
 
   // Set header
-  budgetSheet.getRange(1, budgetCol).setValue('Reprocess');
+  budgetSheet.getRange(1, budgetCol).setValue('Reprocess Budget');
 
   // Add checkbox validation to all data rows
   if (budgetLastRow > 1) {
