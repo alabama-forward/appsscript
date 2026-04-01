@@ -1155,15 +1155,9 @@ function generateWeeklySummary(isTestMode = false) {
   let fieldPlansMissingBudgets = 0;
   const fieldPlansMissingBudgetsList = [];
   const countyData = {};
-  const tacticCounts = {
-    DOOR: 0,
-    PHONE: 0,
-    TEXT: 0,
-    OPEN: 0,
-    RELATIONAL: 0,
-    REGISTRATION: 0,
-    MAIL: 0
-  };
+  const tacticCounts = Object.keys(TACTIC_CONFIG)
+    .filter(key => TACTIC_CONFIG[key].enabled)
+    .reduce((counts, key) => ({ ...counts, [key]: 0 }), {});
   const coachingNeeds = {
     high: 0,    // 1-5
     medium: 0,  // 6-8
@@ -1293,13 +1287,11 @@ function generateWeeklySummary(isTestMode = false) {
 
       // Count tactics (checking which tactic columns have data)
       const rowData = fieldPlanData[i];
-      if (rowData[PROGRAM_COLUMNS.DOOR.PROGRAMLENGTH]) tacticCounts.DOOR++;
-      if (rowData[PROGRAM_COLUMNS.PHONE.PROGRAMLENGTH]) tacticCounts.PHONE++;
-      if (rowData[PROGRAM_COLUMNS.TEXT.PROGRAMLENGTH]) tacticCounts.TEXT++;
-      if (rowData[PROGRAM_COLUMNS.OPEN.PROGRAMLENGTH]) tacticCounts.OPEN++;
-      if (rowData[PROGRAM_COLUMNS.RELATIONAL.PROGRAMLENGTH]) tacticCounts.RELATIONAL++;
-      if (rowData[PROGRAM_COLUMNS.REGISTRATION.PROGRAMLENGTH]) tacticCounts.REGISTRATION++;
-      if (rowData[PROGRAM_COLUMNS.MAIL.PROGRAMLENGTH]) tacticCounts.MAIL++;
+      Object.keys(tacticCounts).forEach(key => {
+        if (PROGRAM_COLUMNS[key] && rowData[PROGRAM_COLUMNS[key].PROGRAMLENGTH]) {
+          tacticCounts[key]++;
+        }
+      });
 
       // Count coaching needs
       const confScores = [

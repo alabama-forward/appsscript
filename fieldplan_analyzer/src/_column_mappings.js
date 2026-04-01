@@ -6,9 +6,9 @@
  * 
  * IMPORTANT: When the spreadsheet structure changes, only update this file
  * 
- * Last Updated: 2025-12-26
- * Form Version: 2026-Jan
- * Total columns: 75 (Columns 0-75)
+ * Last Updated: 2026-04-01
+ * Form Version: 2026-Apr
+ * Total columns: 68 (Columns 0-67)
  */
 
 //===============================
@@ -61,19 +61,19 @@ const FIELD_PLAN_COLUMNS = {
     UNDERSTANDSDISBURSEMENT: 35,
     UNDERSTANDSTRAINING: 36,
     //Confidence & self-assessment NEW to 2026
-    CONFIDENCEREASONABLE: 65,
-    CONFIDENCEDATA: 66,
-    CONFIDENCEPLAN: 67,
-    CONFIDENCECAPACITY: 68,
-    CONFIDENCESKILLS: 69,
-    CONFIDENCEGOALS: 70,
+    CONFIDENCEREASONABLE: 57,
+    CONFIDENCEDATA: 58,
+    CONFIDENCEPLAN: 59,
+    CONFIDENCECAPACITY: 60,
+    CONFIDENCESKILLS: 61,
+    CONFIDENCEGOALS: 62,
     //Submission metadata
-    SUBMISSIONURL: 71,
-    SUBMISSIONID: 72,
+    SUBMISSIONURL: 63,
+    SUBMISSIONID: 64,
     //Query builder summary column (written by writeToFieldPlanSheet)
-    QUERY_BUILDER_STATUS: 73,
-    REPROCESS: 74,
-    REPROCESS_QUERIES: 75
+    QUERY_BUILDER_STATUS: 65,
+    REPROCESS: 66,
+    REPROCESS_QUERIES: 67
 }
 
 //===============================
@@ -166,29 +166,17 @@ const PROGRAM_COLUMNS = {
         WEEKLYHOURS: 47,
         HOURLYATTEMPTS: 48
     },
-    RELATIONAL: {
+    TEXT: {
         PROGRAMLENGTH: 49,
         WEEKLYVOLUNTEERS: 50,
         WEEKLYHOURS: 51,
         HOURLYATTEMPTS: 52
     },
-    REGISTRATION: {
+    MAIL: {
         PROGRAMLENGTH: 53,
         WEEKLYVOLUNTEERS: 54,
         WEEKLYHOURS: 55,
         HOURLYATTEMPTS: 56
-    },
-    TEXT: {
-        PROGRAMLENGTH: 57,
-        WEEKLYVOLUNTEERS: 58,
-        WEEKLYHOURS: 59,
-        HOURLYATTEMPTS: 60
-    },
-    MAIL: {
-        PROGRAMLENGTH: 61,
-        WEEKLYVOLUNTEERS: 62,
-        WEEKLYHOURS: 63,
-        HOURLYATTEMPTS: 64
     }
 }
 

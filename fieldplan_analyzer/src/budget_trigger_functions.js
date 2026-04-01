@@ -266,12 +266,12 @@ function analyzeTactic(budget, tactic) {
 }
 
 /**
- * Analyzes budget gaps across all 7 tactic categories from TACTIC_CONFIG.
+ * Analyzes budget gaps across enabled tactic categories from TACTIC_CONFIG.
  *
  * Maps each tactic category to its corresponding budget field prefix.
  * Some categories share budget columns because the budget spreadsheet
  * does not have dedicated line items for every tactic type:
- *    - canvass, open, registration, relational -> 'canvass' budget prefix
+ *    - canvass, open -> 'canvass' budget prefix
  *    - phone -> 'phone' budget prefix
  *    - text -> 'text' budget prefix
  *    - mail -> 'postage' budget prefix
@@ -281,9 +281,13 @@ function analyzeTactic(budget, tactic) {
  * @returns {Array<Object>} Array of gap analysis results per category
  */
 function analyzeGaps(budget, tactics) {
+  const enabledTactics = Object.keys(TACTIC_CONFIG).filter(key => TACTIC_CONFIG[key].enabled);
   const seen = new Set();
   const categoryMappings = []
-  Object.values(TACTIC_BUDGET_MAP).forEach(({ category, budgetPrefix }) => {
+  enabledTactics.forEach(key => {
+    const mapping = TACTIC_BUDGET_MAP[key];
+    if (!mapping) return;
+    const { category, budgetPrefix } = mapping;
     if (!seen.has(category)) {
       seen.add(category);
       categoryMappings.push({ category, budgetPrefix });
