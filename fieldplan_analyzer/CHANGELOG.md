@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [1.4.5] - 2026-04-01
+### Changed
+- Add enabled kill switch to TACTIC_CONFIG entries for toggling individual tactics
+- Disable RELATIONAL and REGISTRATION tactics (removed from JotForm and spreadsheet)
+
 ## [1.4.4] - 2026-03-30
 ### Fixed
 - Correct confidence score scale from /10 to /9 and rescale all coaching thresholds proportionally
