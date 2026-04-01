@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [1.4.7] - 2026-04-01
+### Changed
+- Document re-enablement steps for disabled RELATIONAL/REGISTRATION tactics
+
+### Fixed
+- Correct TEXT reasonableThreshold from 100 to 1000
+
 ## [1.4.6] - 2026-04-01
 ### Changed
 - Renumber column mappings for removed RELATIONAL/REGISTRATION tactic columns (2026-Apr form version)
