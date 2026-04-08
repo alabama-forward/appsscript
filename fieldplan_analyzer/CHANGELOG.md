@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [1.4.8] - 2026-04-08
+### Changed
+- Rename reprocess column headers for clarity
+
+### Fixed
+- Use consistent "recommended max" label in volunteer hours flags
+
 ## [1.4.7] - 2026-04-01
 ### Changed
 - Document re-enablement steps for disabled RELATIONAL/REGISTRATION tactics
