@@ -285,7 +285,7 @@ function analyzeTacticFlags(fieldPlan, tactics) {
         type: 'volunteer_hours',
         title: `Confirm — ${tactic.tacticName}: Excessive Volunteer Hours`,
         description: `${tactic.tacticName} expects each volunteer to work ${tactic.weeklyVolunteerHours} hours/week ` +
-          `(threshold: ${VOLUNTEER_HOURS_THRESHOLD}). This may indicate the org entered total hours instead of per-volunteer hours.`,
+          `(recommended max: ${VOLUNTEER_HOURS_THRESHOLD}). This may indicate the org entered total hours instead of per-volunteer hours.`,
         tacticName: tactic.tacticName,
         hoursPerVolunteer: tactic.weeklyVolunteerHours
       });
