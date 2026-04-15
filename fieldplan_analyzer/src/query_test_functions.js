@@ -169,11 +169,11 @@ function testResolveCountyName() {
 }
 
 /**
- * Tests precinct code resolution and 5-digit zero-padding.
+ * Tests precinct code resolution: numeric padding, non-precinct rejection, and name matching.
  * @returns {boolean} True if all precinct code tests pass
  * @example testResolvePrecinctCode()
- *   // => true (logs PASS for each padding scenario)
- * @example testResolvePrecinctCode() // bad padding
+ *   // => true (logs PASS for each scenario)
+ * @example testResolvePrecinctCode() // bad matching
  *   // => false
  */
 function testResolvePrecinctCode() {
@@ -181,10 +181,9 @@ function testResolvePrecinctCode() {
   let passed = true;
 
   try {
-    // resolvePrecinctCode(fieldPlanPrecinct, countyName) returns
-    // { valid, precinctCode, rawValue, matchType }
-    // precinctCode is zero-padded to 5 digits
-    const testCases = [
+    // --- Numeric padding (Phase 1) ---
+    Logger.log('--- Phase 1: Numeric-only input ---');
+    const paddingCases = [
       { input: '1', expected: '00001' },
       { input: '12', expected: '00012' },
       { input: '182', expected: '00182' },
@@ -193,7 +192,7 @@ function testResolvePrecinctCode() {
       { input: ' 45 ', expected: '00045' }
     ];
 
-    testCases.forEach(tc => {
+    paddingCases.forEach(tc => {
       const result = resolvePrecinctCode(tc.input, 'HOUSTON');
       if (result.precinctCode === tc.expected) {
         Logger.log(`PASS: "${tc.input}" -> "${result.precinctCode}" (matchType: ${result.matchType})`);
@@ -203,7 +202,57 @@ function testResolvePrecinctCode() {
       }
     });
 
-    // Test empty input
+    // --- Non-precinct rejection (Phase 0) ---
+    Logger.log('--- Phase 0: Non-precinct pattern rejection ---');
+    const rejectCases = [
+      'Congressional District 3',
+      'all in district 1',
+      'City Council 5',
+      'Senate District 22',
+      'House District 7'
+    ];
+
+    rejectCases.forEach(input => {
+      const result = resolvePrecinctCode(input, 'HOUSTON');
+      if (!result.valid && result.matchType === 'not_precinct') {
+        Logger.log(`PASS: "${input}" -> matchType: not_precinct`);
+      } else {
+        Logger.log(`FAIL: "${input}" -> valid=${result.valid}, matchType=${result.matchType} (expected not_precinct)`);
+        passed = false;
+      }
+    });
+
+    // --- Name-based matching (Phase 2) ---
+    Logger.log('--- Phase 2: Name-based matching ---');
+    // Build a mock name map for testing
+    const mockNameMap = new Map([
+      ['HOUSTON|00241', 'DOTHAN CIVIC CENTER 241'],
+      ['HOUSTON|00352', 'WESTGATE PARK 352'],
+      ['HOUSTON|00182', 'ASHFORD COMMUNITY CENTER']
+    ]);
+    // Build a mock precinct map so codes validate
+    const mockPrecinctMap = new Map([
+      ['HOUSTON', ['00241', '00352', '00182']]
+    ]);
+
+    const nameCases = [
+      { input: 'DOTHAN CIVIC CENTER 241', expectedCode: '00241', expectedType: 'name_match' },
+      { input: 'WESTGATE PARK 352', expectedCode: '00352', expectedType: 'name_match' },
+      { input: 'ASHFORD COMMUNITY CENTER', expectedCode: '00182', expectedType: 'name_match' }
+    ];
+
+    nameCases.forEach(tc => {
+      const result = resolvePrecinctCode(tc.input, 'HOUSTON', mockPrecinctMap, mockNameMap);
+      if (result.valid && result.precinctCode === tc.expectedCode && result.matchType === tc.expectedType) {
+        Logger.log(`PASS: "${tc.input}" -> "${result.precinctCode}" (matchType: ${result.matchType})`);
+      } else {
+        Logger.log(`FAIL: "${tc.input}" -> code="${result.precinctCode}", matchType=${result.matchType} (expected "${tc.expectedCode}", "${tc.expectedType}")`);
+        passed = false;
+      }
+    });
+
+    // --- Empty input ---
+    Logger.log('--- Empty input ---');
     const emptyResult = resolvePrecinctCode('', 'HOUSTON');
     if (!emptyResult.valid) {
       Logger.log('PASS: Empty input returns valid=false');

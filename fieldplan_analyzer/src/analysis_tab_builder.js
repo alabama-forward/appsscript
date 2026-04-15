@@ -201,6 +201,7 @@ function buildOrgPlansTab(fieldPlanData, vanEntries) {
         'field_tactics', 'teach_comfortable', 'field_staff',
         'narrative_raw', 'narrative_keywords', 'demo_notes_raw', 'demo_notes_keywords',
         'knows_precincts', 'special_geo', 'running_for_office', 'reviewed_plan',
+        'demo_confidence',
         'confidence_reasonable', 'confidence_data', 'confidence_plan',
         'confidence_capacity', 'confidence_skills', 'confidence_goals'
     ];
@@ -243,6 +244,7 @@ function buildOrgPlansTab(fieldPlanData, vanEntries) {
                 normalizeMultiSelect(row[FIELD_PLAN_COLUMNS.SPECIALGEO]).join(' | '),
                 row[FIELD_PLAN_COLUMNS.RUNNINGFOROFFICE] || '',
                 row[FIELD_PLAN_COLUMNS.REVIEWEDPLAN] || '',
+                row[FIELD_PLAN_COLUMNS.DEMOCONFIDENCE] || '',
                 row[FIELD_PLAN_COLUMNS.CONFIDENCEREASONABLE] || '',
                 row[FIELD_PLAN_COLUMNS.CONFIDENCEDATA] || '',
                 row[FIELD_PLAN_COLUMNS.CONFIDENCEPLAN] || '',
@@ -370,14 +372,14 @@ function buildOrgCountiesTab(fieldPlanData, fipsMap, precinctsByCounty, precinct
                 let bestMatch = null;
 
                 for (const { name: countyName } of resolvedCounties) {
-                    const result = resolvePrecinctCode(rawP, countyName, precinctsByCounty);
+                    const result = resolvePrecinctCode(rawP, countyName, precinctsByCounty, precinctNameMap);
 
-                    // Exact match wins immediately
-                    if (result.valid && result.matchType === 'exact') {
+                    // Exact or name match wins immediately
+                    if (result.valid && (result.matchType === 'exact' || result.matchType === 'name_match')) {
                         bestMatch = { countyName, ...result };
                         break;
                     }
-                    // Fuzzy or unvalidated — keep as fallback if no exact match yet
+                    // Fuzzy or unvalidated — keep as fallback if no exact/name match yet
                     if (result.valid && result.matchType !== 'not_found' && !bestMatch) {
                         bestMatch = { countyName, ...result };
                     }
@@ -429,7 +431,7 @@ function buildOrgCountiesTab(fieldPlanData, fipsMap, precinctsByCounty, precinct
  * @returns {{headers: string[], rows: Array[]}}
  */
 function buildOrgDemographicsTab(fieldPlanData) {
-    const headers = ['org_name', 'demo_category', 'demo_value', 'demo_confidence'];
+    const headers = ['org_name', 'demo_category', 'demo_value'];
 
     const demoFields = [
         { category: 'race', column: FIELD_PLAN_COLUMNS.DEMORACE },
@@ -444,11 +446,9 @@ function buildOrgDemographicsTab(fieldPlanData) {
         const orgName = (row[FIELD_PLAN_COLUMNS.MEMBERNAME] || '').toString().trim();
         if (!orgName) return;
 
-        const confidence = row[FIELD_PLAN_COLUMNS.DEMOCONFIDENCE] || '';
-
         demoFields.forEach(({ category, column }) => {
             normalizeMultiSelect(row[column]).forEach(value => {
-                rows.push([orgName, category, value, confidence]);
+                rows.push([orgName, category, value]);
             });
         });
     });
