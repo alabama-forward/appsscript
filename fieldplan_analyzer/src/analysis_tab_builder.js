@@ -164,7 +164,6 @@ function loadCountyPrecinctData() {
     const precinctNames = new Map();
 
     // county_precinct layout: [countyFips, countyName, precinctCode, precinctName?, ...]
-    // Verify column positions match your sheet — see Part 1, Step 1.2
     data.slice(1).forEach(row => {
         const fips = (row[0] || '').toString().trim();
         const county = (row[1] || '').toString().trim().toUpperCase();
@@ -206,52 +205,50 @@ function buildOrgPlansTab(fieldPlanData, vanEntries) {
         'confidence_capacity', 'confidence_skills', 'confidence_goals'
     ];
 
-    const C = FIELD_PLAN_COLUMNS;
-
     const rows = fieldPlanData.slice(1)
-        .filter(row => row[C.MEMBERNAME])
+        .filter(row => row[FIELD_PLAN_COLUMNS.MEMBERNAME])
         .map(row => {
-            const orgName = row[C.MEMBERNAME].toString().trim();
+            const orgName = row[FIELD_PLAN_COLUMNS.MEMBERNAME].toString().trim();
             const van = resolveVanId(orgName, vanEntries);
-            const dates = parseProgramDates(row[C.PROGRAMDATES]);
-            const narrative = (row[C.FIELDNARRATIVE] || '').toString();
-            const demoNotes = (row[C.DEMONOTES] || '').toString();
+            const dates = parseProgramDates(row[FIELD_PLAN_COLUMNS.PROGRAMDATES]);
+            const narrative = (row[FIELD_PLAN_COLUMNS.FIELDNARRATIVE] || '').toString();
+            const demoNotes = (row[FIELD_PLAN_COLUMNS.DEMONOTES] || '').toString();
 
             return [
                 orgName,
-                row[C.SUBMISSIONID] || '',
-                row[C.SUBMISSIONDATETIME] || '',
+                row[FIELD_PLAN_COLUMNS.SUBMISSIONID] || '',
+                row[FIELD_PLAN_COLUMNS.SUBMISSIONDATETIME] || '',
                 van.committeeId || '',
                 van.matchType === 'none' ? '' : van.matchType,
-                row[C.FIRSTNAME] || '',
-                row[C.LASTNAME] || '',
-                row[C.CONTACTEMAIL] || '',
-                row[C.CONTACTPHONE] || '',
-                row[C.ATTENDEDTRAINING] || '',
-                normalizeMultiSelect(row[C.DATASTORAGE]).join(' | '),
-                normalizeMultiSelect(row[C.VANCOMMITTEE]).join(' | '),
-                normalizeMultiSelect(row[C.PROGRAMTOOLS]).join(' | '),
+                row[FIELD_PLAN_COLUMNS.FIRSTNAME] || '',
+                row[FIELD_PLAN_COLUMNS.LASTNAME] || '',
+                row[FIELD_PLAN_COLUMNS.CONTACTEMAIL] || '',
+                row[FIELD_PLAN_COLUMNS.CONTACTPHONE] || '',
+                row[FIELD_PLAN_COLUMNS.ATTENDEDTRAINING] || '',
+                normalizeMultiSelect(row[FIELD_PLAN_COLUMNS.DATASTORAGE]).join(' | '),
+                normalizeMultiSelect(row[FIELD_PLAN_COLUMNS.VANCOMMITTEE]).join(' | '),
+                normalizeMultiSelect(row[FIELD_PLAN_COLUMNS.PROGRAMTOOLS]).join(' | '),
                 dates.startDate,
                 dates.endDate,
                 dates.days,
-                normalizeMultiSelect(row[C.PROGRAMTYPES]).join(' | '),
-                normalizeMultiSelect(row[C.FIELDTACTICS]).join(' | '),
-                normalizeMultiSelect(row[C.TEACHCOMFORTABLE]).join(' | '),
-                normalizeMultiSelect(row[C.FIELDSTAFF]).join(' | '),
+                normalizeMultiSelect(row[FIELD_PLAN_COLUMNS.PROGRAMTYPES]).join(' | '),
+                normalizeMultiSelect(row[FIELD_PLAN_COLUMNS.FIELDTACTICS]).join(' | '),
+                normalizeMultiSelect(row[FIELD_PLAN_COLUMNS.TEACHCOMFORTABLE]).join(' | '),
+                normalizeMultiSelect(row[FIELD_PLAN_COLUMNS.FIELDSTAFF]).join(' | '),
                 narrative,
                 extractKeywords(narrative),
                 demoNotes,
                 extractKeywords(demoNotes),
-                row[C.KNOWSPRECINCTS] || '',
-                normalizeMultiSelect(row[C.SPECIALGEO]).join(' | '),
-                row[C.RUNNINGFOROFFICE] || '',
-                row[C.REVIEWEDPLAN] || '',
-                row[C.CONFIDENCEREASONABLE] || '',
-                row[C.CONFIDENCEDATA] || '',
-                row[C.CONFIDENCEPLAN] || '',
-                row[C.CONFIDENCECAPACITY] || '',
-                row[C.CONFIDENCESKILLS] || '',
-                row[C.CONFIDENCEGOALS] || ''
+                row[FIELD_PLAN_COLUMNS.KNOWSPRECINCTS] || '',
+                normalizeMultiSelect(row[FIELD_PLAN_COLUMNS.SPECIALGEO]).join(' | '),
+                row[FIELD_PLAN_COLUMNS.RUNNINGFOROFFICE] || '',
+                row[FIELD_PLAN_COLUMNS.REVIEWEDPLAN] || '',
+                row[FIELD_PLAN_COLUMNS.CONFIDENCEREASONABLE] || '',
+                row[FIELD_PLAN_COLUMNS.CONFIDENCEDATA] || '',
+                row[FIELD_PLAN_COLUMNS.CONFIDENCEPLAN] || '',
+                row[FIELD_PLAN_COLUMNS.CONFIDENCECAPACITY] || '',
+                row[FIELD_PLAN_COLUMNS.CONFIDENCESKILLS] || '',
+                row[FIELD_PLAN_COLUMNS.CONFIDENCEGOALS] || ''
             ];
         });
 
@@ -342,20 +339,19 @@ function buildOrgCountiesTab(fieldPlanData, fipsMap, precinctsByCounty, precinct
         'willing_other_precincts', 'cities'
     ];
 
-    const C = FIELD_PLAN_COLUMNS;
     const rows = [];
 
     fieldPlanData.slice(1).forEach(row => {
-        const orgName = (row[C.MEMBERNAME] || '').toString().trim();
+        const orgName = (row[FIELD_PLAN_COLUMNS.MEMBERNAME] || '').toString().trim();
         if (!orgName) return;
 
-        const counties = normalizeMultiSelect(row[C.FIELDCOUNTIES]);
+        const counties = normalizeMultiSelect(row[FIELD_PLAN_COLUMNS.FIELDCOUNTIES]);
         if (counties.length === 0) return;
 
-        const knowsPrecincts = (row[C.KNOWSPRECINCTS] || '').toString().trim().toLowerCase() === 'yes';
-        const rawPrecincts = knowsPrecincts ? normalizeMultiSelect(row[C.FIELDPRECINCTS]) : [];
-        const willingOther = row[C.DIFFPRECINCTS] || '';
-        const cities = normalizeMultiSelect(row[C.CITIES]).join(' | ');
+        const knowsPrecincts = (row[FIELD_PLAN_COLUMNS.KNOWSPRECINCTS] || '').toString().trim().toLowerCase() === 'yes';
+        const rawPrecincts = knowsPrecincts ? normalizeMultiSelect(row[FIELD_PLAN_COLUMNS.FIELDPRECINCTS]) : [];
+        const willingOther = row[FIELD_PLAN_COLUMNS.DIFFPRECINCTS] || '';
+        const cities = normalizeMultiSelect(row[FIELD_PLAN_COLUMNS.CITIES]).join(' | ');
 
         // Resolve county names once (resolveCountyName is free — no sheet reads)
         const resolvedCounties = counties.map(raw => {
@@ -435,21 +431,20 @@ function buildOrgCountiesTab(fieldPlanData, fipsMap, precinctsByCounty, precinct
 function buildOrgDemographicsTab(fieldPlanData) {
     const headers = ['org_name', 'demo_category', 'demo_value', 'demo_confidence'];
 
-    const C = FIELD_PLAN_COLUMNS;
     const demoFields = [
-        { category: 'race', column: C.DEMORACE },
-        { category: 'age', column: C.DEMOAGE },
-        { category: 'gender', column: C.DEMOGENDER },
-        { category: 'affinity', column: C.DEMOAFFINITY }
+        { category: 'race', column: FIELD_PLAN_COLUMNS.DEMORACE },
+        { category: 'age', column: FIELD_PLAN_COLUMNS.DEMOAGE },
+        { category: 'gender', column: FIELD_PLAN_COLUMNS.DEMOGENDER },
+        { category: 'affinity', column: FIELD_PLAN_COLUMNS.DEMOAFFINITY }
     ];
 
     const rows = [];
 
     fieldPlanData.slice(1).forEach(row => {
-        const orgName = (row[C.MEMBERNAME] || '').toString().trim();
+        const orgName = (row[FIELD_PLAN_COLUMNS.MEMBERNAME] || '').toString().trim();
         if (!orgName) return;
 
-        const confidence = row[C.DEMOCONFIDENCE] || '';
+        const confidence = row[FIELD_PLAN_COLUMNS.DEMOCONFIDENCE] || '';
 
         demoFields.forEach(({ category, column }) => {
             normalizeMultiSelect(row[column]).forEach(value => {
@@ -474,14 +469,12 @@ function buildOrgBudgetsTab(budgetData) {
     });
     headers.push('requested_total', 'project_total', 'gap_total', 'sum_outreach', 'sum_non_outreach');
 
-    const B = BUDGET_COLUMNS;
-
     const rows = budgetData.slice(1)
-        .filter(row => row[B.MEMBERNAME])
+        .filter(row => row[BUDGET_COLUMNS.MEMBERNAME])
         .map(row => {
             const values = [
-                (row[B.MEMBERNAME] || '').toString().trim(),
-                row[B.SUBMISSIONID] || ''
+                (row[BUDGET_COLUMNS.MEMBERNAME] || '').toString().trim(),
+                row[BUDGET_COLUMNS.SUBMISSIONID] || ''
             ];
 
             let sumOutreach = 0;
@@ -489,9 +482,9 @@ function buildOrgBudgetsTab(budgetData) {
 
             BUDGET_LINE_ITEMS.forEach(item => {
                 const key = item.toUpperCase();
-                const requested = parseFloat(row[B[`${key}REQUESTED`]]) || 0;
-                const total = parseFloat(row[B[`${key}TOTAL`]]) || 0;
-                const gap = parseFloat(row[B[`${key}GAP`]]) || 0;
+                const requested = parseFloat(row[BUDGET_COLUMNS[`${key}REQUESTED`]]) || 0;
+                const total = parseFloat(row[BUDGET_COLUMNS[`${key}TOTAL`]]) || 0;
+                const gap = parseFloat(row[BUDGET_COLUMNS[`${key}GAP`]]) || 0;
                 values.push(requested, total, gap);
 
                 if (OUTREACH_ITEMS.has(item)) {
@@ -502,9 +495,9 @@ function buildOrgBudgetsTab(budgetData) {
             });
 
             values.push(
-                parseFloat(row[B.REQUESTEDTOTAL]) || 0,
-                parseFloat(row[B.PROJECTTOTAL]) || 0,
-                parseFloat(row[B.GAPTOTAL]) || 0,
+                parseFloat(row[BUDGET_COLUMNS.REQUESTEDTOTAL]) || 0,
+                parseFloat(row[BUDGET_COLUMNS.PROJECTTOTAL]) || 0,
+                parseFloat(row[BUDGET_COLUMNS.GAPTOTAL]) || 0,
                 sumOutreach,
                 sumNonOutreach
             );
