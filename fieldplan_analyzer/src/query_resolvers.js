@@ -294,7 +294,10 @@ function resolvePrecinctCode(fieldPlanPrecinct, countyName, preloadedPrecinctMap
         }
 
         // Try word-overlap matching (handles truncated/partial precinct names)
-        const PRECINCT_STOP_WORDS = new Set(['at', 'the', 'of', 'in', 'and', 'for']);
+        const PRECINCT_STOP_WORDS = new Set([
+            'at', 'the', 'of', 'in', 'and', 'for',
+            'voting', 'center', 'precinct', 'community'
+        ]);
         const inputTokens = inputUpper.split(/\s+/)
             .filter(w => w.length >= 3 && !PRECINCT_STOP_WORDS.has(w.toLowerCase()));
 
@@ -303,12 +306,10 @@ function resolvePrecinctCode(fieldPlanPrecinct, countyName, preloadedPrecinctMap
             for (const [code, name] of precinctNames) {
                 const nameTokens = name.toUpperCase().split(/\s+/);
                 const matches = inputTokens.filter(inputWord =>
-                    nameTokens.some(nameWord =>
-                        nameWord.startsWith(inputWord) || inputWord.startsWith(nameWord)
-                    )
+                    nameTokens.some(nameWord => nameWord.startsWith(inputWord))
                 );
                 if (matches.length >= 1) {
-                    overlapResults.push({ code, name, score: matches.length, longestMatch: Math.max(...matches.map(m => m.length)) });
+                    overlapResults.push({ code, name, score: matches.length });
                 }
             }
 
@@ -326,8 +327,8 @@ function resolvePrecinctCode(fieldPlanPrecinct, countyName, preloadedPrecinctMap
                 }
             }
 
-            // Weak overlap (1 distinctive word, 4+ chars, unique match)
-            if (overlapResults.length === 1 && overlapResults[0].longestMatch >= 4) {
+            // Weak overlap (1 word, unique match) — only when input is a single significant token
+            if (inputTokens.length === 1 && overlapResults.length === 1) {
                 Logger.log(`resolvePrecinctCode: name match "${rawValue}" -> "${overlapResults[0].code}" (word overlap, unique on "${overlapResults[0].name}", county: ${countyName})`);
                 return { valid: true, precinctCode: overlapResults[0].code, rawValue, matchType: 'name_match' };
             }
