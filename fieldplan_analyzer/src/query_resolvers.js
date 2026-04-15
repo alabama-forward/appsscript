@@ -289,8 +289,52 @@ function resolvePrecinctCode(fieldPlanPrecinct, countyName, preloadedPrecinctMap
                     return { valid: true, precinctCode: preferred.code, rawValue, matchType: 'name_match' };
                 }
             }
-            // Multiple matches, no clear winner — fall through to Phase 3
-            Logger.log(`resolvePrecinctCode: ${substringMatches.length} name substring matches for "${rawValue}", falling through`);
+            // Multiple matches, no clear winner — fall through to word overlap
+            Logger.log(`resolvePrecinctCode: ${substringMatches.length} name substring matches for "${rawValue}", trying word overlap`);
+        }
+
+        // Try word-overlap matching (handles truncated/partial precinct names)
+        const PRECINCT_STOP_WORDS = new Set(['at', 'the', 'of', 'in', 'and', 'for']);
+        const inputTokens = inputUpper.split(/\s+/)
+            .filter(w => w.length >= 3 && !PRECINCT_STOP_WORDS.has(w.toLowerCase()));
+
+        if (inputTokens.length >= 1) {
+            const overlapResults = [];
+            for (const [code, name] of precinctNames) {
+                const nameTokens = name.toUpperCase().split(/\s+/);
+                const matches = inputTokens.filter(inputWord =>
+                    nameTokens.some(nameWord =>
+                        nameWord.startsWith(inputWord) || inputWord.startsWith(nameWord)
+                    )
+                );
+                if (matches.length >= 1) {
+                    overlapResults.push({ code, name, score: matches.length, longestMatch: Math.max(...matches.map(m => m.length)) });
+                }
+            }
+
+            // Strong overlap (2+ words) — take best match
+            const strongMatches = overlapResults.filter(r => r.score >= 2);
+            if (strongMatches.length === 1) {
+                Logger.log(`resolvePrecinctCode: name match "${rawValue}" -> "${strongMatches[0].code}" (word overlap ${strongMatches[0].score} words, county: ${countyName})`);
+                return { valid: true, precinctCode: strongMatches[0].code, rawValue, matchType: 'name_match' };
+            }
+            if (strongMatches.length > 1) {
+                const sorted = strongMatches.sort((a, b) => b.score - a.score);
+                if (sorted[0].score > sorted[1].score) {
+                    Logger.log(`resolvePrecinctCode: name match "${rawValue}" -> "${sorted[0].code}" (word overlap ${sorted[0].score} words, county: ${countyName})`);
+                    return { valid: true, precinctCode: sorted[0].code, rawValue, matchType: 'name_match' };
+                }
+            }
+
+            // Weak overlap (1 distinctive word, 4+ chars, unique match)
+            if (overlapResults.length === 1 && overlapResults[0].longestMatch >= 4) {
+                Logger.log(`resolvePrecinctCode: name match "${rawValue}" -> "${overlapResults[0].code}" (word overlap, unique on "${overlapResults[0].name}", county: ${countyName})`);
+                return { valid: true, precinctCode: overlapResults[0].code, rawValue, matchType: 'name_match' };
+            }
+
+            if (overlapResults.length > 1) {
+                Logger.log(`resolvePrecinctCode: ${overlapResults.length} word-overlap matches for "${rawValue}" in ${countyName}, ambiguous`);
+            }
         }
     }
 

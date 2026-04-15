@@ -224,25 +224,31 @@ function testResolvePrecinctCode() {
 
     // --- Name-based matching (Phase 2) ---
     Logger.log('--- Phase 2: Name-based matching ---');
-    // Build a mock name map for testing
+    // Build a mock name map for testing (includes DALE county for word-overlap tests)
     const mockNameMap = new Map([
       ['HOUSTON|00241', 'DOTHAN CIVIC CENTER 241'],
       ['HOUSTON|00352', 'WESTGATE PARK 352'],
-      ['HOUSTON|00182', 'ASHFORD COMMUNITY CENTER']
+      ['HOUSTON|00354', 'WESTGATE PARK 354'],
+      ['HOUSTON|00182', 'ASHFORD COMMUNITY CENTER'],
+      ['DALE|01400', '1400 EWELL BIBLE BAPTIST CHURC'],
+      ['DALE|00500', 'ANDREW BELL COMMUNITY CENTER'],
+      ['DALE|00600', 'DOUG TEW RECREATION CENTER']
     ]);
     // Build a mock precinct map so codes validate
     const mockPrecinctMap = new Map([
-      ['HOUSTON', ['00241', '00352', '00182']]
+      ['HOUSTON', ['00241', '00352', '00354', '00182']],
+      ['DALE', ['01400', '00500', '00600']]
     ]);
 
+    // Exact name and substring matches
     const nameCases = [
-      { input: 'DOTHAN CIVIC CENTER 241', expectedCode: '00241', expectedType: 'name_match' },
-      { input: 'WESTGATE PARK 352', expectedCode: '00352', expectedType: 'name_match' },
-      { input: 'ASHFORD COMMUNITY CENTER', expectedCode: '00182', expectedType: 'name_match' }
+      { input: 'DOTHAN CIVIC CENTER 241', county: 'HOUSTON', expectedCode: '00241', expectedType: 'name_match' },
+      { input: 'WESTGATE PARK 352', county: 'HOUSTON', expectedCode: '00352', expectedType: 'name_match' },
+      { input: 'ASHFORD COMMUNITY CENTER', county: 'HOUSTON', expectedCode: '00182', expectedType: 'name_match' }
     ];
 
     nameCases.forEach(tc => {
-      const result = resolvePrecinctCode(tc.input, 'HOUSTON', mockPrecinctMap, mockNameMap);
+      const result = resolvePrecinctCode(tc.input, tc.county, mockPrecinctMap, mockNameMap);
       if (result.valid && result.precinctCode === tc.expectedCode && result.matchType === tc.expectedType) {
         Logger.log(`PASS: "${tc.input}" -> "${result.precinctCode}" (matchType: ${result.matchType})`);
       } else {
@@ -250,6 +256,34 @@ function testResolvePrecinctCode() {
         passed = false;
       }
     });
+
+    // Word-overlap matches (truncated user input)
+    Logger.log('--- Phase 2b: Word-overlap matching ---');
+    const overlapCases = [
+      { input: 'Voting Center at Ewell Bi', county: 'DALE', expectedCode: '01400', expectedType: 'name_match' },
+      { input: 'Andrew Bell', county: 'DALE', expectedCode: '00500', expectedType: 'name_match' },
+      { input: 'Doug Tew', county: 'DALE', expectedCode: '00600', expectedType: 'name_match' }
+    ];
+
+    overlapCases.forEach(tc => {
+      const result = resolvePrecinctCode(tc.input, tc.county, mockPrecinctMap, mockNameMap);
+      if (result.valid && result.precinctCode === tc.expectedCode && result.matchType === tc.expectedType) {
+        Logger.log(`PASS: "${tc.input}" -> "${result.precinctCode}" (matchType: ${result.matchType})`);
+      } else {
+        Logger.log(`FAIL: "${tc.input}" -> code="${result.precinctCode}", matchType=${result.matchType} (expected "${tc.expectedCode}", "${tc.expectedType}")`);
+        passed = false;
+      }
+    });
+
+    // Ambiguous word-overlap (Westgate matches 2 precincts) — should NOT match
+    Logger.log('--- Phase 2c: Ambiguous word-overlap ---');
+    const ambiguousResult = resolvePrecinctCode('Westgate', 'HOUSTON', mockPrecinctMap, mockNameMap);
+    if (!ambiguousResult.valid) {
+      Logger.log(`PASS: "Westgate" -> not matched (ambiguous between 352 and 354)`);
+    } else {
+      Logger.log(`FAIL: "Westgate" -> matched ${ambiguousResult.precinctCode} (expected ambiguous/no match)`);
+      passed = false;
+    }
 
     // --- Empty input ---
     Logger.log('--- Empty input ---');
