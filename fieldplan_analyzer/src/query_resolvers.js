@@ -16,26 +16,28 @@
 /**
  * Resolve an org name to its VAN committee ID via exact, normalized, or contains match.
  * @param {string} orgName - Organization name from the field plan form
+ * @param {Array<{name: string, id: string}>|null} [preloadedEntries=null] - Pre-loaded VAN entries; if null, reads from sheet
  * @returns {{found: boolean, committeeId: string|null, committeeName: string|null, matchType: string}}
  * @example resolveVanId('NAACP') // { found: true, committeeId: '12345', committeeName: 'NAACP', matchType: 'exact' }
  * @example resolveVanId('')      // { found: false, committeeId: null, committeeName: null, matchType: 'none' }
  */
-function resolveVanId(orgName) {
+function resolveVanId(orgName, preloadedEntries = null) {
     if (!orgName) {
         Logger.log('resolveVanId: orgName is empty or null');
         return { found: false, committeeId: null, committeeName: null, matchType: 'none' };
     }
 
     try {
-        const config = getQueryConfig();
-        const sheet = getSheet(config.sheetVanIdLookup);
-        const data = sheet.getDataRange().getValues();
-
-        // Parse rows into structured entries, skipping header row (0)
-        const entries = data.slice(1).map(row => ({
-            name: (row[0] || '').toString().trim(),
-            id: (row[1] || '').toString().trim()
-        }));
+        // Use pre-loaded entries if provided, otherwise read from sheet
+        const entries = preloadedEntries || (() => {
+            const config = getQueryConfig();
+            const sheet = getSheet(config.sheetVanIdLookup);
+            const data = sheet.getDataRange().getValues();
+            return data.slice(1).map(row => ({
+                name: (row[0] || '').toString().trim(),
+                id: (row[1] || '').toString().trim()
+            }));
+        })();
 
         const orgNameLower = orgName.trim().toLowerCase();
         const orgNameNormalized = normalizeOrgName(orgName);
@@ -120,11 +122,14 @@ function resolveCountyName(fieldPlanCounty) {
 /**
  * Load valid precinct codes for a county from the county_precinct tab.
  * @param {string} countyName - Uppercase county name
+ * @param {Map<string, string[]>|null} [preloadedMap=null] - Pre-loaded county→precincts map; if null, reads from sheet
  * @returns {string[]} Array of zero-padded precinct codes
  * @example getCountyPrecincts('HOUSTON') // ['00182', '00183', '00184']
  * @example getCountyPrecincts('FAKE')    // []
  */
-function getCountyPrecincts(countyName) {
+function getCountyPrecincts(countyName, preloadedMap = null) {
+    if (preloadedMap) return preloadedMap.get(countyName) || [];
+
     const config = getQueryConfig();
     const sheet = getSheet(config.sheetCountyPrecinct);
     const data = sheet.getDataRange().getValues();
@@ -139,11 +144,12 @@ function getCountyPrecincts(countyName) {
  * Resolve a precinct value to a zero-padded 5-digit code with county validation.
  * @param {string} fieldPlanPrecinct - A single precinct value from the form
  * @param {string} countyName - Resolved uppercase county name
+ * @param {Map<string, string[]>|null} [preloadedPrecinctMap=null] - Pre-loaded county→precincts map; if null, reads from sheet
  * @returns {{valid: boolean, precinctCode: string, rawValue: string, matchType: string}}
  * @example resolvePrecinctCode('182', 'HOUSTON') // { valid: true, precinctCode: '00182', rawValue: '182', matchType: 'exact' }
  * @example resolvePrecinctCode('', 'HOUSTON')    // { valid: false, precinctCode: '', rawValue: '', matchType: 'none' }
  */
-function resolvePrecinctCode(fieldPlanPrecinct, countyName) {
+function resolvePrecinctCode(fieldPlanPrecinct, countyName, preloadedPrecinctMap = null) {
     //No precinct, mark as empty in log
     if (!fieldPlanPrecinct) {
         Logger.log('resolvePrecinctCode: empty precinct value');
@@ -166,7 +172,7 @@ function resolvePrecinctCode(fieldPlanPrecinct, countyName) {
     //Load valid precincts for this county
     let validPrecincts = [];
     try {
-        validPrecincts = getCountyPrecincts(countyName);
+        validPrecincts = getCountyPrecincts(countyName, preloadedPrecinctMap);
     } catch (e) {
         Logger.log(`resolvePrecinctCode: county_precinct lookup failed (${e.message}),
             falling back to unvalidated`);

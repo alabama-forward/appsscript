@@ -2,7 +2,7 @@
  * Analysis Tab Builder
  * Builds 5 analysis tabs from raw field plan and budget data
  * for BigQuery ingestion and Hex.tech visualization
- * 
+ *
  * Exports these functions:
  *      rebuildAnalysisTabs()       - clears and rewrites all 5 tabs
  *      testRebuildAnalysisTabs()   - test wrapper (logs counts, no emails)
@@ -24,7 +24,7 @@ const NARRATIVE_KEYWORDS = [
     'public safety', 'housing', 'criminal justice', 'environmental',
     'faith-based', 'youth', 'seniors', 'rural', 'data-driven',
     'volunteer mobilization', 'door-to-door', 'phone banking',
-    'text banking', 'community organizing', 'long-term power' 
+    'text banking', 'community organizing', 'long-term power'
 ]
 
 /**Budget line items keys. Order matches 2026 budget form. */
@@ -74,7 +74,7 @@ function writeTab(sheetName, headers, rows) {
 
 /**
  * Splits a multi-select field on newlines (technical debt here: this is
- * the same logic as the FieldPlan constructor's normalizeField. Future 
+ * the same logic as the FieldPlan constructor's normalizeField. Future
  * refactoring should consider pulling normalization outsife of FieldPlan
  * to make the function globally available.)
  * @param {*} value - raw cell value
@@ -182,5 +182,408 @@ function loadCountyPrecinctData() {
         }
     });
 
-  return { fipsMap, precinctsByCounty, precinctNames };
+    return { fipsMap, precinctsByCounty, precinctNames };
+}
+
+
+/**
+ * Builds rows for analysis_org_plans (one row per org).
+ * @param {Array[]} fieldPlanData - raw field plan sheet data (includes header at index 0)
+ * @param {Array<{name: string, id: string}>} vanEntries - pre-loaded VAN lookup
+ * @returns {{headers: string[], rows: Array[]}}
+ */
+function buildOrgPlansTab(fieldPlanData, vanEntries) {
+    const headers = [
+        'org_name', 'submission_id', 'submission_date',
+        'van_id', 'van_match_type',
+        'contact_first', 'contact_last', 'contact_email', 'contact_phone',
+        'attended_training', 'data_storage', 'van_committee', 'program_tools',
+        'program_start_date', 'program_end_date', 'program_days', 'program_types',
+        'field_tactics', 'teach_comfortable', 'field_staff',
+        'narrative_raw', 'narrative_keywords', 'demo_notes_raw', 'demo_notes_keywords',
+        'knows_precincts', 'special_geo', 'running_for_office', 'reviewed_plan',
+        'confidence_reasonable', 'confidence_data', 'confidence_plan',
+        'confidence_capacity', 'confidence_skills', 'confidence_goals'
+    ];
+
+    const C = FIELD_PLAN_COLUMNS;
+
+    const rows = fieldPlanData.slice(1)
+        .filter(row => row[C.MEMBERNAME])
+        .map(row => {
+            const orgName = row[C.MEMBERNAME].toString().trim();
+            const van = resolveVanId(orgName, vanEntries);
+            const dates = parseProgramDates(row[C.PROGRAMDATES]);
+            const narrative = (row[C.FIELDNARRATIVE] || '').toString();
+            const demoNotes = (row[C.DEMONOTES] || '').toString();
+
+            return [
+                orgName,
+                row[C.SUBMISSIONID] || '',
+                row[C.SUBMISSIONDATETIME] || '',
+                van.committeeId || '',
+                van.matchType === 'none' ? '' : van.matchType,
+                row[C.FIRSTNAME] || '',
+                row[C.LASTNAME] || '',
+                row[C.CONTACTEMAIL] || '',
+                row[C.CONTACTPHONE] || '',
+                row[C.ATTENDEDTRAINING] || '',
+                normalizeMultiSelect(row[C.DATASTORAGE]).join(' | '),
+                normalizeMultiSelect(row[C.VANCOMMITTEE]).join(' | '),
+                normalizeMultiSelect(row[C.PROGRAMTOOLS]).join(' | '),
+                dates.startDate,
+                dates.endDate,
+                dates.days,
+                normalizeMultiSelect(row[C.PROGRAMTYPES]).join(' | '),
+                normalizeMultiSelect(row[C.FIELDTACTICS]).join(' | '),
+                normalizeMultiSelect(row[C.TEACHCOMFORTABLE]).join(' | '),
+                normalizeMultiSelect(row[C.FIELDSTAFF]).join(' | '),
+                narrative,
+                extractKeywords(narrative),
+                demoNotes,
+                extractKeywords(demoNotes),
+                row[C.KNOWSPRECINCTS] || '',
+                normalizeMultiSelect(row[C.SPECIALGEO]).join(' | '),
+                row[C.RUNNINGFOROFFICE] || '',
+                row[C.REVIEWEDPLAN] || '',
+                row[C.CONFIDENCEREASONABLE] || '',
+                row[C.CONFIDENCEDATA] || '',
+                row[C.CONFIDENCEPLAN] || '',
+                row[C.CONFIDENCECAPACITY] || '',
+                row[C.CONFIDENCESKILLS] || '',
+                row[C.CONFIDENCEGOALS] || ''
+            ];
+        });
+
+    return { headers, rows };
+}
+
+/**
+ * Builds rows for analysis_org_tactics (one row per org × active tactic).
+ * Only includes rows where all 4 input metrics are non-zero.
+ * @param {Array[]} fieldPlanData - raw field plan sheet data (includes header at index 0)
+ * @returns {{headers: string[], rows: Array[]}}
+ */
+function buildOrgTacticsTab(fieldPlanData) {
+    const headers = [
+        'org_name', 'tactic_name',
+        'program_length_weeks', 'weekly_volunteers', 'weekly_hours', 'hourly_attempts',
+        'total_program_attempts', 'weekly_attempts', 'total_volunteer_hours',
+        'expected_contacts_low', 'expected_contacts_high',
+        'attempts_per_hour_threshold', 'cost_target'
+    ];
+
+    const rows = [];
+
+    fieldPlanData.slice(1).forEach(row => {
+        const orgName = (row[FIELD_PLAN_COLUMNS.MEMBERNAME] || '').toString().trim();
+        if (!orgName) return;
+
+        Object.entries(TACTIC_CONFIG).forEach(([tacticKey, config]) => {
+            if (!config.enabled) return;
+
+            const cols = PROGRAM_COLUMNS[config.columnKey];
+            if (!cols) return;
+
+            const programLength = Number(row[cols.PROGRAMLENGTH]) || 0;
+            const weeklyVolunteers = Number(row[cols.WEEKLYVOLUNTEERS]) || 0;
+            const weeklyHours = Number(row[cols.WEEKLYHOURS]) || 0;
+            const hourlyAttempts = Number(row[cols.HOURLYATTEMPTS]) || 0;
+
+            // Skip if any of the 4 metrics is zero — tactic not active
+            if (!programLength || !weeklyVolunteers || !weeklyHours || !hourlyAttempts) return;
+
+            const weeklyAttemptsCalc = weeklyVolunteers * weeklyHours * hourlyAttempts;
+            const totalProgramAttempts = programLength * weeklyAttemptsCalc;
+            const totalVolunteerHours = programLength * weeklyVolunteers * weeklyHours;
+
+            rows.push([
+                orgName,
+                config.name,
+                programLength,
+                weeklyVolunteers,
+                weeklyHours,
+                hourlyAttempts,
+                totalProgramAttempts,
+                weeklyAttemptsCalc,
+                totalVolunteerHours,
+                Math.round(totalProgramAttempts * config.contactRange[0]),
+                Math.round(totalProgramAttempts * config.contactRange[1]),
+                config.reasonableThreshold,
+                config.costTarget
+            ]);
+        });
+    });
+
+    return { headers, rows };
+}
+
+/**
+ * Builds rows for analysis_org_counties (one row per org × county × precinct).
+ *
+ * Precinct assignment logic:
+ *   1. For each org, collect their counties and precincts
+ *   2. Try each precinct against each county (exact match first, then fuzzy)
+ *   3. Assign each precinct to its best-matching county
+ *   4. Counties with assigned precincts get one row per precinct
+ *   5. Counties with no assigned precincts get one row with empty precinct columns
+ *   6. Orgs that don't know precincts get one row per county with empty precinct columns
+ *
+ * @param {Array[]} fieldPlanData - raw field plan sheet data (includes header at index 0)
+ * @param {Map<string,string>} fipsMap - county → FIPS code
+ * @param {Map<string,string[]>} precinctsByCounty - county → [precinctCodes]
+ * @param {Map<string,string>} precinctNameMap - "COUNTY|code" → precinct name
+ * @returns {{headers: string[], rows: Array[]}}
+ */
+function buildOrgCountiesTab(fieldPlanData, fipsMap, precinctsByCounty, precinctNameMap) {
+    const headers = [
+        'org_name', 'county_raw', 'county_name', 'county_fips',
+        'precinct_raw', 'precinct_code', 'precinct_name', 'precinct_match_type',
+        'willing_other_precincts', 'cities'
+    ];
+
+    const C = FIELD_PLAN_COLUMNS;
+    const rows = [];
+
+    fieldPlanData.slice(1).forEach(row => {
+        const orgName = (row[C.MEMBERNAME] || '').toString().trim();
+        if (!orgName) return;
+
+        const counties = normalizeMultiSelect(row[C.FIELDCOUNTIES]);
+        if (counties.length === 0) return;
+
+        const knowsPrecincts = (row[C.KNOWSPRECINCTS] || '').toString().trim().toLowerCase() === 'yes';
+        const rawPrecincts = knowsPrecincts ? normalizeMultiSelect(row[C.FIELDPRECINCTS]) : [];
+        const willingOther = row[C.DIFFPRECINCTS] || '';
+        const cities = normalizeMultiSelect(row[C.CITIES]).join(' | ');
+
+        // Resolve county names once (resolveCountyName is free — no sheet reads)
+        const resolvedCounties = counties.map(raw => {
+            const result = resolveCountyName(raw);
+            return {
+                raw,
+                name: result.valid ? result.countyName : raw.toString().trim().toUpperCase()
+            };
+        });
+
+        // Assign each precinct to its best-matching county
+        const precinctAssignments = new Map();
+
+        if (rawPrecincts.length > 0) {
+            rawPrecincts.forEach(rawP => {
+                let bestMatch = null;
+
+                for (const { name: countyName } of resolvedCounties) {
+                    const result = resolvePrecinctCode(rawP, countyName, precinctsByCounty);
+
+                    // Exact match wins immediately
+                    if (result.valid && result.matchType === 'exact') {
+                        bestMatch = { countyName, ...result };
+                        break;
+                    }
+                    // Fuzzy or unvalidated — keep as fallback if no exact match yet
+                    if (result.valid && result.matchType !== 'not_found' && !bestMatch) {
+                        bestMatch = { countyName, ...result };
+                    }
+                }
+
+                if (bestMatch) {
+                    if (!precinctAssignments.has(bestMatch.countyName)) {
+                        precinctAssignments.set(bestMatch.countyName, []);
+                    }
+                    precinctAssignments.get(bestMatch.countyName).push({
+                        precinctCode: bestMatch.precinctCode,
+                        rawValue: bestMatch.rawValue,
+                        matchType: bestMatch.matchType
+                    });
+                }
+            });
+        }
+
+        // Generate output rows
+        resolvedCounties.forEach(({ raw: countyRaw, name: countyName }) => {
+            const countyFips = fipsMap.get(countyName) || '';
+            const assigned = precinctAssignments.get(countyName) || [];
+
+            if (assigned.length > 0) {
+                assigned.forEach(p => {
+                    rows.push([
+                        orgName, countyRaw, countyName, countyFips,
+                        p.rawValue, p.precinctCode,
+                        precinctNameMap.get(`${countyName}|${p.precinctCode}`) || '',
+                        p.matchType, willingOther, cities
+                    ]);
+                });
+            } else {
+                // No precincts assigned — one row with empty precinct columns
+                rows.push([
+                    orgName, countyRaw, countyName, countyFips,
+                    '', '', '', '', willingOther, cities
+                ]);
+            }
+        });
+    });
+
+    return { headers, rows };
+}
+
+/**
+ * Builds rows for analysis_org_demographics (one row per org × category × value).
+ * @param {Array[]} fieldPlanData - raw field plan sheet data (includes header at index 0)
+ * @returns {{headers: string[], rows: Array[]}}
+ */
+function buildOrgDemographicsTab(fieldPlanData) {
+    const headers = ['org_name', 'demo_category', 'demo_value', 'demo_confidence'];
+
+    const C = FIELD_PLAN_COLUMNS;
+    const demoFields = [
+        { category: 'race', column: C.DEMORACE },
+        { category: 'age', column: C.DEMOAGE },
+        { category: 'gender', column: C.DEMOGENDER },
+        { category: 'affinity', column: C.DEMOAFFINITY }
+    ];
+
+    const rows = [];
+
+    fieldPlanData.slice(1).forEach(row => {
+        const orgName = (row[C.MEMBERNAME] || '').toString().trim();
+        if (!orgName) return;
+
+        const confidence = row[C.DEMOCONFIDENCE] || '';
+
+        demoFields.forEach(({ category, column }) => {
+            normalizeMultiSelect(row[column]).forEach(value => {
+                rows.push([orgName, category, value, confidence]);
+            });
+        });
+    });
+
+    return { headers, rows };
+}
+
+/**
+ * Builds rows for analysis_org_budgets (one row per org).
+ * Generates 3 columns per line item (requested, total, gap) plus summary totals.
+ * @param {Array[]} budgetData - raw budget sheet data (includes header at index 0)
+ * @returns {{headers: string[], rows: Array[]}}
+ */
+function buildOrgBudgetsTab(budgetData) {
+    const headers = ['org_name', 'submission_id'];
+    BUDGET_LINE_ITEMS.forEach(item => {
+        headers.push(`${item}_requested`, `${item}_total`, `${item}_gap`);
+    });
+    headers.push('requested_total', 'project_total', 'gap_total', 'sum_outreach', 'sum_non_outreach');
+
+    const B = BUDGET_COLUMNS;
+
+    const rows = budgetData.slice(1)
+        .filter(row => row[B.MEMBERNAME])
+        .map(row => {
+            const values = [
+                (row[B.MEMBERNAME] || '').toString().trim(),
+                row[B.SUBMISSIONID] || ''
+            ];
+
+            let sumOutreach = 0;
+            let sumNonOutreach = 0;
+
+            BUDGET_LINE_ITEMS.forEach(item => {
+                const key = item.toUpperCase();
+                const requested = parseFloat(row[B[`${key}REQUESTED`]]) || 0;
+                const total = parseFloat(row[B[`${key}TOTAL`]]) || 0;
+                const gap = parseFloat(row[B[`${key}GAP`]]) || 0;
+                values.push(requested, total, gap);
+
+                if (OUTREACH_ITEMS.has(item)) {
+                    sumOutreach += requested;
+                } else {
+                    sumNonOutreach += requested;
+                }
+            });
+
+            values.push(
+                parseFloat(row[B.REQUESTEDTOTAL]) || 0,
+                parseFloat(row[B.PROJECTTOTAL]) || 0,
+                parseFloat(row[B.GAPTOTAL]) || 0,
+                sumOutreach,
+                sumNonOutreach
+            );
+
+            return values;
+        });
+
+    return { headers, rows };
+}
+
+// ========================
+// ENTRY POINTS
+// ========================
+
+/**
+ * Clears and rewrites all 5 analysis tabs from scratch.
+ * Reads source data and reference sheets once, then builds each tab.
+ * @returns {{orgPlans: number, orgTactics: number, orgCounties: number, orgDemographics: number, orgBudgets: number}}
+ * @example rebuildAnalysisTabs()
+ *   => { orgPlans: 32, orgTactics: 78, orgCounties: 95, orgDemographics: 210, orgBudgets: 30 }
+ * @example rebuildAnalysisTabs() => { orgPlans: 0, ... } (if sheets are empty)
+ */
+function rebuildAnalysisTabs() {
+    Logger.log('=== REBUILDING ANALYSIS TABS ===');
+    const startTime = new Date();
+
+    // --- Read all source data once ---
+    const fieldPlanSheet = getSheet(scriptProps.getProperty('SHEET_FIELD_PLAN'));
+    const fieldPlanData = fieldPlanSheet.getDataRange().getValues();
+    Logger.log(`Field plan rows: ${fieldPlanData.length - 1}`);
+
+    const budgetSheet = getSheet(scriptProps.getProperty('SHEET_FIELD_BUDGET'));
+    const budgetData = budgetSheet.getDataRange().getValues();
+    Logger.log(`Budget rows: ${budgetData.length - 1}`);
+
+    // --- Pre-load reference data (avoids repeated sheet reads) ---
+    const vanEntries = loadVanLookup();
+    Logger.log(`VAN lookup entries: ${vanEntries.length}`);
+
+    const { fipsMap, precinctsByCounty, precinctNames } = loadCountyPrecinctData();
+    Logger.log(`County FIPS entries: ${fipsMap.size}, Counties with precincts: ${precinctsByCounty.size}`);
+
+    // --- Build and write each tab ---
+    const plansResult = buildOrgPlansTab(fieldPlanData, vanEntries);
+    const orgPlans = writeTab(ANALYSIS_TABS.ORG_PLANS, plansResult.headers, plansResult.rows);
+
+    const tacticsResult = buildOrgTacticsTab(fieldPlanData);
+    const orgTactics = writeTab(ANALYSIS_TABS.ORG_TACTICS, tacticsResult.headers, tacticsResult.rows);
+
+    const countiesResult = buildOrgCountiesTab(fieldPlanData, fipsMap, precinctsByCounty, precinctNames);
+    const orgCounties = writeTab(ANALYSIS_TABS.ORG_COUNTIES, countiesResult.headers, countiesResult.rows);
+
+    const demosResult = buildOrgDemographicsTab(fieldPlanData);
+    const orgDemographics = writeTab(ANALYSIS_TABS.ORG_DEMOGRAPHICS, demosResult.headers, demosResult.rows);
+
+    const budgetsResult = buildOrgBudgetsTab(budgetData);
+    const orgBudgets = writeTab(ANALYSIS_TABS.ORG_BUDGETS, budgetsResult.headers, budgetsResult.rows);
+
+    const elapsed = ((new Date() - startTime) / 1000).toFixed(1);
+    Logger.log(`=== ANALYSIS TABS COMPLETE (${elapsed}s) ===`);
+
+    return { orgPlans, orgTactics, orgCounties, orgDemographics, orgBudgets };
+}
+
+/**
+ * Test wrapper for rebuildAnalysisTabs. Logs row counts.
+ * Run from the Apps Script editor: Run > testRebuildAnalysisTabs
+ */
+function testRebuildAnalysisTabs() {
+    Logger.log('=== TEST: Rebuilding Analysis Tabs ===');
+    try {
+        const counts = rebuildAnalysisTabs();
+        Logger.log('Row counts:');
+        Object.entries(counts).forEach(([tab, count]) => {
+            Logger.log(`  ${tab}: ${count}`);
+        });
+        Logger.log('Test passed — check the spreadsheet for the 5 analysis tabs');
+    } catch (error) {
+        Logger.log(`Test FAILED: ${error.message}`);
+        Logger.log(error.stack);
+    }
 }
